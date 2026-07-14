@@ -24,3 +24,6 @@
 
 <!-- Page Styles -->
 @yield('page-style')
+
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/css/bethel-custom.css') }}" />

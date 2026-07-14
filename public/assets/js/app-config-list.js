@@ -107,7 +107,7 @@ $(function () {
           },
           { responsivePriority: 1, targets: 11 }
         ],
-        order: [[2, 'desc']],
+        order: [[1, 'desc']],
         dom:
           '<"row me-2"' +
           '<"col-md-2"<"me-3"l>>' +

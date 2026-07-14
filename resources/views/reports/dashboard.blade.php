@@ -386,7 +386,7 @@
       <div class="card-body">
         <div class="d-flex align-items-start justify-content-between mb-3">
           <div class="db-icon bg-label-info">
-            <i class="ti ti-calendar-month text-info" style="font-size:22px;"></i>
+            <i class="ti ti-calendar text-info" style="font-size:22px;"></i>
           </div>
           <span class="db-badge bg-label-info text-info">Mes actual</span>
         </div>
@@ -404,7 +404,7 @@
       <div class="card-body">
         <div class="d-flex align-items-start justify-content-between mb-3">
           <div class="db-icon bg-label-warning">
-            <i class="ti ti-calendar-week text-warning" style="font-size:22px;"></i>
+            <i class="ti ti-calendar-event text-warning" style="font-size:22px;"></i>
           </div>
           <span class="db-badge bg-label-warning text-warning">Esta semana</span>
         </div>

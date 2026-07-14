@@ -37,14 +37,14 @@
                         <div class="mt-2 mb-4 app-brand justify-content-center">
                             <a href="{{ url('/') }}" class="gap-2 app-brand-link">
                                 <span class="app-brand-logo">@include('_partials.macros', [
-                                    'height' => 100,
+                                    'height' => 120,
                                     'withbg' => 'fill: #fff;',
                                 ])</span>
                             </a>
                         </div>
                         <!-- /Logo -->
-                        <h4 class="pt-1 mb-1 app-brand justify-content-center">Login</h4>
-                        <p class="mb-4"></p>
+                        <h4 class="pt-1 mb-1 app-brand justify-content-center">Bienvenido a Bethel Travel</h4>
+                        <p class="mb-4 text-center">Por favor, inicia sesión para continuar</p>
 
                         <form method="POST" action="{{ route('login') }}">
                             @csrf

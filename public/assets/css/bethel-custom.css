@@ -1,0 +1,710 @@
+/* Estilos Bethel Travel (navbar, menú theSVG, calendario, notificaciones, SweetAlert, colores de marca). Fuente única: public/assets/css/bethel-custom.css */
+
+/* ==========================================
+   Colores Corporativos de Bethel Travel
+   ========================================== */
+:root {
+    --bs-primary: #1E2B7B !important;
+    --bs-primary-rgb: 30, 43, 123 !important;
+    --bs-primary-hover: #16205b !important;
+    --bs-primary-active: #0f1640 !important;
+    --bs-secondary: #d2af37 !important;
+    --bs-secondary-rgb: 210, 175, 55 !important;
+    --bs-warning: #d2af37 !important;
+    --bs-warning-rgb: 210, 175, 55 !important;
+    --bs-link-color: #1E2B7B !important;
+    --bs-link-hover-color: #16205b !important;
+}
+
+/* Enlaces */
+a {
+    color: #1E2B7B;
+}
+a:hover {
+    color: #16205b;
+}
+
+/* Botones Primarios */
+.btn-primary {
+    color: #fff !important;
+    background-color: #1E2B7B !important;
+    border-color: #1E2B7B !important;
+}
+.btn-primary:hover, 
+.btn-primary:focus, 
+.btn-primary:active, 
+.btn-primary.active, 
+.show > .btn-primary.dropdown-toggle {
+    background-color: #16205b !important;
+    border-color: #16205b !important;
+    color: #fff !important;
+    box-shadow: 0 0.125rem 0.25rem 0 rgba(30, 43, 123, 0.4) !important;
+}
+.btn-primary:focus, .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(30, 43, 123, 0.5) !important;
+}
+
+/* Botones Label */
+.btn-label-primary {
+    color: #1E2B7B !important;
+    background-color: rgba(30, 43, 123, 0.08) !important;
+}
+.btn-label-primary:hover, .btn-label-primary:active, .btn-label-primary.active {
+    color: #fff !important;
+    background-color: #1E2B7B !important;
+}
+
+/* Botones Outline */
+.btn-outline-primary {
+    color: #1E2B7B !important;
+    border-color: #1E2B7B !important;
+}
+.btn-outline-primary:hover, .btn-outline-primary:active, .btn-outline-primary.active {
+    color: #fff !important;
+    background-color: #1E2B7B !important;
+    border-color: #1E2B7B !important;
+}
+
+/* Textos y Fondos */
+.text-primary {
+    color: #1E2B7B !important;
+}
+.bg-primary {
+    background-color: #1E2B7B !important;
+}
+.bg-label-primary {
+    background-color: rgba(30, 43, 123, 0.08) !important;
+    color: #1E2B7B !important;
+}
+.border-primary {
+    border-color: #1E2B7B !important;
+}
+
+/* Navegación y Menú Activo */
+.menu-vertical .menu-item.active > .menu-link {
+    background: linear-gradient(72.47deg, #1E2B7B 22.16%, rgba(30, 43, 123, 0.7) 76.47%) !important;
+    color: #fff !important;
+}
+.menu-vertical .menu-item.active > .menu-link::before {
+    background-color: #d2af37 !important; /* Detalle en oro de la barra del menú */
+}
+
+/* Pestañas (Tabs) y Pills */
+.nav-tabs .nav-link.active {
+    color: #1E2B7B !important;
+    border-bottom: 2px solid #1E2B7B !important;
+}
+.nav-pills .nav-link.active, .nav-pills .nav-link.active:hover, .nav-pills .nav-link.active:focus {
+    background-color: #1E2B7B !important;
+    color: #fff !important;
+}
+
+/* Paginación */
+.page-item.active .page-link, .page-item.active .page-link:hover, .page-item.active .page-link:focus {
+    background-color: #1E2B7B !important;
+    border-color: #1E2B7B !important;
+    color: #fff !important;
+}
+
+/* Componentes de Formulario */
+.form-control:focus, .form-select:focus {
+    border-color: #1E2B7B !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 43, 123, 0.25) !important;
+}
+.form-check-input:checked {
+    background-color: #1E2B7B !important;
+    border-color: #1E2B7B !important;
+}
+
+/* Badges */
+.badge.bg-primary {
+    background-color: #1E2B7B !important;
+    color: #fff !important;
+}
+.badge.bg-label-primary {
+    background-color: rgba(30, 43, 123, 0.08) !important;
+    color: #1E2B7B !important;
+}
+
+/* Estilos personalizados para SweetAlert2 - Popups de error más anchos */
+.swal-wide {
+    width: 900px !important;
+    max-width: 95vw !important;
+}
+
+.swal-wide .swal2-html-container {
+    white-space: pre-line !important;
+    text-align: left !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    line-height: 1.5 !important;
+    max-height: 600px !important;
+    overflow-y: auto !important;
+}
+
+/* Estilos para diferentes tipos de errores */
+.swal2-popup.swal-wide .swal2-title {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+}
+
+.swal2-popup.swal-wide .swal2-html-container {
+    font-size: 0.9rem !important;
+    margin: 1rem 0 !important;
+    padding: 1rem !important;
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Estilos para contenido de error */
+.swal-wide .error-content {
+    font-family: 'Courier New', monospace !important;
+    background-color: #f1f3f4 !important;
+    padding: 0.75rem !important;
+    border-radius: 0.25rem !important;
+    border-left: 4px solid #dc3545 !important;
+    margin: 0.5rem 0 !important;
+}
+
+.swal-wide .warning-content {
+    font-family: 'Courier New', monospace !important;
+    background-color: #fff3cd !important;
+    padding: 0.75rem !important;
+    border-radius: 0.25rem !important;
+    border-left: 4px solid #ffc107 !important;
+    margin: 0.5rem 0 !important;
+}
+
+/* Iconos personalizados para diferentes tipos de errores */
+.swal2-icon.swal2-warning {
+    border-color: #f39c12 !important;
+    color: #f39c12 !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #e74c3c !important;
+    color: #e74c3c !important;
+}
+
+/* Botones personalizados */
+.swal-wide .swal2-confirm {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.swal-wide .swal2-confirm:hover {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+}
+
+.swal-wide .swal2-cancel {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.swal-wide .swal2-cancel:hover {
+    background-color: #545b62 !important;
+    border-color: #545b62 !important;
+}
+
+/* Iconos del menú cargados vía CDN theSVG (https://thesvg.org) */
+.menu-link .thesvg-menu-img {
+    display: block;
+    width: 1.375rem;
+    height: 1.375rem;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+/* Menú lateral: iconos Tabler (ti) con el mismo color que el texto del enlace */
+.layout-menu.menu-vertical .menu-link > .menu-icon i.ti {
+    font-size: 1.375rem;
+    line-height: 1;
+    color: currentColor;
+}
+
+/* Menú lateral: Font Awesome solid (menu-icon fa-solid … desde PermissionController) */
+.layout-menu.menu-vertical .menu-link > .menu-icon i.fa-solid {
+    font-size: 1.125rem;
+    line-height: 1;
+    width: 1.375rem;
+    text-align: center;
+    color: currentColor;
+}
+
+/* Notificaciones de actividad (navbar) */
+.activity-notif-badge {
+    font-size: 0.65rem;
+    min-width: 1.15rem;
+    line-height: 1.1;
+    padding: 0.2em 0.45em;
+    z-index: 1106 !important;
+    pointer-events: none;
+}
+
+#layout-navbar .dropdown-notifications > .nav-link {
+    overflow: visible !important;
+}
+
+.activity-notif-scroll {
+    max-height: 20rem;
+}
+
+.activity-notif-item {
+    transition: background-color 0.15s ease;
+}
+
+.activity-notif-item--unread {
+    background-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.09);
+    border-left: 3px solid var(--bs-primary, #696cff);
+}
+
+.activity-notif-item:not(.activity-notif-item--unread):hover {
+    background-color: rgba(67, 89, 113, 0.05);
+}
+
+/*
+ * Popper 2 / Bootstrap 5: el margen en .dropdown-menu[data-bs-popper] dispara
+ * "CSS margin styles cannot be used...". Se anula el margen y se reproduce el
+ * espacio con top/bottom/left/right + calc (navbar desactiva offset de Popper).
+ */
+.dropdown-menu[data-bs-popper] {
+    margin: 0 !important;
+}
+
+#layout-navbar
+    .navbar-nav
+    .nav-item.dropdown:not(.dropup):not(.dropend):not(.dropstart)
+    .dropdown-menu[data-bs-popper] {
+    top: calc(100% + var(--bs-dropdown-spacer, 0.25rem)) !important;
+}
+
+#layout-navbar .navbar-nav .dropup .dropdown-menu[data-bs-popper] {
+    top: auto !important;
+    bottom: calc(100% + var(--bs-dropdown-spacer, 0.25rem)) !important;
+}
+
+#layout-navbar .navbar-nav .dropend .dropdown-menu[data-bs-popper] {
+    margin-left: 0 !important;
+    left: calc(100% + var(--bs-dropdown-spacer, 0.25rem)) !important;
+}
+
+#layout-navbar .navbar-nav .dropstart .dropdown-menu[data-bs-popper] {
+    margin-right: 0 !important;
+    right: calc(100% + var(--bs-dropdown-spacer, 0.25rem)) !important;
+}
+
+/* Navbar: evita recortes y que los dropdowns queden detrás / sin abrir */
+#layout-navbar.layout-navbar,
+#layout-navbar .navbar-nav.flex-row,
+#layout-navbar #navbar-collapse {
+    overflow: visible !important;
+}
+
+.layout-navbar {
+    min-height: 3.875rem;
+    height: auto !important;
+}
+
+/* Bloque usuario (navbar): solo nombre + rol en barra; fecha/hora en el menú */
+.navbar-user-trigger {
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.navbar-user-trigger:hover {
+    background-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.06);
+    border-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.2);
+}
+
+.navbar-user-time {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+/* Fecha + calendario utilidad (navbar, antes de la campana) */
+.navbar-calendar-btn {
+    max-width: 11rem;
+    border: 1px solid transparent;
+}
+
+.navbar-calendar-btn:hover {
+    background-color: rgba(67, 89, 113, 0.06);
+    border-color: rgba(67, 89, 113, 0.1);
+}
+
+/* Panel calendario: un mes; no forzar width:100% en .flatpickr-calendar (comprime celdas) */
+.navbar-calendar-dropdown-menu.dropdown-menu {
+    min-width: 19rem;
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+    padding: 0 !important;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(67, 89, 113, 0.12);
+    box-shadow: 0 0.5rem 1.35rem rgba(67, 89, 113, 0.16);
+    z-index: 1085 !important;
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.navbar-calendar-panel {
+    overflow: visible;
+    border-radius: inherit;
+    background: var(--bs-body-bg, #fff);
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+}
+
+.navbar-calendar-panel-body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    padding: 0.65rem 0.75rem 0.75rem;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-prev-month:hover,
+.navbar-calendar-dropdown-menu .flatpickr-next-month:hover {
+    color: var(--bs-primary, #696cff);
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline {
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    width: auto !important;
+    min-width: 17.5rem;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: transparent !important;
+    text-align: center;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-months {
+    width: 100%;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-innerContainer {
+    max-width: none;
+    justify-content: center !important;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-innerContainer,
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-rContainer {
+    width: auto !important;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-rContainer {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .flatpickr-days {
+    width: 100% !important;
+    justify-content: center !important;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-calendar.inline .dayContainer {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-day.selected,
+.navbar-calendar-dropdown-menu .flatpickr-day.selected:hover {
+    background: var(--bs-primary, #696cff);
+    border-color: var(--bs-primary, #696cff);
+    color: #fff;
+}
+
+.navbar-calendar-dropdown-menu .flatpickr-day.today:not(.selected) {
+    border-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.45);
+}
+
+/* Tema oscuro: Flatpickr integrado al skin del layout */
+html.dark-style .navbar-calendar-dropdown-menu.dropdown-menu {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0.65rem 1.75rem rgba(0, 0, 0, 0.45);
+}
+
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-months .flatpickr-month {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-current-month span.cur-month,
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-current-month input.cur-year {
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-weight: 600;
+}
+
+html.dark-style .navbar-calendar-dropdown-menu span.flatpickr-weekday {
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-day {
+    color: rgba(255, 255, 255, 0.82);
+    border-color: transparent;
+}
+
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-day.prevMonthDay,
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-day.nextMonthDay {
+    color: rgba(255, 255, 255, 0.28);
+}
+
+html.dark-style .navbar-calendar-dropdown-menu .flatpickr-day:hover:not(.selected):not(.flatpickr-disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: transparent;
+}
+
+/* Contenedores del layout: no recortar dropdowns de la barra */
+#layout-navbar .navbar-nav-right,
+#layout-navbar .navbar .container-fluid,
+#layout-navbar .container-xxl {
+    overflow: visible !important;
+}
+
+#layout-navbar .navbar-calendar-dropdown .navbar-calendar-btn span#navbarUserDate {
+    max-width: 8.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-user .dropdown-menu .navbar-user-dropdown-header {
+    background: linear-gradient(
+        135deg,
+        rgba(var(--bs-primary-rgb, 105, 108, 255), 0.12) 0%,
+        rgba(var(--bs-primary-rgb, 105, 108, 255), 0.04) 100%
+    );
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+/* Menú usuario: ancho suficiente y sin recortar fecha/hora (el tema pone overflow:hidden en .dropdown-menu) */
+.layout-navbar .navbar-dropdown.dropdown-user .dropdown-menu.navbar-user-dropdown-menu,
+.dropdown-user .dropdown-menu.navbar-user-dropdown-menu {
+    min-width: min(22rem, calc(100vw - 1.5rem)) !important;
+    max-width: min(24rem, calc(100vw - 1rem)) !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+}
+
+/* Panel notificaciones actividad */
+.activity-dropdown-panel {
+    min-width: 22rem;
+    max-width: 26rem;
+    z-index: 1095 !important;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(67, 89, 113, 0.12);
+    box-shadow: 0 0.5rem 1.5rem rgba(67, 89, 113, 0.12);
+}
+
+.activity-notif-header {
+    background: linear-gradient(180deg, #f8f9fb 0%, #f4f6f9 100%);
+    border-bottom: 1px solid rgba(67, 89, 113, 0.12) !important;
+}
+
+.activity-notif-header-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #384551;
+    letter-spacing: 0.01em;
+}
+
+.activity-notif-header-desc {
+    font-size: 0.8125rem;
+    color: #697a8d;
+    line-height: 1.45;
+}
+
+.activity-notif-header-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.35em 0.65em;
+    background-color: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.12);
+    color: var(--bs-primary, #696cff);
+    border: 1px solid rgba(var(--bs-primary-rgb, 105, 108, 255), 0.25);
+}
+
+.activity-notif-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+.activity-notif-item-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(67, 89, 113, 0.06);
+    color: #5d6a7a;
+}
+
+.activity-notif-item--unread .activity-notif-item-icon {
+    background: rgba(var(--bs-primary-rgb, 105, 108, 255), 0.12);
+    color: var(--bs-primary, #696cff);
+}
+
+.activity-notif-type-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #697a8d;
+    margin-bottom: 0.2rem;
+}
+
+.activity-notif-item-title {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #384551;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.activity-notif-item-time {
+    font-size: 0.75rem;
+    color: #8e9baa;
+    margin-top: 0.25rem;
+}
+
+.activity-notif-scroll-wrapper {
+    max-height: 20rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: #fff;
+}
+
+.layout-navbar .navbar-dropdown.dropdown-notifications .activity-notif-scroll-wrapper {
+    max-height: 20rem;
+}
+
+/* ==========================================
+   Ajustes para el Modo Oscuro (Dark Mode)
+   ========================================== */
+.dark-style {
+    --bs-primary: #5d85ff !important;
+    --bs-primary-rgb: 93, 133, 255 !important;
+    --bs-primary-hover: #7b9eff !important;
+    --bs-primary-active: #3c65df !important;
+    --bs-link-color: #5d85ff !important;
+    --bs-link-hover-color: #7b9eff !important;
+}
+
+.dark-style a {
+    color: #5d85ff;
+}
+.dark-style a:hover {
+    color: #7b9eff;
+}
+
+.dark-style .btn-primary {
+    color: #fff !important;
+    background-color: #5d85ff !important;
+    border-color: #5d85ff !important;
+}
+.dark-style .btn-primary:hover, 
+.dark-style .btn-primary:focus, 
+.dark-style .btn-primary:active, 
+.dark-style .btn-primary.active {
+    background-color: #7b9eff !important;
+    border-color: #7b9eff !important;
+    color: #fff !important;
+    box-shadow: 0 0.125rem 0.25rem 0 rgba(93, 133, 255, 0.4) !important;
+}
+
+.dark-style .btn-label-primary {
+    color: #5d85ff !important;
+    background-color: rgba(93, 133, 255, 0.15) !important;
+}
+.dark-style .btn-label-primary:hover {
+    color: #fff !important;
+    background-color: #5d85ff !important;
+}
+
+.dark-style .btn-outline-primary {
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    background-color: transparent !important;
+}
+.dark-style .btn-outline-primary:hover, 
+.dark-style .btn-outline-primary:focus, 
+.dark-style .btn-outline-primary:active, 
+.dark-style .btn-outline-primary.active {
+    color: #fff !important;
+    background-color: rgba(93, 133, 255, 0.25) !important;
+    border-color: #5d85ff !important;
+}
+
+.dark-style .text-primary {
+    color: #5d85ff !important;
+}
+.dark-style .bg-primary {
+    background-color: #5d85ff !important;
+}
+.dark-style .bg-label-primary {
+    background-color: rgba(93, 133, 255, 0.12) !important;
+    color: #5d85ff !important;
+}
+.dark-style .border-primary {
+    border-color: #5d85ff !important;
+}
+
+.dark-style .menu-vertical .menu-item.active > .menu-link {
+    background: linear-gradient(72.47deg, #5d85ff 22.16%, rgba(93, 133, 255, 0.7) 76.47%) !important;
+    color: #fff !important;
+}
+.dark-style .menu-vertical .menu-item.active > .menu-link::before {
+    background-color: #d2af37 !important;
+}
+
+.dark-style .nav-tabs .nav-link.active {
+    color: #5d85ff !important;
+    border-bottom: 2px solid #5d85ff !important;
+}
+.dark-style .nav-pills .nav-link.active {
+    background-color: #5d85ff !important;
+    color: #fff !important;
+}
+
+.dark-style .page-item.active .page-link {
+    background-color: #5d85ff !important;
+    border-color: #5d85ff !important;
+    color: #fff !important;
+}
+
+.dark-style .form-control:focus, .dark-style .form-select:focus {
+    border-color: #5d85ff !important;
+    box-shadow: 0 0 0 0.2rem rgba(93, 133, 255, 0.25) !important;
+}
+.dark-style .form-check-input:checked {
+    background-color: #5d85ff !important;
+    border-color: #5d85ff !important;
+}
+
+.dark-style .badge.bg-primary {
+    background-color: #5d85ff !important;
+    color: #fff !important;
+}
+.dark-style .badge.bg-label-primary {
+    background-color: rgba(93, 133, 255, 0.12) !important;
+    color: #5d85ff !important;
+}
+
+.dark-style .swal-wide .swal2-confirm {
+    background-color: #5d85ff !important;
+    border-color: #5d85ff !important;
+}
+.dark-style .swal-wide .swal2-confirm:hover {
+    background-color: #7b9eff !important;
+    border-color: #7b9eff !important;
+}

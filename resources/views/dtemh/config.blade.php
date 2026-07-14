@@ -203,17 +203,26 @@
                 <option value="4">v4</option>
               </select>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña Llave Privada</label>
-              <input type="text" id="passprivatekey" name="passprivatekey" class="form-control" placeholder="Private key" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passprivatekey">Contraseña Llave Privada</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passprivatekey" name="passprivatekey" class="form-control" placeholder="Private key" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña Llave Publica</label>
-              <input type="text" id="passpublickey" name="passpublickey" class="form-control" placeholder="Public key" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passpublickey">Contraseña Llave Publica</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passpublickey" name="passpublickey" class="form-control" placeholder="Public key" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña MH</label>
-              <input type="text" id="passmh" name="passmh" class="form-control" placeholder="Pass MH" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passmh">Contraseña MH</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passmh" name="passmh" class="form-control" placeholder="Pass MH" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
             <div class="mb-3 col-12">
               <div class="form-check form-switch">
@@ -286,17 +295,26 @@
                 <option value="4">v4</option>
               </select>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña Llave Privada</label>
-              <input type="text" id="passprivatekeyedit" name="passprivatekeyedit" class="form-control" placeholder="Private key" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passprivatekeyedit">Contraseña Llave Privada</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passprivatekeyedit" name="passprivatekeyedit" class="form-control" placeholder="Private key" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña Llave Publica</label>
-              <input type="text" id="passpublickeyedit" name="passpublickeyedit" class="form-control" placeholder="Public key" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passpublickeyedit">Contraseña Llave Publica</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passpublickeyedit" name="passpublickeyedit" class="form-control" placeholder="Public key" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
-            <div class="mb-3 col-12">
-              <label class="form-label" for="name">Contraseña MH</label>
-              <input type="text" id="passmhedit" name="passmhedit" class="form-control" placeholder="Pass MH" required/>
+            <div class="mb-3 form-password-toggle col-12">
+              <label class="form-label" for="passmhedit">Contraseña MH</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="passmhedit" name="passmhedit" class="form-control" placeholder="Pass MH" required/>
+                <span class="cursor-pointer input-group-text"><i class="ti ti-eye-off"></i></span>
+              </div>
             </div>
             <div class="mb-3 col-12">
               <div class="form-check form-switch">

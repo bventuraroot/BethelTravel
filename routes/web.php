@@ -30,6 +30,7 @@ use App\Http\Controllers\FirmadorTestController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\DteDashboardController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,6 +56,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutas de Actividad Reciente / Notificaciones
+    Route::get('/activity/recent', [ActivityLogController::class, 'recent'])->name('activity.recent');
+    Route::get('/activity/unread-count', [ActivityLogController::class, 'unreadCount'])->name('activity.unread-count');
+    Route::post('/activity/mark-seen', [ActivityLogController::class, 'markSeen'])->name('activity.mark-seen');
 
     Route::middleware(['auth', 'permission:manage_users'])->group(function () {
 

@@ -8,7 +8,7 @@
     @if (!isset($navbarFull))
         <div class="app-brand demo">
             <a href="{{ url('/') }}" class="app-brand-link">
-                <span class="app-brand-logo demo">
+                <span class="app-brand-logo" style="display: flex; align-items: center; overflow: visible;">
                     @include('_partials.logo')
                 </span>
                 <span class="app-brand-text demo menu-text fw-bold menu-letra">{{ config('variables.templateName') }}</span>
