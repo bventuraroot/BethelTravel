@@ -141,18 +141,12 @@ $(function () {
     var dt_user = dt_user_table.DataTable({
       columnDefs: [
         {
-          // For Responsive
-          className: 'control',
           searchable: false,
           orderable: false,
-          responsivePriority: 0,
-          targets: 0,
-          render: function (data, type, full, meta) {
-            return '';
-          }
+          targets: 0
         }
       ],
-      order: [[2, 'desc']],
+      order: [[1, 'desc']],
       dom:
         '<"row me-2"' +
         '<"col-md-2"<"me-3"l>>' +
@@ -167,6 +161,7 @@ $(function () {
         search: '',
         searchPlaceholder: 'Buscar'
       },
+      scrollX: true,
       // Buttons with Dropdown
       buttons: [
         {
@@ -317,40 +312,7 @@ $(function () {
             'data-bs-target': '#addProviderModal'
           }
         }
-      ],
-      // For responsive popup
-      responsive: {
-        details: {
-          display: $.fn.dataTable.Responsive.display.modal({
-            header: function (row) {
-              var data = row.data();
-              return 'Detalles proveedor ' + data[0] + ' ' + data[1];
-            }
-          }),
-          type: 'column',
-          renderer: function (api, rowIdx, columns) {
-            var data = $.map(columns, function (col, i) {
-              return col.title !== '' // ? Do not show row in modal popup if title is blank (for check box)
-                ? '<tr data-dt-row="' +
-                    col.rowIndex +
-                    '" data-dt-column="' +
-                    col.columnIndex +
-                    '">' +
-                    '<td>' +
-                    col.title +
-                    ':' +
-                    '</td> ' +
-                    '<td>' +
-                    col.data +
-                    '</td>' +
-                    '</tr>'
-                : '';
-            }).join('');
-
-            return data ? $('<table class="table"/><tbody />').append(data) : false;
-          }
-        }
-      }
+      ]
     });
   }
 

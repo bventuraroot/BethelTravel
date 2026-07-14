@@ -55,21 +55,34 @@
             <table class="table datatables-provider border-top">
                 <thead>
                     <tr>
-                        <th>Ver</th>
+                        <th>Acciones</th>
                         <th>Razon Social</th>
                         <th>NCR</th>
                         <th>NIT</th>
                         <th>TELEFONOS</th>
                         <th>DIRECCION</th>
                         <th>CORREO</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @isset($providers)
                         @forelse($providers as $provider)
                             <tr>
-                                <td></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-2"
+                                                onclick="editProvider({{ $provider->id }})"
+                                                title="Editar">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <a href="javascript:;" class="text-body dropdown-toggle hide-arrow"
+                                            data-bs-toggle="dropdown"><i class="mx-1 ti ti-dots-vertical ti-sm"></i></a>
+                                        <div class="m-0 dropdown-menu dropdown-menu-end">
+                                            <a href="javascript:deleteProvider({{ $provider->id }});" class="dropdown-item"><i
+                                                    class="ti ti-eraser ti-sm me-2"></i>Eliminar</a>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td><h5>{{ $provider->razonsocial }}</h5>
                                 <h5 class="p-2 rounded badge bg-label-primary"> <li class="ti ti-users ti-sm"></li> Empresa: {{$provider->company}}</h5></td>
                                 <td>{{ $provider->ncr }}</td>
@@ -83,17 +96,6 @@
                                     <span><span class="p-2 rounded badge bg-label-primary">{{ $provider->address }}</span></span><br>
                                 </td>
                                 <td><span class="p-2 rounded badge bg-label-warning"> <li class="ti ti-mail ti-sm"></li> {{ $provider->email }}</span></td>
-                                <td><div class="d-flex align-items-center">
-                                    <a href="javascript: editProvider({{ $provider->id }});" class="dropdown-item"><i
-                                        class="ti ti-edit ti-sm me-2"></i>Editar</a>
-                                    <a href="javascript:;" class="text-body dropdown-toggle hide-arrow"
-                                        data-bs-toggle="dropdown"><i class="mx-1 ti ti-dots-vertical ti-sm"></i></a>
-                                    <div class="m-0 dropdown-menu dropdown-menu-end">
-                                        <a href="javascript:deleteProvider({{ $provider->id }});" class="dropdown-item"><i
-                                                class="ti ti-eraser ti-sm me-2"></i>Eliminar</a>
-
-                                    </div>
-                                </div></td>
                             </tr>
                             @empty
                                 <tr>
