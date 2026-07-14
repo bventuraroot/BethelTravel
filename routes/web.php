@@ -436,6 +436,15 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('client/movements/{client}', [App\Http\Controllers\ClientController::class, 'getMovements'])->name('client.movements');
+
+    // Gestión de Aerolíneas
+    Route::group(['prefix' => 'airline', 'as' => 'airline.'], function(){
+        Route::get('index', [App\Http\Controllers\AirlineController::class, 'index'])->name('index');
+        Route::post('store', [App\Http\Controllers\AirlineController::class, 'store'])->name('store');
+        Route::post('update', [App\Http\Controllers\AirlineController::class, 'update'])->name('update');
+        Route::get('getairlineid/{id}', [App\Http\Controllers\AirlineController::class, 'getairlineid'])->name('getairlineid');
+        Route::get('destroy/{id}', [App\Http\Controllers\AirlineController::class, 'destroy'])->name('destroy');
+    });
 });
 });
 });

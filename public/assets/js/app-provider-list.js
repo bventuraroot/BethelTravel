@@ -60,6 +60,16 @@ $(function () {
     });
   }
 
+  var select2companyedit = $('.select2companyedit');
+
+  if (select2companyedit.length) {
+    var $this = select2companyedit;
+    $this.wrap('<div class="position-relative"></div>').select2({
+      placeholder: 'Seleccionar empresa',
+      dropdownParent: $this.parent()
+    });
+  }
+
   var selectdacteconomica = $('.select2act');
 
   if (selectdacteconomica.length) {

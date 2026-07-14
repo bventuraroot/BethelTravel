@@ -10,7 +10,7 @@
             "name": "Administracion",
             "icon": "menu-icon fa-solid fa-shield",
             "slug": "user.index",
-            "badge": ["primary", "2"],
+            "badge": ["primary", "4"],
             "submenu": [
                 {
                     "url": "/user/index",
@@ -26,6 +26,11 @@
                     "url": "/permission/index",
                     "name": "Permisos",
                     "slug": "user.permission.index"
+                },
+                {
+                    "url": "/airline/index",
+                    "name": "Aerolineas",
+                    "slug": "airline.index"
                 }
             ]
         },

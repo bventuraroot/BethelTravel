@@ -199,23 +199,6 @@ $configData = Helper::appClasses();
                     <td>{{ $client->birthday }}</td>
                 </tr>
                 @empty
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>No data</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
                 @endforelse
                 @endisset
             </tbody>

@@ -202,14 +202,15 @@ function getpaises(selected="",type=""){
             url: "/getcountry",
             method: "GET",
             success: function(response){
+                $('#countryedit').find('option:not(:first)').remove();
                 $.each(response, function(index, value) {
                     if(selected!="" && value.id==selected){
                         $('#countryedit').append('<option value="'+value.id+'" selected>'+value.name.toUpperCase()+'</option>');
                     }else{
                         $('#countryedit').append('<option value="'+value.id+'">'+value.name.toUpperCase()+'</option>');
                     }
-
                   });
+                $('#countryedit').trigger('change');
             }
         });
     }else{
@@ -217,9 +218,11 @@ function getpaises(selected="",type=""){
             url: "/getcountry",
             method: "GET",
             success: function(response){
+                $('#country').find('option:not(:first)').remove();
                 $.each(response, function(index, value) {
                     $('#country').append('<option value="'+value.id+'">'+value.name.toUpperCase()+'</option>');
                   });
+                $('#country').trigger('change');
             }
         });
     }
@@ -240,7 +243,7 @@ function getpaises(selected="",type=""){
   }
 })();
 
-function getdepartamentos(pais, type="", selected){
+function getdepartamentos(pais, type="", selected, selectedmuni){
     //Get countrys avaibles
     if(type=='edit'){
        $.ajax({
@@ -254,8 +257,11 @@ function getdepartamentos(pais, type="", selected){
                    }else{
                        $('#departamentedit').append('<option value="'+value.id+'">'+value.name+'</option>');
                    }
-
                  });
+               $('#departamentedit').trigger('change');
+               if (selected) {
+                   getmunicipio(selected, 'edit', selectedmuni);
+               }
            }
        });
     }else{
@@ -267,6 +273,7 @@ function getdepartamentos(pais, type="", selected){
                $.each(response, function(index, value) {
                    $('#departament').append('<option value="'+value.id+'">'+value.name+'</option>');
                  });
+               $('#departament').trigger('change');
            }
        });
     }
@@ -286,8 +293,8 @@ $.ajax({
             }else{
                 $('#municipioedit').append('<option value="'+value.id+'">'+value.name+'</option>');
             }
-
           });
+        $('#municipioedit').trigger('change');
     }
 });
     }else{
@@ -300,6 +307,7 @@ $.ajax({
         $.each(response, function(index, value) {
             $('#municipio').append('<option value="'+value.id+'">'+value.name+'</option>');
           });
+        $('#municipio').trigger('change');
     }
 });
     }
@@ -307,8 +315,7 @@ $.ajax({
 
    function llamarselected(pais, departamento, municipio){
     getpaises(pais,'edit');
-    getdepartamentos(pais,'edit', departamento);
-    getmunicipio(departamento, 'edit', municipio);
+    getdepartamentos(pais,'edit', departamento, municipio);
     }
 
    function editProvider(id){
@@ -322,10 +329,14 @@ $.ajax({
             $.each(response[0], function(index, value) {
                     $('#'+index+'update').val(value);
                     if(index=='companyid'){
-                        $("#companyupdate option[value='"+ value  +"']").attr("selected", true);
+                        $("#companyupdate").val(value).trigger('change');
                     }
-
               });
+
+              // Apply formatting to NIT and NCR immediately upon loading
+              if ($('#nitupdate').length) nitDuiMask($('#nitupdate')[0]);
+              if ($('#ncrupdate').length) NRCMask($('#ncrupdate')[0]);
+
               $("#updateProviderModal").modal("show");
         }
     });
