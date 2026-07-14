@@ -11,6 +11,11 @@
     {{ config('variables.templateSuffix') ? config('variables.templateSuffix') : 'TemplateSuffix' }}</title>
   <meta name="description" content="{{ config('variables.templateDescription') ? config('variables.templateDescription') : '' }}" />
   <meta name="keywords" content="{{ config('variables.templateKeyword') ? config('variables.templateKeyword') : '' }}">
+  <!-- Open Graph Meta Tags for Social Media Sharing Preview -->
+  <meta property="og:title" content="{{ config('variables.templateName') }} - {{ config('variables.templateSuffix') }}" />
+  <meta property="og:description" content="{{ config('variables.templateKeyword') }}" />
+  <meta property="og:image" content="{{ asset('assets/img/logo/logo.png') }}" />
+  <meta property="og:type" content="website" />
   <!-- laravel CRUD token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <!-- Canonical SEO -->

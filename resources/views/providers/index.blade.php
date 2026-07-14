@@ -37,8 +37,8 @@
 @endsection
 
 @section('page-script')
-    <script src="{{ asset('assets/js/app-provider-list.js') }}"></script>
-    <script src="{{ asset('assets/js/forms-provider.js') }}"></script>
+    <script src="{{ asset('assets/js/app-provider-list.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('assets/js/forms-provider.js') }}?v={{ time() }}"></script>
 @endsection
 
 @section('title', 'Proveedores')

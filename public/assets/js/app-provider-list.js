@@ -146,6 +146,7 @@ $(function () {
           targets: 0
         }
       ],
+      responsive: false,
       order: [[1, 'desc']],
       dom:
         '<"row me-2"' +
