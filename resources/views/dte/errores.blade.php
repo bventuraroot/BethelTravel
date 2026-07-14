@@ -1,0 +1,601 @@
+@extends('layouts/layoutMaster')
+
+@section('title', 'Gestión de Errores DTE')
+
+@section('vendor-style')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+@endsection
+
+@section('vendor-script')
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+@endsection
+
+@section('content')
+<h4 class="py-3 mb-4">
+    <span class="text-muted fw-light">DTE /</span> Gestión de Errores
+</h4>
+
+<!-- Estadísticas -->
+<div class="row">
+    <div class="mb-4 col-lg-3 col-md-6 col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text">Total Errores</p>
+                        <div class="mb-2 d-flex align-items-end">
+                            <h4 class="mb-0 card-title">{{ $estadisticas['total'] ?? 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-icon">
+                        <span class="p-2 rounded badge bg-label-primary">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-4 col-lg-3 col-md-6 col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text">No Resueltos</p>
+                        <div class="mb-2 d-flex align-items-end">
+                            <h4 class="mb-0 card-title">{{ $estadisticas['no_resueltos'] ?? 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-icon">
+                        <span class="p-2 rounded badge bg-label-warning">
+                            <i class="fas fa-clock"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-4 col-lg-3 col-md-6 col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text">Resueltos</p>
+                        <div class="mb-2 d-flex align-items-end">
+                            <h4 class="mb-0 card-title">{{ $estadisticas['resueltos'] ?? 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-icon">
+                        <span class="p-2 rounded badge bg-label-success">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-4 col-lg-3 col-md-6 col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="card-info">
+                        <p class="card-text">Críticos</p>
+                        <div class="mb-2 d-flex align-items-end">
+                            <h4 class="mb-0 card-title">{{ $estadisticas['criticos'] ?? 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-icon">
+                        <span class="p-2 rounded badge bg-label-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros y Acciones -->
+<div class="mb-4 row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 card-title">Filtros y Acciones</h5>
+                <div class="gap-2 d-flex">
+                    <button type="button" class="btn btn-label-success" onclick="resolverSeleccionados()">
+                        <i class="fas fa-check-double me-1"></i> Resolver Seleccionados
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="exportarErrores()">
+                        <i class="fas fa-download me-1"></i> Exportar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="procesarReintentos()">
+                        <i class="fas fa-redo me-1"></i> Procesar Reintentos
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="filtrosForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label">Tipo de Error</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="validacion">Validación</option>
+                            <option value="hacienda">Hacienda</option>
+                            <option value="sistema">Sistema</option>
+                            <option value="autenticacion">Autenticación</option>
+                            <option value="firma">Firma</option>
+                            <option value="datos">Datos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="empresa" class="form-label">Empresa</label>
+                        <select class="form-select" id="empresa" name="empresa_id">
+                            <option value="">Todas las empresas</option>
+                            @foreach($empresas as $empresa)
+                                <option value="{{ $empresa->id }}">{{ $empresa->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="resuelto" class="form-label">Estado</label>
+                        <select class="form-select" id="resuelto" name="resuelto">
+                            <option value="">Todos los estados</option>
+                            <option value="0">No resueltos</option>
+                            <option value="1">Resueltos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="gap-2 d-flex">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Filtrar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="limpiarFiltros()">
+                                <i class="fas fa-times me-1"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Errores -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 card-title">Lista de Errores DTE</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="erroresTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllErrores" title="Seleccionar todos">
+                                </th>
+                                <th>ID</th>
+                                <th>DTE ID</th>
+                                <th>Tipo</th>
+                                <th>Empresa</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Intentos</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{-- Debug: Mostrar información de errores --}}
+                            @if($errores->count() == 0)
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No se encontraron errores con los filtros aplicados
+                                        <br>
+                                        <small>Total de errores en la consulta: {{ $errores->total() }}</small>
+                                    </td>
+                                </tr>
+                            @endif
+                            @foreach($errores as $error)
+                            <tr class="{{ $error->resuelto ? 'table-success' : '' }}">
+                                <td>
+                                    @if(!$error->resuelto && $error->id)
+                                        <input type="checkbox"
+                                               class="error-checkbox"
+                                               value="{{ $error->id }}"
+                                               title="Seleccionar error #{{ $error->id }}">
+                                    @endif
+                                </td>
+                                <td>{{ $error->id ?? 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ route('dte.show', $error->dte_id) }}" class="text-primary">
+                                        {{ $error->dte_id }}
+                                    </a>
+                                </td>
+                                <td>
+                                    @php
+                                        $badgeClass = match($error->tipo_error) {
+                                            'hacienda' => 'bg-warning',
+                                            'sistema' => 'bg-secondary',
+                                            'validacion' => 'bg-info',
+                                            'autenticacion', 'firma' => 'bg-danger',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }}">
+                                        {{ ucfirst($error->tipo_error) }}
+                                    </span>
+                                </td>
+                                <td>{{ $error->dte->company->name ?? 'N/A' }}</td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 300px;"
+                                          title="{{ $error->descripcion }}">
+                                        {{ Str::limit($error->descripcion, 80) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($error->resuelto)
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i> Resuelto
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i> Pendiente
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ $error->intentos_realizados }}/{{ $error->max_intentos }}
+                                    </span>
+                                </td>
+                                <td>{{ $error->created_at->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        @if($error->id && $error->id !== '')
+                                            <a href="{{ route('dte.error-show', $error->id) }}"
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Ver Error">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @else
+                                            <span class="text-muted" title="ID no disponible">N/A</span>
+                                        @endif
+                                        @if(!$error->resuelto && $error->id && $error->id !== '')
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    onclick="resolverError({{ $error->id }})"
+                                                    title="Marcar como resuelto">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-warning"
+                                                    onclick="reintentarDte({{ $error->dte_id }})"
+                                                    title="Reintentar DTE">
+                                                <i class="fas fa-redo"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div class="mt-4 d-flex justify-content-center">
+                    {{ $errores->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para resolver error -->
+<div class="modal fade" id="resolverErrorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resolver Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resolverErrorForm">
+                    <div class="mb-3">
+                        <label for="solucion" class="form-label">Solución aplicada:</label>
+                        <textarea class="form-control" id="solucion" name="solucion" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarResolucion()">Resolver</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('page-script')
+<script>
+let errorIdActual = null;
+
+$(document).ready(function() {
+    // Inicializar DataTables
+    $('#erroresTable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+        },
+        order: [[8, 'desc']] // Ordenar por fecha descendente (columna fecha)
+    });
+
+    // Aplicar filtros automáticamente
+    $('#filtrosForm select').change(function() {
+        $('#filtrosForm').submit();
+    });
+
+    // Seleccionar / deseleccionar todos
+    $('#selectAllErrores').on('change', function() {
+        $('.error-checkbox').prop('checked', $(this).is(':checked'));
+    });
+
+    // Sincronizar estado del checkbox general
+    $(document).on('change', '.error-checkbox', function() {
+        const total = $('.error-checkbox').length;
+        const checked = $('.error-checkbox:checked').length;
+        $('#selectAllErrores').prop('checked', total > 0 && total === checked);
+    });
+});
+
+function resolverError(errorId) {
+    errorIdActual = errorId;
+    document.getElementById('solucion').value = '';
+    new bootstrap.Modal(document.getElementById('resolverErrorModal')).show();
+}
+
+function confirmarResolucion() {
+    const solucion = document.getElementById('solucion').value;
+    if (!solucion.trim()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'Por favor ingrese una solución'
+        });
+        return;
+    }
+
+    $.ajax({
+        url: `/dte-admin/errores/${errorIdActual}/resolver`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: JSON.stringify({ solucion: solucion }),
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Error resuelto!',
+                    text: response.message,
+                    timer: 2000
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al resolver: ' + xhr.responseText
+            });
+        }
+    });
+}
+
+function resolverSeleccionados() {
+    const ids = $('.error-checkbox:checked').map(function() {
+        return parseInt($(this).val(), 10);
+    }).get();
+
+    if (!ids.length) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin selección',
+            text: 'Selecciona al menos un error pendiente para resolver.'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Resolver errores seleccionados',
+        input: 'textarea',
+        inputLabel: `Se resolverán ${ids.length} error(es)`,
+        inputPlaceholder: 'Escribe una sola solución para todos los errores seleccionados...',
+        inputAttributes: {
+            'aria-label': 'Solución aplicada'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Resolver en lote',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Ingresa la solución aplicada';
+            }
+            return null;
+        }
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        $.ajax({
+            url: '/dte-admin/errores/resolver-masivo',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: JSON.stringify({
+                error_ids: ids,
+                solucion: result.value.trim()
+            }),
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Resolución masiva completada',
+                        text: response.message,
+                        timer: 2200
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo resolver en lote',
+                        text: response.message || 'Ocurrió un error al resolver los seleccionados.'
+                    });
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Error al resolver errores seleccionados.';
+                try {
+                    const response = xhr.responseJSON || JSON.parse(xhr.responseText);
+                    if (response && response.message) {
+                        msg = response.message;
+                    }
+                } catch (e) {}
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: msg
+                });
+            }
+        });
+    });
+}
+
+function reintentarDte(dteId) {
+    Swal.fire({
+        title: '¿Reintentar DTE?',
+        text: '¿Está seguro de que desea reintentar este DTE?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, reintentar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/dte-admin/reintentar/${dteId}`,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Reintento exitoso!',
+                            text: response.message,
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al reintentar: ' + xhr.responseText
+                    });
+                }
+            });
+        }
+    });
+}
+
+function procesarReintentos() {
+    Swal.fire({
+        title: 'Procesar Reintentos',
+        text: '¿Desea procesar todos los reintentos automáticos?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, procesar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '{{ route("dte.procesar-reintentos") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Procesamiento completado!',
+                            text: response.message,
+                            timer: 3000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error de conexión'
+                    });
+                }
+            });
+        }
+    });
+}
+
+function exportarErrores() {
+    const filtros = $('#filtrosForm').serialize();
+    window.open(`{{ route('dte.errores') }}?${filtros}&export=1`, '_blank');
+}
+
+function limpiarFiltros() {
+    $('#filtrosForm')[0].reset();
+    window.location.href = '{{ route("dte.errores") }}';
+}
+</script>
+@endsection

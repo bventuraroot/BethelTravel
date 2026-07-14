@@ -1,0 +1,43 @@
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: betheltravelsv-web
+    restart: unless-stopped
+    ports:
+      - "8007:80"
+    volumes:
+      - ./:/var/www
+    networks:
+      - betheltravelsv
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: betheltravelsv-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-betheltravelsv}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-betheltravelsv}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+      TZ: America/El_Salvador
+    volumes:
+      - betheltravelsv-dbdata:/var/lib/mysql
+    ports:
+      - "3312:3306"
+    networks:
+      - betheltravelsv
+    command: --default-authentication-plugin=mysql_native_password --default-time-zone='-06:00'
+
+networks:
+  betheltravelsv:
+    driver: bridge
+
+volumes:
+  betheltravelsv-dbdata:
+

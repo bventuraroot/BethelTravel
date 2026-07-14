@@ -1,0 +1,1517 @@
+@php
+    $configData = Helper::appClasses();
+@endphp
+
+@extends('layouts/layoutMaster')
+
+@section('vendor-style')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.css') }}" />
+    <link rel="stylesheet"
+        href="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/jquery-timepicker/jquery-timepicker.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/pickr/pickr-themes.css') }}" />
+@endsection
+
+@section('vendor-script')
+    <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/cleavejs/cleave.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/jquery-timepicker/jquery-timepicker.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/pickr/pickr.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endsection
+
+<!-- Modal de Detalles de Reemisión -->
+<div class="modal fade" id="reemitDetailsModal" tabindex="-1" aria-labelledby="reemitDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reemitDetailsModalLabel">Detalles de Reemisión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info d-none" id="reemitModalStatus"></div>
+                <h6>Mensaje:</h6>
+                <p id="reemitModalMessage"></p>
+                <hr>
+                <h6>Detalles de Hacienda:</h6>
+                <p id="reemitModalErrorDetails" class="text-danger fw-bold"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section('page-script')
+    <script src="{{ asset('assets/js/app-sale-list.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '{!! session('success') !!}',
+                    customClass: { confirmButton: 'btn btn-success' }
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{!! session('error') !!}',
+                    customClass: { confirmButton: 'btn btn-danger' }
+                });
+            @endif
+        });
+    </script>
+    <script>
+    /**
+     * Expande/colapsa las ventas hijas de una venta padre
+     */
+    function toggleChildren(parentId) {
+        const icon = document.getElementById('icon-' + parentId);
+        const isExpanded = icon.classList.contains('ti-chevron-down');
+
+        if (isExpanded) {
+            // Colapsar
+            $(`.child-sale-row[data-parent-id="${parentId}"]`).remove();
+            icon.classList.remove('ti-chevron-down');
+            icon.classList.add('ti-chevron-right');
+        } else {
+            // Expandir - cargar hijos via AJAX
+            icon.classList.remove('ti-chevron-right');
+            icon.classList.add('ti-chevron-down');
+
+            // Mostrar loading
+            const parentRow = $(`tr[data-sale-id="${parentId}"]`);
+            parentRow.after(`
+                <tr class="child-sale-row loading-row" data-parent-id="${parentId}">
+                    <td colspan="9" class="py-3 text-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        Cargando DTEs hijos...
+                    </td>
+                </tr>
+            `);
+
+            // Cargar hijos
+            $.ajax({
+                url: `/sale/get-child-sales/${parentId}`,
+                method: 'GET',
+                success: function(children) {
+                    // Remover loading
+                    $(`.loading-row[data-parent-id="${parentId}"]`).remove();
+
+                    if (children.length === 0) {
+                        parentRow.after(`
+                            <tr class="child-sale-row" data-parent-id="${parentId}">
+<td colspan="9" class="py-2 text-center text-muted">
+                                <i class="ti ti-info-circle me-1"></i>No hay DTEs hijos
+                                </td>
+                            </tr>
+                        `);
+                        return;
+                    }
+
+                    // Base URL para rutas (construir desde la ruta actual)
+                    const baseUrl = window.location.origin;
+
+                    // Renderizar todos los hijos en orden inverso para que aparezcan en orden correcto
+                    let childRows = '';
+                    children.forEach((child, index) => {
+                        // Verificar si está invalidado (state == 0)
+                        const isInvalidated = child.state == 0;
+
+                        // Estado DTE: priorizar invalidado sobre otros estados
+                        const dteStatus = isInvalidated
+                            ? '<span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>'
+                            : (child.has_dte
+                                ? (child.is_success
+                                    ? '<span class="badge bg-success">PROCESADO</span>'
+                                    : '<span class="badge bg-danger">ERROR</span>')
+                                : '<span class="badge bg-warning">PENDIENTE</span>');
+
+                        const provider = child.acuenta || 'Servicio Propio';
+
+                        // Estilo para fila invalidada
+                        const rowClass = isInvalidated ? 'child-sale-row bg-light invalidated-row' : 'child-sale-row bg-light';
+                        const rowStyle = isInvalidated ? 'opacity: 0.7; text-decoration: line-through;' : '';
+
+                        const reemitBtn = child.can_reemit
+                            ? `<button type="button" 
+                                  onclick="reemitirDte(${child.id}, ${parentId})"
+                                  class="btn btn-icon btn-sm btn-warning me-1"
+                                  title="Reemitir DTE">
+                                  <i class="ti ti-refresh"></i>
+                               </button>`
+                            : '';
+
+                        const printBtn = child.has_dte
+                            ? `<a href="${baseUrl}/sale/sale/print/${child.id}"
+                                  class="btn btn-icon btn-sm btn-outline-secondary me-1"
+                                  target="_blank"
+                                  title="Imprimir DTE">
+                                  <i class="ti ti-printer"></i>
+                               </a>`
+                            : '';
+
+                        // Botón de anular (solo si no está anulado)
+                        const cancelBtn = (child.state != 0)
+                            ? `<div class="btn-group">
+                                  <button type="button" class="btn btn-icon btn-sm btn-outline-secondary dropdown-toggle"
+                                          data-bs-toggle="dropdown"
+                                          title="Más opciones">
+                                      <i class="ti ti-dots-vertical"></i>
+                                  </button>
+                                  <div class="dropdown-menu">
+                                      <a href="javascript:cancelsale(${child.id});" class="dropdown-item">
+                                          <i class="ti ti-x me-2"></i>Anular
+                                      </a>
+                                  </div>
+                               </div>`
+                            : '';
+
+                        // Mostrar correlativo del DTE (id_doc) si existe, sino el ID de la venta
+                        const correlativo = child.correlativo_dte || child.id;
+                        const correlativoStyle = child.correlativo_dte
+                            ? 'color: green; font-weight: bold; font-size: 0.7rem;'
+                            : '';
+
+                        // Tipo de documento fiscal
+                        const docType = child.document_type || 'DTE Hijo';
+
+                        childRows += `
+                            <tr class="${rowClass}" data-parent-id="${parentId}" style="${rowStyle}">
+                                <td>
+                                    <div class="d-flex align-items-center ps-4">
+                                        ${reemitBtn}
+                                        ${printBtn}
+                                        ${cancelBtn}
+                                    </div>
+                                </td>
+                                <td style="${correlativoStyle}">
+                                    <i class="ti ti-corner-down-right text-muted me-1"></i>
+                                    <small>${correlativo}</small>
+                                </td>
+                                <td>
+                                    <small>${child.date}</small>
+                                    ${child.created_at ? `<br><small class="text-muted" style="font-size: 0.7rem;">${child.created_at}</small>` : ''}
+                                </td>
+                                <td>
+                                    <small>${child.date_venta || 'N/A'}</small>
+                                </td>
+                                <td>
+                                    <small>${docType}</small>
+                                    <br><small class="badge bg-info" style="font-size: 0.65rem;">${provider}</small>
+                                </td>
+                                <td>
+                                    ${dteStatus}
+                                    ${isInvalidated && child.dte_invalidacion
+                                        ? `<br><small class="text-danger" style="font-size: 0.65rem;"><i class="ti ti-alert-circle"></i> Invalidado: ${child.dte_invalidacion.fhRecibido ? new Date(child.dte_invalidacion.fhRecibido).toLocaleDateString('es-SV') : 'N/A'}</small>`
+                                        : ''}
+                                </td>
+                                <td><small>${child.parent_client_name || '-'}</small></td>
+                                <td class="text-end"><small>$${parseFloat(child.totalamount).toFixed(2)}</small></td>
+                                <td>
+                                    <small>
+                                        ${child.parent_waytopay == 1
+                                            ? '<span class="badge bg-primary">CONTADO</span>'
+                                            : child.parent_waytopay == 2
+                                                ? '<span class="badge bg-secondary">CRÉDITO</span>'
+                                                : '<span class="badge bg-info">OTRO</span>'}
+                                    </small>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    // Insertar todas las filas de una vez
+                    parentRow.after(childRows);
+                },
+                error: function(xhr) {
+                    $(`.loading-row[data-parent-id="${parentId}"]`).remove();
+                    parentRow.after(`
+                        <tr class="child-sale-row" data-parent-id="${parentId}">
+                            <td colspan="9" class="py-2 text-center text-danger">
+                                <i class="ti ti-alert-circle me-1"></i>Error al cargar DTEs hijos
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+        }
+    }
+
+    /**
+     * Reemite un DTE via AJAX y muestra el error o exito en un modal
+     */
+    function reemitirDte(childId, parentId) {
+        Swal.fire({
+            title: '¿Deseas reemitir este DTE?',
+            text: "Se intentará conectar con Hacienda nuevamente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, reemitir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar loading en el modal
+                $('#reemitModalStatus').removeClass('d-none alert-success alert-danger').addClass('alert-info').text('Procesando solicitud con Hacienda...');
+                $('#reemitModalMessage').text('Por favor espera...');
+                $('#reemitModalErrorDetails').text('');
+                const reemitModal = new bootstrap.Modal(document.getElementById('reemitDetailsModal'));
+                reemitModal.show();
+
+                $.ajax({
+                    url: `/sale/reemit-child/${childId}`,
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
+                        $('#reemitModalStatus').removeClass('alert-info alert-danger').addClass('alert-success').text(response.success ? '¡Éxito!' : 'Aviso');
+                        $('#reemitModalMessage').text(response.message);
+                        
+                        if (!response.success && response.details) {
+                            $('#reemitModalStatus').removeClass('alert-success').addClass('alert-danger').text('Error');
+                            $('#reemitModalErrorDetails').text(response.details);
+                        } else if(response.data && response.data.observacionesMsg) {
+                             $('#reemitModalErrorDetails').text(response.data.observacionesMsg);
+                        } else {
+                            $('#reemitModalErrorDetails').text('Ninguno');
+                        }
+
+                        // Recargar tabla de hijos
+                        if (response.success) {
+                            setTimeout(() => {
+                                toggleChildren(parentId); // Colapsar
+                                toggleChildren(parentId); // Expandir de nuevo para refrescar
+                            }, 1500);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#reemitModalStatus').removeClass('alert-info alert-success').addClass('alert-danger').text('Error del Servidor');
+                        
+                        let errorMsg = 'Error interno del sistema';
+                        
+                        if (xhr.status === 401) {
+                            errorMsg = "Tu sesión ha expirado. Por favor, recarga la página e inicia sesión nuevamente.";
+                        } else if(xhr.responseJSON) {
+                            errorMsg = xhr.responseJSON.details || xhr.responseJSON.message || errorMsg;
+                        }
+
+                        $('#reemitModalMessage').text('Ocurrió un problema al intentar reemitir.');
+                        $('#reemitModalErrorDetails').text(errorMsg);
+                    }
+                });
+            }
+        });
+    }
+    </script>
+@endsection
+
+@section('title', 'Ventas')
+
+@section('page-style')
+<style>
+    /* Estilos específicos para la tabla de borradores */
+    .draft-table {
+        border-collapse: separate !important;
+    }
+    .draft-table thead th {
+        position: relative;
+    }
+    /* Prevenir que DataTables afecte esta tabla */
+    .draft-table_wrapper {
+        display: none !important;
+    }
+
+    /* Protección adicional contra DataTables */
+    #draft-invoices-table_wrapper {
+        display: none !important;
+    }
+
+    /* Asegurar que la tabla de borradores no reciba estilos de DataTables */
+    .draft-table .sorting,
+    .draft-table .sorting_asc,
+    .draft-table .sorting_desc {
+        background-image: none !important;
+        cursor: default !important;
+    }
+
+    /* Prevenir que DataTables procese tablas marcadas como excluidas */
+    [data-exclude-datatables="true"] {
+        pointer-events: auto !important;
+    }
+
+    /* Forzar separación de contextos entre tablas */
+    .draft-table table,
+    #draft-invoices-table {
+        isolation: isolate !important;
+    }
+
+    /* Prevenir que DataTables añada clases automáticamente a tablas de borradores */
+    .draft-table.dataTable,
+    #draft-invoices-table.dataTable {
+        display: table !important;
+    }
+
+    /* Ocultar cualquier wrapper de DataTables que se pueda generar para borradores */
+    .draft-table .dataTables_wrapper,
+    #draft-invoices-table_wrapper,
+    .draft-table_wrapper {
+        display: none !important;
+    }
+
+    /* Estilos para el scroll horizontal y vertical de la tabla principal */
+    .card-datatable .table-responsive {
+        border: 0px solid #e7eaf3;
+        border-radius: 0.375rem;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        max-height: 70vh;
+        position: relative;
+        background-color: #fff;
+    }
+
+    [data-bs-theme="dark"] .card-datatable .table-responsive {
+        background-color: #283144;
+    }
+
+    .datatables-sale {
+        margin-bottom: 0;
+        width: 100% !important;
+        table-layout: auto;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .datatables-sale th,
+    .datatables-sale td {
+        padding: 0.5rem 0.75rem;
+        vertical-align: top;
+        border-bottom: 1px solid #e7eaf3;
+        white-space: normal;
+        word-wrap: break-word;
+        font-size: 0.875rem;
+    }
+
+    /* Permitir saltos de línea pero mantener algunas columnas en una línea */
+    .datatables-sale td:nth-child(1) {
+        white-space: nowrap; /* Acciones siempre en una línea */
+    }
+
+    .datatables-sale td:nth-child(3) {
+        white-space: nowrap; /* Fecha siempre en una línea */
+    }
+
+    .datatables-sale td:nth-child(5) {
+        white-space: nowrap; /* Estado siempre en una línea */
+    }
+
+    .datatables-sale td:nth-child(7) {
+        white-space: nowrap; /* Total siempre en una línea */
+    }
+
+    .datatables-sale td:nth-child(8) {
+        white-space: nowrap; /* Forma de pago siempre en una línea */
+    }
+
+    .datatables-sale th {
+        background-color: #f8f9fa !important;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 12;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        font-size: 0.8125rem;
+        border-bottom: 2px solid #dee2e6;
+        color: #566a7f;
+    }
+
+    /* Asegurar que el header se mantenga visible durante el scroll */
+    .card-datatable .table-responsive thead {
+        position: sticky;
+        top: 0;
+        z-index: 11;
+        background-color: #f8f9fa !important;
+    }
+
+    .card-datatable .table-responsive thead tr {
+        background-color: #f8f9fa !important;
+    }
+
+    /* Background transparente - como estaba antes */
+    .card-datatable .table-responsive {
+        background-color: transparent !important;
+    }
+
+    .card-datatable {
+        background-color: transparent !important;
+    }
+
+    .datatables-sale {
+        background-color: transparent !important;
+    }
+
+    .datatables-sale tbody tr {
+        background-color: transparent !important;
+    }
+
+    .datatables-sale td {
+        background-color: transparent !important;
+    }
+
+    /* Header mantiene fondo para scroll */
+    .dark-layout .datatables-sale th,
+    .dark-layout .card-datatable .table-responsive thead,
+    .dark-layout .card-datatable .table-responsive thead tr {
+        background-color: #2f3349 !important;
+        color: #b6bee3 !important;
+        border-bottom-color: #434968 !important;
+    }
+
+    .dark-layout .datatables-sale th,
+    .dark-layout .datatables-sale td {
+        border-bottom-color: #434968 !important;
+        color: #b6bee3 !important;
+        background-color: transparent !important;
+    }
+
+    .dark-layout .card-datatable,
+    .dark-layout .card-datatable .table-responsive,
+    .dark-layout .datatables-sale {
+        background-color: transparent !important;
+    }
+
+    .dark-layout .datatables-sale tbody tr {
+        background-color: transparent !important;
+    }
+
+    .dark-layout .datatables-sale tbody tr:hover {
+        background-color: rgba(54, 59, 82, 0.5) !important;
+    }
+
+    .dark-layout .datatables-sale tbody tr td {
+        color: #b6bee3 !important;
+        background-color: transparent !important;
+    }
+
+    .dark-layout .datatables-sale tbody tr:hover td {
+        background-color: rgba(54, 59, 82, 0.5) !important;
+    }
+
+    /* Ajustar sombra en modo oscuro */
+    .dark-layout .datatables-sale th {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .datatables-sale .column-filters td {
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+    }
+
+    .datatables-sale .column-filters input {
+        width: 100%;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .datatables-sale .column-filters input:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Mejorar el campo de búsqueda global */
+    .dataTables_filter {
+        position: relative;
+    }
+
+    .dataTables_filter input {
+        padding-left: 2.5rem !important;
+    }
+
+    .dataTables_filter .ti-search {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* Indicador de búsqueda activa */
+    .dataTables_filter input:not(:placeholder-shown) {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+
+    /* Mejorar información de la tabla */
+    .dataTables_info {
+        padding-top: 0.75rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    /* Resaltar resultados de búsqueda */
+    .datatables-sale tbody tr {
+        cursor: pointer;
+    }
+
+    /* Estilos para modo oscuro - campos de búsqueda */
+    .dark-layout .dataTables_filter input {
+        background-color: #2f3349 !important;
+        border-color: #434968 !important;
+        color: #b6bee3 !important;
+    }
+
+    .dark-layout .dataTables_filter input::placeholder {
+        color: #7983bb !important;
+    }
+
+    .dark-layout .dataTables_filter .ti-search {
+        color: #7983bb !important;
+    }
+
+    .dark-layout .dataTables_filter input:not(:placeholder-shown) {
+        border-color: #7367f0 !important;
+        box-shadow: 0 0 0 0.25rem rgba(115, 103, 240, 0.25) !important;
+    }
+
+    /* Estilos para modo oscuro - información de la tabla */
+    .dark-layout .dataTables_info {
+        color: #b6bee3 !important;
+    }
+
+    .dark-layout .dataTables_length label,
+    .dark-layout .dataTables_length select {
+        color: #b6bee3 !important;
+    }
+
+    .dark-layout .dataTables_length select {
+        background-color: #2f3349 !important;
+        border-color: #434968 !important;
+    }
+
+    /* Estilos para modo oscuro - paginación */
+    .dark-layout .dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: #b6bee3 !important;
+    }
+
+    .dark-layout .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background-color: #363b52 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background-color: #7367f0 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        color: #676d7d !important;
+    }
+
+    .datatables-sale td {
+        max-width: 300px;
+    }
+
+    /* Asegurar que las columnas tengan un ancho mínimo pero permitan expansión */
+    .datatables-sale th:nth-child(1),
+    .datatables-sale td:nth-child(1) {
+        min-width: 180px;
+        width: 180px;
+    } /* Acciones */
+    .datatables-sale th:nth-child(2),
+    .datatables-sale td:nth-child(2) {
+        min-width: 120px;
+        max-width: 180px;
+    } /* Correlativo - permite expansión */
+    .datatables-sale th:nth-child(3),
+    .datatables-sale td:nth-child(3) {
+        min-width: 100px;
+        width: 100px;
+    } /* Fecha */
+    .datatables-sale th:nth-child(4),
+    .datatables-sale td:nth-child(4) {
+        min-width: 120px;
+        max-width: 290px;
+    } /* Tipo - permite expansión */
+    .datatables-sale th:nth-child(5),
+    .datatables-sale td:nth-child(5) {
+        min-width: 120px;
+        width: 120px;
+    } /* Estado */
+    .datatables-sale th:nth-child(6),
+    .datatables-sale td:nth-child(6) {
+        min-width: 200px;
+        max-width: 300px;
+    } /* Cliente - permite expansión */
+    .datatables-sale th:nth-child(7),
+    .datatables-sale td:nth-child(7) {
+        min-width: 110px;
+        width: 110px;
+        text-align: right;
+    } /* Total */
+    .datatables-sale th:nth-child(8),
+    .datatables-sale td:nth-child(8) {
+        min-width: 130px;
+        width: 130px;
+    } /* Forma de Pago */
+
+    /* Reducir tamaño de badges y botones en la tabla */
+    .datatables-sale .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .datatables-sale .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .datatables-sale .btn-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+
+    /* Estilos para modo oscuro - texto con colores específicos */
+    .dark-layout .datatables-sale td[style*="color: green"] {
+        color: #28c76f !important;
+    }
+
+    .dark-layout .datatables-sale td[style*="color: red"],
+    .dark-layout .datatables-sale .text-danger {
+        color: #ea5455 !important;
+    }
+
+    /* Asegurar que los badges se vean bien en modo oscuro */
+    .dark-layout .datatables-sale .badge.bg-success {
+        background-color: #28c76f !important;
+    }
+
+    .dark-layout .datatables-sale .badge.bg-danger {
+        background-color: #ea5455 !important;
+    }
+
+    .dark-layout .datatables-sale .badge.bg-warning {
+        background-color: #ff9f43 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .datatables-sale .badge.bg-info {
+        background-color: #00cfe8 !important;
+    }
+
+    .dark-layout .datatables-sale .badge.bg-primary {
+        background-color: #7367f0 !important;
+    }
+
+    .dark-layout .datatables-sale .badge.bg-secondary {
+        background-color: #a8aaae !important;
+    }
+
+    /* Estilos para botones en modo oscuro */
+    .dark-layout .btn-primary {
+        background-color: #7367f0 !important;
+        border-color: #7367f0 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .btn-primary:hover:not(.disabled):not(:disabled) {
+        background-color: #685dd8 !important;
+        border-color: #685dd8 !important;
+        color: #fff !important;
+        box-shadow: 0 8px 25px -8px #7367f0 !important;
+    }
+
+    .dark-layout .btn-primary:focus,
+    .dark-layout .btn-primary:active,
+    .dark-layout .btn-primary.active {
+        background-color: #685dd8 !important;
+        border-color: #685dd8 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .btn-outline-primary {
+        border-color: #7367f0 !important;
+        color: #7367f0 !important;
+        background-color: transparent !important;
+    }
+
+    .dark-layout .btn-outline-primary:hover:not(.disabled):not(:disabled) {
+        background-color: #7367f0 !important;
+        border-color: #7367f0 !important;
+        color: #fff !important;
+    }
+
+    .dark-layout .btn-outline-secondary {
+        border-color: #82868b !important;
+        color: #82868b !important;
+        background-color: transparent !important;
+    }
+
+    .dark-layout .btn-outline-secondary:hover:not(.disabled):not(:disabled) {
+        background-color: #82868b !important;
+        border-color: #82868b !important;
+        color: #fff !important;
+    }
+
+    /* Estilos para formularios en modo oscuro */
+    .dark-layout .form-control,
+    .dark-layout .form-select {
+        background-color: #2f3349 !important;
+        border-color: #434968 !important;
+        color: #b6bee3 !important;
+    }
+
+    .dark-layout .form-control:focus,
+    .dark-layout .form-select:focus {
+        background-color: #2f3349 !important;
+        border-color: #7367f0 !important;
+        color: #b6bee3 !important;
+        box-shadow: 0 0 0 0.25rem rgba(115, 103, 240, 0.25) !important;
+    }
+
+    .dark-layout .form-control::placeholder {
+        color: #7983bb !important;
+    }
+
+    .dark-layout .form-label {
+        color: #d0d2d6 !important;
+    }
+
+    /* Forzar que DataTables no oculte columnas */
+    .datatables-sale .dtr-hidden {
+        display: table-cell !important;
+    }
+
+    /* Asegurar que el wrapper de DataTables no limite el ancho */
+    .dataTables_wrapper {
+        overflow-x: auto !important;
+    }
+
+    /* Asegurar que los dropdowns funcionen correctamente */
+    .dropdown-menu {
+        z-index: 9999 !important;
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+        min-width: 160px !important;
+        padding: 0.5rem 0 !important;
+        margin: 0.125rem 0 0 !important;
+        background-color: #fff !important;
+        border: 1px solid rgba(0,0,0,.15) !important;
+        border-radius: 0.375rem !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175) !important;
+    }
+
+    /* Asegurar que el dropdown se muestre sobre DataTables */
+    .datatables-sale .dropdown-menu {
+        z-index: 9999 !important;
+        position: absolute !important;
+    }
+
+    /* Asegurar que el contenedor del dropdown tenga posición relativa */
+    .datatables-sale .btn-group {
+        position: relative !important;
+    }
+
+    .btn-group .dropdown-toggle::after {
+        display: inline-block;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: "";
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+    }
+
+    /* Asegurar que los botones del dropdown sean clickeables */
+    .dropdown-item {
+        cursor: pointer;
+        display: block;
+        width: 100%;
+        padding: 0.25rem 1rem;
+        clear: both;
+        font-weight: 400;
+        color: #212529;
+        text-align: inherit;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: transparent;
+        border: 0;
+    }
+
+    .dropdown-item:hover {
+        color: #1e2125;
+        background-color: #e9ecef;
+    }
+
+    /* Asegurar que las celdas de la tabla permitan overflow visible para dropdowns */
+    .datatables-sale td {
+        overflow: visible !important;
+        position: relative !important;
+    }
+
+    /* Asegurar que el wrapper de DataTables no corte los dropdowns */
+    .dataTables_wrapper {
+        overflow: visible !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+</style>
+@endsection
+
+@section('content')
+<style>
+    /* Estilos para ventas padre/hijo */
+    .parent-sale-row {
+        background-color: #f8f9fa !important;
+        font-weight: 500;
+    }
+
+    .child-sale-row {
+        background-color: #fafbfc !important;
+        border-left: 4px solid #7367f0 !important;
+    }
+
+    .invalidated-row {
+        background-color: #fff5f5 !important;
+        border-left: 4px solid #dc3545 !important;
+    }
+
+    .invalidated-row td {
+        color: #6c757d !important;
+    }
+
+    /* Aplicar también a filas padre invalidadas */
+    .parent-sale-row.invalidated-row {
+        background-color: #fff5f5 !important;
+        border-left: 4px solid #dc3545 !important;
+    }
+
+    .child-sale-row td {
+        font-size: 0.85rem;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .btn-expand-children {
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .btn-expand-children i {
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    /* Animación del icono */
+    .ti-chevron-down {
+        transform: rotate(90deg);
+    }
+
+    /* Indentación de hijos */
+    .child-sale-row td:first-child {
+        padding-left: 1rem !important;
+    }
+
+    /* Modo oscuro */
+    .dark-layout .parent-sale-row {
+        background-color: #2f3349 !important;
+    }
+
+    .dark-layout .child-sale-row {
+        background-color: #283144 !important;
+        border-left-color: #7367f0 !important;
+    }
+
+    .dark-layout .child-sale-row:hover {
+        background-color: #2d3650 !important;
+    }
+</style>
+    <div class="card">
+        <div class="card-header border-bottom">
+            <h5 class="mb-3 card-title">
+                <i class="ti ti-receipt me-2"></i>
+                Ventas
+            </h5>
+            <div class="gap-3 pb-2 d-flex justify-content-between align-items-center row gap-md-0">
+                <div class="col-md-4 companies"></div>
+                <div class="col-md-8 text-end">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#selectDocumentModal">
+                        <i class="ti ti-plus me-1"></i>
+                        Nueva Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card-body">
+            <form method="GET" action="{{ route('sale.index') }}" class="mb-4 row g-3 filter-form" id="filter-form" onsubmit="return validarFiltros(this)">
+                <div class="col-md-2">
+                    <label class="form-label">Fecha Desde</label>
+                    <input type="date" name="fecha_desde" id="fecha_desde" class="form-control" value="{{ request('fecha_desde') }}">
+                    <div class="invalid-feedback" id="error_fecha_desde" style="display: none;"></div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Fecha Hasta</label>
+                    <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control" value="{{ request('fecha_hasta') }}">
+                    <div class="invalid-feedback" id="error_fecha_hasta" style="display: none;"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo Documento</label>
+                    <select name="tipo_documento" id="tipo_documento" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        @foreach($tiposDocumento as $tipo)
+                            <option value="{{ $tipo->id }}" {{ request('tipo_documento') == $tipo->id ? 'selected' : '' }}>
+                                {{ $tipo->description }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Correlativo</label>
+                    <input type="text" name="correlativo" id="correlativo" class="form-control" placeholder="ID, N° Control, Cód. Generación, Sello" value="{{ request('correlativo') }}" maxlength="100">
+                    <div class="invalid-feedback" id="error_correlativo" style="display: none;"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cliente</label>
+                    <select name="cliente_id" id="cliente_id" class="form-select">
+                        <option value="">Todos los clientes</option>
+                        @foreach($clientes as $cliente)
+                            <option value="{{ $cliente->id }}" {{ request('cliente_id') == $cliente->id ? 'selected' : '' }}>
+                                @if($cliente->tpersona == 'N')
+                                    {{ $cliente->firstname . ' ' . $cliente->firstlastname }}
+                                @else
+                                    {{ $cliente->name_contribuyente ?: $cliente->comercial_name }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-search me-1"></i>
+                        Filtrar
+                    </button>
+                    <a href="{{ route('sale.index') }}" class="btn btn-outline-secondary">
+                        <i class="ti ti-x me-1"></i>
+                        Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+
+
+        <div class="card-datatable">
+            <div class="table-responsive" style="overflow-x: auto; max-width: 100%;">
+                <table class="table datatables-sale border-top">
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>CORRELATIVO</th>
+                        <th>FECHA</th>
+                        <th>FECHA VENTA</th>
+                        <th>TIPO</th>
+                        <th>ESTADO</th>
+                        <th>CLIENTE</th>
+                        <th>TOTAL</th>
+                        <th>FORMA DE PAGO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @isset($sales)
+                        @forelse($sales as $sale)
+                            @php
+                                $esAnulado = ($sale->state == 0);
+                                $rowClass = $sale->is_parent ? 'parent-sale-row' : '';
+                                if ($esAnulado) {
+                                    $rowClass .= ' invalidated-row';
+                                }
+                            @endphp
+                            <tr class="{{ $rowClass }}" data-sale-id="{{ $sale->id }}" style="{{ $esAnulado ? 'opacity: 0.7; text-decoration: line-through;' : '' }}">
+                                <td>
+                                    @switch($sale->typesale)
+                                        @case(1)
+                                        <div class="d-flex align-items-center">
+                                            @if($sale->is_parent && $sale->children_count > 0)
+                                                <button class="btn btn-icon btn-outline-primary btn-sm me-1 btn-expand-children"
+                                                        onclick="toggleChildren({{ $sale->id }})"
+                                                        title="Ver DTEs hijos">
+                                                    <i class="ti ti-chevron-right" id="icon-{{ $sale->id }}"></i>
+                                                </button>
+                                            @else
+                                                {{-- Solo mostrar imprimir si NO es padre --}}
+                                                <a href="{{route('sale.print', $sale->id)}}"
+                                                        class="btn btn-icon btn-outline-secondary btn-sm me-1" target="_blank" title="Imprimir">
+                                                    <i class="ti ti-printer"></i>
+                                                </a>
+                                            @endif
+                                            <a href="#"
+                                                    onclick="EnviarCorreo({{$sale->id}} ,'{{ $sale->mailClient}}','{{$sale->id_doc }}')"
+                                                    class="btn btn-icon btn-outline-success btn-sm me-1" title="Enviar por correo">
+                                                <i class="ti ti-mail"></i>
+                                            </a>
+                                            <a href="#"
+                                                    onclick="enviarFacturaElectronica({
+                                                        saleId: {{ $sale->id }},
+                                                        numeroControl: '{{ $sale->id_doc }}',
+                                                        codigoGeneracion: '{{ $sale->codigoGeneracion }}',
+                                                        selloRecepcion: '{{ $sale->selloRecibido }}',
+                                                        fechaHoraRecepcion: '{{ $sale->fhRecibido }}',
+                                                        total: {{ $sale->totalamount ?? 0 }},
+                                                        pdfUrl: '{{ route('sale.download', $sale->id) }}',
+                                                        telefonoCliente: '{{ $sale->client_phone ?? '' }}'
+                                                    })"
+                                                    class="btn btn-icon btn-outline-primary btn-sm me-1" title="Enviar factura electrónica">
+                                                <i class="ti ti-brand-whatsapp"></i>
+                                            </a>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    @if ($sale->state != 0 && !$sale->is_parent)
+                                                    <a href="javascript:cancelsale({{ $sale->id }});" class="dropdown-item">
+                                                        <i class="ti ti-x me-2"></i>Anular
+                                                    </a>
+                                                    @endif
+                                                    @if ($sale->tipoDte=="03"  && $sale->estadoHacienda=='PROCESADO' && $sale->tipoDte!="05" && $sale->relatedSale=="")
+                                                    <a href="{{ route('credit-notes.create', ['sale_id' => $sale->id]) }}" class="dropdown-item">
+                                                        <i class="ti ti-file-minus me-2"></i>Crear Nota de Crédito
+                                                    </a>
+                                                   <!-- <a href="{{ route('debit-notes.create', ['sale_id' => $sale->id]) }}" class="dropdown-item">
+                                                        <i class="ti ti-file-plus me-2"></i>Crear Nota de Débito
+                                                    </a>-->
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @break
+
+                                        @case(2)
+                                        <div class="d-flex align-items-center">
+                                            @if($sale->is_parent && $sale->children_count > 0)
+                                                <button class="btn btn-icon btn-outline-primary btn-sm me-1 btn-expand-children"
+                                                        onclick="toggleChildren({{ $sale->id }})"
+                                                        title="Ver DTEs hijos">
+                                                    <i class="ti ti-chevron-right" id="icon-{{ $sale->id }}"></i>
+                                                </button>
+                                            @endif
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="retomarsale({{ $sale->id }}, {{ $sale->typedocument_id}})">
+                                                <i class="ti ti-pencil me-1"></i>Retomar Borrador
+                                            </button>
+                                            <!--<a class="btn btn-success btn-sm ms-1" href="{{ route('sale.create') }}?corr={{ $sale->id }}&draft=true&typedocument={{ $sale->typedocument_id }}">
+                                                <i class="ti ti-send me-1"></i> Presentar Hacienda
+                                            </a>-->
+                                            @if ($sale->state != 0 && !$sale->is_parent)
+                                            <div class="btn-group ms-1">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    <a href="javascript:cancelsale({{ $sale->id }});" class="dropdown-item">
+                                                        <i class="ti ti-x me-2"></i>Anular
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        @break
+                                        @case(0)
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-muted">Sin acciones</span>
+                                        </div>
+                                        @break
+
+                                        @default
+                                        <div class="d-flex align-items-center">
+                                            @if ($sale->state != 0 && !$sale->is_parent)
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="ti ti-dots-vertical"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    <a href="javascript:cancelsale({{ $sale->id }});" class="dropdown-item">
+                                                        <i class="ti ti-x me-2"></i>Anular
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            @else
+                                            <span class="text-muted">Sin acciones</span>
+                                            @endif
+                                        </div>
+                                    @endswitch
+                                </td>
+                                @php
+                                    $esAnulado = ($sale->state == 0);
+                                    $mostrarId = $sale->id;
+                                    if (!$esAnulado && $sale->estadoHacienda=='PROCESADO' && !empty($sale->id_doc)) {
+                                        $mostrarId = $sale->id_doc;
+                                    }
+                                @endphp
+                                <td style="{{ (!$esAnulado && $sale->estadoHacienda=='PROCESADO') ? 'color: green; font-weight: bold; font-size: 0.7rem;' : '' }}">
+                                    <div class="flex-wrap d-flex align-items-center">
+                                        <span>{{ $mostrarId }}</span>
+                                        @if($sale->is_parent && $sale->children_count > 0)
+                                            <span class="badge bg-label-primary ms-2" style="font-size: 0.65rem; white-space: nowrap;">
+                                                <i class="ti ti-folder"></i> {{ $sale->children_count }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($esAnulado && !empty($sale->codigoGeneracion))
+                                        <div class="mt-1 small text-danger" style="font-size: 0.6rem;">CG: {{ $sale->codigoGeneracion }}</div>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    @php
+                                        $fechaColumna = $sale->fhRecibido ? \Carbon\Carbon::parse($sale->fhRecibido) : $sale->updated_at;
+                                    @endphp
+                                    @if($fechaColumna)
+                                        {{ $fechaColumna->format('d/m/Y') }}
+                                        <br><small class="text-muted" style="font-size: 0.7rem;">{{ $fechaColumna->format('H:i') }}</small>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($sale->date)
+                                        {{ \Carbon\Carbon::parse($sale->date)->format('d/m/Y') }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td>{{ $sale->document_name ?? 'N/A' }}</td>
+                                <td>
+                                    @if($sale->typesale == 2)
+                                        <span class="badge bg-warning">BORRADOR</span>
+                                    @else
+                                        @php
+                                            // Buscar DTE de invalidación si está anulado
+                                            $dteInvalidacion = null;
+                                            if ($sale->state == 0) {
+                                                $dteInvalidacion = \App\Models\Dte::where('sale_id', $sale->id)
+                                                    ->where('codTransaction', '02')
+                                                    ->latest()
+                                                    ->first();
+                                            }
+                                        @endphp
+
+                                        @switch($sale->state)
+                                            @case(0)
+                                                <span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>
+                                                @if($dteInvalidacion && $dteInvalidacion->fhRecibido)
+                                                    <br><small class="text-danger" style="font-size: 0.65rem;">
+                                                        <i class="ti ti-alert-circle"></i> Invalidado: {{ \Carbon\Carbon::parse($dteInvalidacion->fhRecibido)->format('d/m/Y H:i') }}
+                                                    </small>
+                                                @endif
+                                            @break
+
+                                            @case(1)
+                                                @if($sale->estadoHacienda == 'PROCESADO')
+                                                    <span class="badge bg-success">PROCESADO</span>
+                                                @else
+                                                    <span class="badge bg-success">CONFIRMADO</span>
+                                                @endif
+                                            @break
+
+                                            @case(2)
+                                                <span class="badge bg-warning">PENDIENTE</span>
+                                            @break
+
+                                            @case(3)
+                                                <span class="badge bg-info">FACTURADO</span>
+                                            @break
+
+                                            @default
+                                        @endswitch
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($sale->tpersona == 'N')
+                                        {{ trim($sale->firstname . ' ' . $sale->firstlastname) }}
+                                    @elseif($sale->tpersona == 'J')
+                                        {{ $sale->nameClient ? substr($sale->nameClient, 0, 50) : 'N/A' }}
+                                    @else
+                                        {{ $sale->nameClient ?? ($sale->firstname . ' ' . $sale->firstlastname) ?? 'N/A' }}
+                                    @endif
+                                </td>
+                                <td>$ {{ $sale->totalamount ? number_format($sale->totalamount, 2, '.', ',') : '0.00' }}</td>
+
+                                <td>
+                                    @switch($sale->waytopay)
+                                        @case(1)
+                                            <span class="badge bg-primary">CONTADO</span>
+                                        @break
+
+                                        @case(2)
+                                            <span class="badge bg-secondary">CRÉDITO</span>
+                                        @break
+
+                                        @case(3)
+                                            <span class="badge bg-info">OTRO</span>
+                                        @break
+
+                                        @default
+                                    @endswitch
+                                </td>
+
+                            </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">No hay ventas registradas</td>
+                                </tr>
+                            @endforelse
+                        @endisset
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para seleccionar tipo de documento -->
+    <div class="modal fade" id="selectDocumentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-simple modal-pricing">
+          <div class="p-3 modal-content p-md-5">
+            <button type="button" class="btn-close btn-pinned" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body">
+              <div class="mb-4 text-center">
+                <h3 class="mb-2">
+                    <i class="ti ti-file-text me-2"></i>
+                    Documentos disponibles
+                </h3>
+                <p class="text-muted">Seleccione el tipo de documento que desea crear</p>
+              </div>
+              <form id="selectDocumentForm" class="row" action="{{Route('sale.create')}}" method="GET">
+                @csrf @method('GET')
+                <input type="hidden" name="iduser" id="iduser" value="{{Auth::user()->id}}">
+                <div id="wizard-create-deal" class="mt-2 bs-stepper vertical">
+                    <div class="bs-stepper-content">
+                        <!-- Deal Type -->
+                        <div id="deal-type" class="content">
+                          <div class="row g-3">
+                            <div class="pt-4 border rounded col-12 d-flex justify-content-center">
+                              <img src="{{ asset('assets/img/illustrations/auth-register-illustration-'.$configData['style'].'.png') }}" alt="wizard-create-deal" data-app-light-img="illustrations/auth-register-illustration-light.png" data-app-dark-img="illustrations/auth-register-illustration-dark.png" width="200" class="img-fluid">
+                            </div>
+                            <div class="pb-2 col-12">
+                              <div class="row">
+                                <div class="mb-2 col-md mb-md-0">
+                                  <div class="form-check custom-option custom-option-icon">
+                                    <label class="form-check-label custom-option-content" for="factura">
+                                      <span class="custom-option-body">
+                                        <i class="mb-2 ti ti-receipt-2"></i>
+                                        <span class="custom-option-title">FACTURA CONSUMIDOR FINAL</span>
+                                        <small>Creación de factura para personas naturales contribuyentes o no contribuyentes</small>
+                                      </span>
+                                      <input name="typedocument" class="form-check-input" type="radio" value="6" id="factura" checked />
+                                    </label>
+                                  </div>
+                                </div>
+                                <div class="mb-2 col-md mb-md-0">
+                                  <div class="form-check custom-option custom-option-icon">
+                                    <label class="form-check-label custom-option-content" for="fiscal">
+                                      <span class="custom-option-body">
+                                        <i class="mb-2 ti ti-receipt"></i>
+                                        <span class="custom-option-title">COMPROBANTE DE CREDITO FISCAL</span>
+                                        <small>Creación de documentos donde necesitas una persona natural o jurídica que declare IVA</small>
+                                      </span>
+                                      <input name="typedocument" class="form-check-input" type="radio" value="3" id="fiscal" />
+                                    </label>
+                                  </div>
+                                </div>
+                                <div class="mb-2 col-md mb-md-0">
+                                  <div class="form-check custom-option custom-option-icon">
+                                    <label class="form-check-label custom-option-content" for="nota">
+                                      <span class="custom-option-body">
+                                        <i class="mb-2 ti ti-receipt-refund"></i>
+                                        <span class="custom-option-title">FACTURAS DE SUJETO EXCLUIDO</span>
+                                        <small>Creación de documento para que el impuesto no es aplicable a la operación que se realiza.</small>
+                                      </span>
+                                      <input name="typedocument" class="form-check-input" type="radio" value="8" id="nota" />
+                                    </label>
+                                  </div>
+                                </div>
+                                <div class="mb-2 col-md mb-md-0">
+                                    <div class="form-check custom-option custom-option-icon">
+                                      <label class="form-check-label custom-option-content" for="exportacion">
+                                        <span class="custom-option-body">
+                                          <i class="mb-2 ti ti-world-upload"></i>
+                                          <span class="custom-option-title">FACTURA DE EXPORTACIÓN</span>
+                                          <small>Creación de documento para exportaciones internacionales.</small>
+                                        </span>
+                                        <input name="typedocument" class="form-check-input" type="radio" value="7" id="exportacion" />
+                                      </label>
+                                    </div>
+                                  </div>
+                                <div class="mb-2 col-md mb-md-0">
+                                    <div class="form-check custom-option custom-option-icon">
+                                      <label class="form-check-label custom-option-content" for="liquidacion">
+                                        <span class="custom-option-body">
+                                          <i class="mb-2 ti ti-file-invoice"></i>
+                                          <span class="custom-option-title">COMPROBANTE DE LIQUIDACIÓN</span>
+                                          <small>Creación de documento de liquidación para agentes de retención o percepción.</small>
+                                        </span>
+                                        <input name="typedocument" class="form-check-input" type="radio" value="2" id="liquidacion" />
+                                      </label>
+                                    </div>
+                                  </div>
+                                <div class="mt-4 col-12 d-flex justify-content-center">
+                                    <button class="btn btn-success btn-submit btn-next">
+                                        <span class="align-center d-sm-inline-block d-none me-sm-1">Comenzar</span>
+                                        <i class="ti ti-arrow-right ti-xs"></i>
+                                    </button>
+                                </div>
+                              </div>
+                            </div>
+                    </div>
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+<script>
+// Validar filtros antes de enviar el formulario
+function validarFiltros(form) {
+    let isValid = true;
+
+    // Ocultar mensajes de error anteriores
+    document.querySelectorAll('.invalid-feedback').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.form-control.is-invalid, .form-select.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+    });
+
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const correlativo = document.getElementById('correlativo').value.trim();
+
+    // Validar rango de fechas
+    if (fechaDesde && fechaHasta) {
+        if (fechaDesde > fechaHasta) {
+            document.getElementById('fecha_desde').classList.add('is-invalid');
+            document.getElementById('error_fecha_desde').textContent = 'La fecha desde no puede ser mayor que la fecha hasta';
+            document.getElementById('error_fecha_desde').style.display = 'block';
+            document.getElementById('fecha_hasta').classList.add('is-invalid');
+            document.getElementById('error_fecha_hasta').textContent = 'La fecha hasta no puede ser menor que la fecha desde';
+            document.getElementById('error_fecha_hasta').style.display = 'block';
+            isValid = false;
+        }
+    }
+
+    // Validar formato de correlativo (alfanuméricos, guiones, guiones bajos y espacios para búsqueda parcial)
+    if (correlativo && !/^[a-zA-Z0-9\-\_\s]+$/.test(correlativo)) {
+        document.getElementById('correlativo').classList.add('is-invalid');
+        document.getElementById('error_correlativo').textContent = 'El correlativo solo puede contener letras, números, guiones y guiones bajos';
+        document.getElementById('error_correlativo').style.display = 'block';
+        isValid = false;
+    }
+
+    if (!isValid) {
+        // Mostrar mensaje de error general
+        Swal.fire({
+            title: 'Error de validación',
+            text: 'Por favor corrija los errores en el formulario',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    }
+
+    return isValid;
+}
+
+function enviarFacturaElectronica({ saleId, numeroControl, codigoGeneracion, selloRecepcion, fechaHoraRecepcion, total, pdfUrl, telefonoCliente }) {
+    Swal.fire({
+        title: 'Número de WhatsApp',
+        input: 'tel',
+        inputLabel: 'Confirma o edita el número del cliente',
+        inputValue: telefonoCliente || '',
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Enviar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: (phone) => {
+            const cleaned = (phone || '').replace(/[^\d+]/g, '');
+            if (!cleaned) {
+                Swal.showValidationMessage('Ingresa un número válido');
+                return false;
+            }
+            return cleaned;
+        }
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const phone = result.value;
+
+        fetch('{{ route('sale.send-n8n') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                sale_id: saleId,
+                numero_control: numeroControl || null,
+                codigo_generacion: codigoGeneracion || null,
+                sello_recepcion: selloRecepcion || null,
+                fecha_hora_recepcion: fechaHoraRecepcion || null,
+                total: total,
+                pdf_url: pdfUrl,
+                phone: phone
+            })
+        })
+        .then(async (resp) => {
+            const text = await resp.text();
+            let data;
+            try { data = JSON.parse(text); } catch { data = { raw: text }; }
+            if (resp.ok && data && data.success !== false) {
+                Swal.fire('¡Enviado!', 'Se inició el envío de la factura.', 'success');
+            } else {
+                const msg = (data && (data.message || (data.data && data.data.message))) || resp.statusText || 'No se pudo enviar la factura.';
+                Swal.fire('Error', msg, 'error');
+            }
+        })
+        .catch((err) => {
+            Swal.fire('Error', (err && err.message) ? err.message : 'No se pudo contactar con el servidor.', 'error');
+        });
+    });
+}
+</script>
+@endsection

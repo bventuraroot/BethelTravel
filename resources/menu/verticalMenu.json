@@ -1,0 +1,214 @@
+{
+    "menu": [
+        {
+            "url": "/",
+            "name": "Home",
+            "icon": "menu-icon fa-solid fa-home",
+            "slug": "dashboard"
+        },
+        {
+            "name": "Administracion",
+            "icon": "menu-icon fa-solid fa-shield",
+            "slug": "user.index",
+            "badge": ["primary", "2"],
+            "submenu": [
+                {
+                    "url": "/user/index",
+                    "name": "Usuarios",
+                    "slug": "user.index"
+                },
+                {
+                    "url": "/rol/index",
+                    "name": "Roles",
+                    "slug": "user.rol.index"
+                },
+                {
+                    "url": "/permission/index",
+                    "name": "Permisos",
+                    "slug": "user.permission.index"
+                }
+            ]
+        },
+        {
+            "url": "/company/index",
+            "name": "Empresas",
+            "icon": "menu-icon fa-solid fa-id-badge",
+            "slug": "company.index"
+        },
+        {
+            "url": "/client/index",
+            "name": "Clientes",
+            "icon": "menu-icon fa-solid fa-user-plus",
+            "slug": "client.index"
+        },
+        {
+            "name": "Produccion",
+            "icon": "menu-icon fa-solid fa-feed",
+            "slug": "user.index",
+            "badge": ["primary", "2"],
+            "submenu": [
+                {
+                    "url": "/product/index",
+                    "name": "Productos",
+                    "slug": "product.index"
+                },
+                {
+                    "url": "/provider/index",
+                    "name": "Proveedores",
+                    "slug": "provider.index"
+                }
+            ]
+        },
+        {
+            "name": "Ventas",
+            "icon": "menu-icon fa-solid fa-dollar",
+            "slug": "sale.index",
+            "submenu": [
+                {
+                    "url": "/sale/index",
+                    "name": "Facturas",
+                    "slug": "sale.index"
+                },
+                {
+                    "url": "/credit-notes",
+                    "name": "Notas de Crédito",
+                    "slug": "credit-notes.index"
+                },
+                {
+                    "url": "/debit-notes",
+                    "name": "Notas de Débito",
+                    "slug": "debit-notes.index"
+                }
+            ]
+        },
+        {
+            "url": "/purchase/index",
+            "name": "Compras",
+            "icon": "menu-icon fa-solid fa-truck",
+            "slug": "purchase.index"
+        },
+        {
+            "url": "/credit/index",
+            "name": "Creditos",
+            "icon": "menu-icon fa-solid fa-credit-card",
+            "slug": "credit.index"
+        },
+        {
+            "url": "/correlativos",
+            "name": "Correlativos",
+            "icon": "menu-icon fa-solid fa-list-ol",
+            "slug": "correlativos.index"
+        },
+        {
+            "url": "/dte/estadisticas",
+            "name": "DTE",
+            "icon": "menu-icon fa-solid fa-file-invoice",
+            "slug": "dte.estadisticas"
+        },
+        {
+            "url": "/firmador/test",
+            "name": "Firmador",
+            "icon": "menu-icon fa-solid fa-server",
+            "slug": "firmador.test"
+        },
+        {
+            "url": "/report/index",
+            "name": "Reportes",
+            "icon": "menu-icon fa-solid fa-line-chart",
+            "slug": "report.index",
+            "badge": ["primary", "6"],
+            "submenu": [
+                {
+                    "url": "/report/sales",
+                    "name": "Ventas",
+                    "slug": "report.sales"
+                },
+                {
+                    "url": "/agro-report/sales-by-client",
+                    "name": "Ventas por Clientes",
+                    "slug": "agro-report.sales-by-client"
+                },
+                {
+                    "url": "/report/contribuyentes",
+                    "name": "Ventas Contribuyentes",
+                    "slug": "report.contribuyentes"
+                },
+                {
+                    "url": "/report/directas",
+                    "name": "Ventas Directas",
+                    "slug": "report.directas"
+                },
+                {
+                    "url": "/report/consumidor",
+                    "name": "Ventas Consumidor",
+                    "slug": "report.consumidor"
+                },
+                {
+                    "url": "/report/liquidacion",
+                    "name": "Comprobantes de Liquidación",
+                    "slug": "report.liquidacion"
+                },
+                {
+                    "url": "/report/clq-detalle",
+                    "name": "Detalle Facturas por CLQ",
+                    "slug": "report.clqDetalle"
+                },
+                {
+                    "url": "/report/facturas-terceros",
+                    "name": "Facturas Terceros (Mandante)",
+                    "slug": "report.facturasTerceros"
+                },
+                {
+                    "url": "/report/purchases",
+                    "name": "Compras",
+                    "slug": "report.purchases"
+                },
+                {
+                    "url": "/report/bookpurchases",
+                    "name": "Libro de Compras",
+                    "slug": "report.bookpurchases"
+                },
+                {
+                    "url": "/report/reportyear",
+                    "name": "Ventas y compras por año",
+                    "slug": "report.reportyear"
+                },
+                {
+                    "url": "/report/hacienda-anexos",
+                    "name": "Anexos de Hacienda (F-07)",
+                    "slug": "report.hacienda-anexos"
+                }
+            ]
+        },
+        {
+            "url": "/factmh/index",
+            "name": "Administracion DTE",
+            "icon": "menu-icon fa-solid fa-satellite-dish",
+            "slug": "factmh.index",
+            "badge": ["primary", "5"],
+            "submenu": [
+                {
+                    "url": "/factmh/contingencias",
+                    "name": "Contingencias",
+                    "slug": "factmh.contingencias"
+                },
+                {
+                    "url": "/factmh/test_crt",
+                    "name": "Muestra Enviados",
+                    "slug": "factmh.test_crt"
+                },
+                {
+                    "url": "/config/index",
+                    "name": "Configuraciones Ambiente",
+                    "slug": "config.index"
+                }
+            ]
+        },
+        {
+            "url": "/manuals",
+            "name": "Manuales",
+            "icon": "menu-icon fa-solid fa-book",
+            "slug": "manuals.index"
+        }
+    ]
+}
