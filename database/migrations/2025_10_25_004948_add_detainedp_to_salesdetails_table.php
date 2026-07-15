@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('salesdetails', function (Blueprint $table) {
-            $table->decimal('detainedP', 12, 8)->default(0)->after('detained');
+            if (!Schema::hasColumn('salesdetails', 'detainedP')) {
+                $table->decimal('detainedP', 12, 8)->default(0)->after('detained');
+            }
         });
     }
 
@@ -26,7 +28,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('salesdetails', function (Blueprint $table) {
-            $table->dropColumn('detainedP');
+            if (Schema::hasColumn('salesdetails', 'detainedP')) {
+                $table->dropColumn('detainedP');
+            }
         });
     }
 };

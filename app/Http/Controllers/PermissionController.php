@@ -57,6 +57,33 @@ class PermissionController extends Controller
         $result = DB::select(DB::raw($rolhasuser));
         //dd($result);
 
+        $pendingPrecheckinsCount = 0;
+        try {
+            if (\Schema::hasTable('salesdetails')) {
+                $diasAntes = 2;
+                if (\Schema::hasTable('precheckin_configs')) {
+                    $config = DB::table('precheckin_configs')->first();
+                    if ($config) {
+                        $diasAntes = $config->dias_antes;
+                    }
+                }
+                
+                $fechaLimite = now()->addDays($diasAntes)->toDateString();
+                $hoy = now()->toDateString();
+                
+                $pendingPrecheckinsCount = DB::table('salesdetails')
+                    ->whereNotNull('reserva')
+                    ->where('reserva', '!=', '')
+                    ->where('precheckin_status', 'pendiente')
+                    ->whereNotNull('fecha_viaje')
+                    ->where('fecha_viaje', '<=', $fechaLimite)
+                    ->where('fecha_viaje', '>=', $hoy)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            \Log::error("Error calculando badge prechequeo: " . $e->getMessage());
+        }
+
         $menu = [
             [
                 "url" => "/",
@@ -132,6 +159,13 @@ class PermissionController extends Controller
                 "name" => "Ventas",
                 "icon" => "menu-icon fa-solid fa-dollar",
                 "slug" => "sale.index"
+            ],
+            [
+                "url" => "/precheckin",
+                "name" => "Reservas y Prechequeo",
+                "icon" => "menu-icon fa-solid fa-plane-departure",
+                "slug" => "precheckin.index",
+                "badge" => ["danger", (string)$pendingPrecheckinsCount]
             ],
             [
                 "url" => "/purchase/index",

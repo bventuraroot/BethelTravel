@@ -30,7 +30,13 @@ class Salesdetail extends Model
         'linea',
         'canal',
         'user_id',
-        'description'
+        'description',
+        'fecha_viaje',
+        'precheckin_status',
+        'precheckin_notes',
+        'precheckin_email_sent',
+        'precheckin_email_sent_at',
+        'precheckin_completed_at'
     ];
 
     protected $casts = [
@@ -44,6 +50,10 @@ class Salesdetail extends Model
         'detained' => 'decimal:8',
         'detainedP' => 'decimal:8',
         'detained13' => 'decimal:8',
+        'precheckin_email_sent' => 'boolean',
+        'fecha_viaje' => 'date',
+        'precheckin_email_sent_at' => 'datetime',
+        'precheckin_completed_at' => 'datetime'
     ];
 
     /**
@@ -68,5 +78,13 @@ class Salesdetail extends Model
     public function lineProvider()
     {
         return $this->belongsTo(Provider::class, 'line_provider_id');
+    }
+
+    /**
+     * Relación con la aerolínea
+     */
+    public function airline()
+    {
+        return $this->belongsTo(Airline::class, 'linea', 'id_aerolinea');
     }
 }

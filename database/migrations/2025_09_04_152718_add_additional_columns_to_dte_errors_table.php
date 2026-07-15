@@ -14,6 +14,10 @@ return new class extends Migration
     public function up()
     {
         if (Schema::hasTable('dte_errors')) {
+            try {
+                \DB::statement("ALTER TABLE dte_errors MODIFY COLUMN tipo_error VARCHAR(150) NULL");
+            } catch (\Exception $e) {}
+
             Schema::table('dte_errors', function (Blueprint $table) {
                 // Agregar solo las columnas que faltan
                 if (!Schema::hasColumn('dte_errors', 'intentos_realizados')) {

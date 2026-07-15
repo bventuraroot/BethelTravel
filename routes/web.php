@@ -445,6 +445,15 @@ Route::middleware('auth')->group(function () {
         Route::get('getairlineid/{id}', [App\Http\Controllers\AirlineController::class, 'getairlineid'])->name('getairlineid');
         Route::get('destroy/{id}', [App\Http\Controllers\AirlineController::class, 'destroy'])->name('destroy');
     });
+
+    // Gestión de Reservas y Prechequeo
+    Route::group(['prefix' => 'precheckin', 'as' => 'precheckin.'], function(){
+        Route::get('/', [App\Http\Controllers\PrecheckinController::class, 'index'])->name('index');
+        Route::get('data', [App\Http\Controllers\PrecheckinController::class, 'getData'])->name('data');
+        Route::post('update-status/{id}', [App\Http\Controllers\PrecheckinController::class, 'updateStatus'])->name('update-status');
+        Route::post('config', [App\Http\Controllers\PrecheckinController::class, 'saveConfig'])->name('config');
+        Route::post('send-mail/{id}', [App\Http\Controllers\PrecheckinController::class, 'sendMailManual'])->name('send-mail');
+    });
 });
 });
 });

@@ -15,12 +15,20 @@ return new class extends Migration
     {
         Schema::table('config', function (Blueprint $table) {
             // Agregar campos para control de emisión DTE
-            $table->boolean('dte_emission_enabled')->default(true)->after('nameCountry');
-            $table->text('dte_emission_notes')->nullable()->after('dte_emission_enabled');
-
-            // Agregar índice para mejorar consultas
-            $table->index(['company_id', 'dte_emission_enabled']);
+            if (!Schema::hasColumn('config', 'dte_emission_enabled')) {
+                $table->boolean('dte_emission_enabled')->default(true)->after('nameCountry');
+            }
+            if (!Schema::hasColumn('config', 'dte_emission_notes')) {
+                $table->text('dte_emission_notes')->nullable()->after('dte_emission_enabled');
+            }
         });
+
+        try {
+            Schema::table('config', function (Blueprint $table) {
+                // Agregar índice para mejorar consultas
+                $table->index(['company_id', 'dte_emission_enabled']);
+            });
+        } catch (\Exception $e) {}
     }
 
     /**
@@ -30,15 +38,24 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('config', function (Blueprint $table) {
-            // Eliminar índice primero
-            $table->dropIndex(['company_id', 'dte_emission_enabled']);
+        try {
+            Schema::table('config', function (Blueprint $table) {
+                // Eliminar índice primero
+                $table->dropIndex(['company_id', 'dte_emission_enabled']);
+            });
+        } catch (\Exception $e) {}
 
-            // Eliminar columnas agregadas
-            $table->dropColumn([
-                'dte_emission_enabled',
-                'dte_emission_notes'
-            ]);
+        Schema::table('config', function (Blueprint $table) {
+            $columns = [];
+            if (Schema::hasColumn('config', 'dte_emission_enabled')) {
+                $columns[] = 'dte_emission_enabled';
+            }
+            if (Schema::hasColumn('config', 'dte_emission_notes')) {
+                $columns[] = 'dte_emission_notes';
+            }
+            if (!empty($columns)) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };

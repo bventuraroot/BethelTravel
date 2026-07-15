@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sales', function (Blueprint $table) {
-            // Aumentar precisión de decimales de (5,2) a (10,8) para mayor precisión en cálculos
-            $table->decimal('totalamount', 10, 8)->nullable()->change();
+            // Aumentar precisión de decimales de (5,2) a (18,8) para mayor precisión en cálculos
+            $table->decimal('totalamount', 18, 8)->nullable()->change();
         });
     }
 

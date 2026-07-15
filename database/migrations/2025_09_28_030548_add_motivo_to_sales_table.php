@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('sales', function (Blueprint $table) {
-            $table->text('motivo')->nullable()->comment('Motivo para notas de crédito/débito');
+            if (!Schema::hasColumn('sales', 'motivo')) {
+                $table->text('motivo')->nullable()->comment('Motivo para notas de crédito/débito');
+            }
         });
     }
 
@@ -26,7 +28,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('sales', function (Blueprint $table) {
-            $table->dropColumn('motivo');
+            if (Schema::hasColumn('sales', 'motivo')) {
+                $table->dropColumn('motivo');
+            }
         });
     }
 };

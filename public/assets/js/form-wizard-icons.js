@@ -358,6 +358,7 @@ function agregarp() {
     //alert(productid);
     var reserva = $('#reserva').val() || '';
     var ruta = $('#ruta').val() || '';
+    var fecha_viaje = $('#fecha_viaje').val() || '';
 
     // Capturar valores de select2 de manera más robusta
     var destino = '';
@@ -394,8 +395,8 @@ function agregarp() {
     if (productosConInfo.includes(productid.toString())) {
         // Para productos que requieren información adicional, validar campos obligatorios
         if (productid == 9) {
-            if (!reserva || !ruta || !destino || !linea || !canal) {
-                swal.fire("Favor complete la información del producto");
+            if (!reserva || !ruta || !destino || !linea || !canal || !fecha_viaje) {
+                swal.fire("Favor complete la información del producto (incluyendo la fecha de viaje)");
                 return;
             }
         }
@@ -405,6 +406,7 @@ function agregarp() {
         if (!destino) destino = "";
         if (!linea) linea = "";
         if (!canal) canal = "";
+        if (!fecha_viaje) fecha_viaje = "";
     } else {
         // Si el producto no requiere información adicional, enviar valores vacíos
         reserva = "";
@@ -412,6 +414,7 @@ function agregarp() {
         destino = "";
         linea = "";
         canal = "";
+        fecha_viaje = "";
     }
     var typedoc = $('#typedocument').val();
     var clientid = $("#client").val();
@@ -591,6 +594,7 @@ function agregarp() {
     destino = nz(destino, '');
     linea = nz(linea, '');
     canal = nz(canal, '');
+    fecha_viaje = nz(fecha_viaje, '');
     descriptionbyproduct = nz(descriptionbyproduct, '');
 
     // Validación final para evitar valores undefined en la URL
@@ -599,6 +603,7 @@ function agregarp() {
     if (reserva === undefined || reserva === 'undefined') reserva = '';
     if (ruta === undefined || ruta === 'undefined') ruta = '';
     if (canal === undefined || canal === 'undefined') canal = '';
+    if (fecha_viaje === undefined || fecha_viaje === 'undefined') fecha_viaje = '';
     if (descriptionbyproduct === undefined || descriptionbyproduct === 'undefined') descriptionbyproduct = '';
 
 
@@ -631,6 +636,7 @@ function agregarp() {
         destino: destino,
         linea: linea,
         canal: canal,
+        fecha_viaje: fecha_viaje,
         description: descriptionbyproduct,
         tipoVenta: type,
         retencion_agente: retencion_agente_actual,
@@ -1001,6 +1007,7 @@ function limpiarCamposProducto() {
     // Limpiar campos de información adicional
     $('#reserva').val('');
     $('#ruta').val('');
+    $('#fecha_viaje').val('');
     $('#destino').val(null).trigger('change');
     $('#linea').val(null).trigger('change');
     $('#canal').val(null).trigger('change');

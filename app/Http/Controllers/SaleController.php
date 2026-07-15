@@ -226,6 +226,7 @@ class SaleController extends Controller
             'destino' => 'nullable|string',
             'linea' => 'nullable|string',
             'canal' => 'nullable|string',
+            'fecha_viaje' => 'nullable|date',
             'description' => 'nullable|string',
             'tipoVenta' => 'nullable|string',
             // Campos adicionales para CLQ
@@ -248,6 +249,7 @@ class SaleController extends Controller
         $destino = $request->input('destino', '');
         $linea = $request->input('linea', '');
         $canal = $request->input('canal', '');
+        $fecha_viaje = $request->input('fecha_viaje', null);
         $description = $request->input('description', '');
         $tipoVenta = $request->input('tipoVenta', 'gravada');
         $retencion_agente = $request->input('retencion_agente', 0);
@@ -294,7 +296,8 @@ class SaleController extends Controller
             $clq_observaciones,
             $clq_total_gravadas,
             $clq_total_exentas,
-            $clq_total_no_sujetas
+            $clq_total_no_sujetas,
+            $fecha_viaje
         );
 
         // Si tenemos line_provider_id, actualizar el salesdetail recién creado
@@ -340,7 +343,7 @@ class SaleController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function savefactemp($idsale, $clientid, $productid, $cantidad, $price, $pricenosujeta, $priceexenta, $pricegravada, $ivarete13, $renta, $ivarete, $acuenta, $fpago, $fee, $reserva, $ruta, $destino, $linea, $canal, $description, $tipoVenta = 'gravada', $retencion_agente = 0, $detainedP = 0, $clq_tipo_documento = '', $clq_tipo_generacion = '', $clq_numero_documento = '', $clq_fecha_generacion = null, $clq_observaciones = '', $clq_total_gravadas = 0, $clq_total_exentas = 0, $clq_total_no_sujetas = 0)
+    public function savefactemp($idsale, $clientid, $productid, $cantidad, $price, $pricenosujeta, $priceexenta, $pricegravada, $ivarete13, $renta, $ivarete, $acuenta, $fpago, $fee, $reserva, $ruta, $destino, $linea, $canal, $description, $tipoVenta = 'gravada', $retencion_agente = 0, $detainedP = 0, $clq_tipo_documento = '', $clq_tipo_generacion = '', $clq_numero_documento = '', $clq_fecha_generacion = null, $clq_observaciones = '', $clq_total_gravadas = 0, $clq_total_exentas = 0, $clq_total_no_sujetas = 0, $fecha_viaje = null)
     {
         // Limpiar parámetros que vienen como 'SIN_VALOR'
         $acuenta = ($acuenta === 'SIN_VALOR') ? '' : $acuenta;
@@ -530,6 +533,7 @@ class SaleController extends Controller
             $saledetails->destino = $destino;
             $saledetails->linea = $linea;
             $saledetails->canal = $canal;
+            $saledetails->fecha_viaje = $fecha_viaje ? date('Y-m-d', strtotime($fecha_viaje)) : null;
             $saledetails->user_id = $id_user;
             $saledetails->description = $description;
 

@@ -1184,13 +1184,17 @@
                                 <label class="form-label" for="ruta">Ruta</label>
                                 <input type="text" id="ruta" name="ruta" class="form-control" onchange="updateProductDescription()" oninput="updateProductDescription()">
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-2">
+                                <label class="form-label" for="fecha_viaje">Fecha de Viaje</label>
+                                <input type="date" id="fecha_viaje" name="fecha_viaje" class="form-control">
+                            </div>
+                            <div class="col-sm-3">
                                 <label class="form-label" for="destino">Destino</label>
                                 <select class="form-select select2destino" id="destino" name="destino">
                                     <option value="">Seleccione</option>
                                 </select>
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-3">
                                 <label class="form-label" for="linea">Aerolínea</label>
                                 <select class="form-select select2linea" id="linea" name="linea">
                                     <option value="">Seleccione</option>

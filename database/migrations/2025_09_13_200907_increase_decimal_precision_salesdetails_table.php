@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('salesdetails', function (Blueprint $table) {
-            // Aumentar precisión de decimales de (5,2) a (10,8) para mayor precisión en cálculos
-            $table->decimal('pricesale', 10, 8)->change();
-            $table->decimal('priceunit', 10, 8)->change();
-            $table->decimal('nosujeta', 10, 8)->change();
-            $table->decimal('exempt', 10, 8)->change();
-            $table->decimal('detained', 10, 8)->nullable()->change();
-            $table->decimal('detained13', 10, 8)->change();
+            // Aumentar precisión de decimales de (5,2) a (18,8) para mayor precisión en cálculos
+            $table->decimal('pricesale', 18, 8)->change();
+            $table->decimal('priceunit', 18, 8)->change();
+            $table->decimal('nosujeta', 18, 8)->change();
+            $table->decimal('exempt', 18, 8)->change();
+            $table->decimal('detained', 18, 8)->nullable()->change();
+            $table->decimal('detained13', 18, 8)->change();
         });
     }
 

@@ -11,13 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        try {
+            \DB::statement("ALTER TABLE dte MODIFY COLUMN codEstado VARCHAR(50) NULL");
+            \DB::statement("ALTER TABLE dte MODIFY COLUMN estadoHacienda VARCHAR(50) NULL");
+        } catch (\Exception $e) {}
+
         Schema::table('dte', function (Blueprint $table) {
             // Agregar solo los campos que no existen
             if (!Schema::hasColumn('dte', 'sale_id')) {
                 $table->unsignedBigInteger('sale_id')->nullable()->after('company_id');
             }
             if (!Schema::hasColumn('dte', 'estadoHacienda')) {
-                $table->string('estadoHacienda')->nullable()->after('codEstado');
+                $table->string('estadoHacienda', 50)->nullable()->after('codEstado');
             }
             if (!Schema::hasColumn('dte', 'jsonDte')) {
                 $table->longText('jsonDte')->nullable()->after('json');
