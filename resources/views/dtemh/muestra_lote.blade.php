@@ -40,15 +40,16 @@
     <script src="{{ asset('assets/js/app-muestracola-list.js') }}?v={{ time() }}"></script>
     <script>
         $(document).ready(function() {
-            // Transmitir DTE individual a Hacienda
+            // Transmitir DTE / Venta individual a Hacienda
             $('.procesar-dte').click(function(e) {
                 e.preventDefault();
                 const btn = $(this);
-                const dteId = btn.data('dte-id');
+                const id = btn.data('id');
+                const type = btn.data('type');
 
                 Swal.fire({
-                    title: 'Transmitir DTE',
-                    text: '¿Está seguro de transmitir esta factura individual a Hacienda?',
+                    title: 'Transmitir a Hacienda',
+                    text: '¿Está seguro de transmitir esta factura a Hacienda?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Transmitir',
@@ -56,7 +57,7 @@
                     showLoaderOnConfirm: true,
                     preConfirm: () => {
                         return $.ajax({
-                            url: `{{ url('dte-admin/procesar') }}/${dteId}`,
+                            url: `{{ url('dte-admin/procesar') }}/${id}/${type}`,
                             method: 'POST',
                             data: {
                                 _token: '{{ csrf_token() }}'
@@ -141,10 +142,11 @@
                                             onclick="EnviarCorreo({{$d->id_factura}} ,'{{ $d->email_cliente}}',{{$d->numero_factura }},'{{ $d->nombre_cliente}}')"
                                             class="btn btn-icon btn-success btn-xs" title="Enviar por Correo"><i class="fas fa-envelope"></i></a>
                                     @endif
-                                    @if ($d->estadoHacienda != 'RECIBIDO' && $d->dte_id)
+                                    @if ($d->estadoHacienda != 'RECIBIDO')
                                         <button class="btn btn-icon btn-primary btn-xs procesar-dte" 
                                                 title="Transmitir a Hacienda"
-                                                data-dte-id="{{ $d->dte_id }}">
+                                                data-id="{{ $d->dte_id ?: $d->id_factura }}"
+                                                data-type="{{ $d->dte_id ? 'dte' : 'sale' }}">
                                             <i class="fas fa-cloud-upload-alt"></i>
                                         </button>
                                     @endif

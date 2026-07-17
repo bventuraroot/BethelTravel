@@ -161,24 +161,71 @@ class DteAdminController extends Controller
         }
     }
 
-    public function procesarDteAdmin(Request $request, int $dteId): JsonResponse
+    public function procesarDteAdmin(Request $request, int $id, string $type): JsonResponse
     {
         try {
-            $dte = Dte::findOrFail($dteId);
-            $resultado = $this->dteService->procesarDte($dte);
+            if ($type === 'dte') {
+                $dte = Dte::findOrFail($id);
+                $resultado = $this->dteService->procesarDte($dte);
 
-            if ($resultado['exitoso']) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'DTE procesado exitosamente'
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error al procesar DTE: ' . $resultado['error']
-                ], 400);
+                if ($resultado['exitoso']) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'DTE procesado exitosamente'
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Error al procesar DTE: ' . $resultado['error']
+                    ], 400);
+                }
+            } elseif ($type === 'sale') {
+                $sale = Sale::findOrFail($id);
+                
+                // Si la venta ya tiene un DTE exitoso, no re-procesar
+                $existingDte = Dte::where('sale_id', $sale->id)
+                    ->where('codTransaction', '01')
+                    ->where('estadoHacienda', 'RECIBIDO')
+                    ->first();
+                if ($existingDte) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'La venta ya fue procesada exitosamente con anterioridad'
+                    ]);
+                }
+
+                $saleController = new SaleController();
+                $encodedId = base64_encode($sale->id);
+                // El totalamount de la venta. createdocument espera el prefijo '$' y luego el valor
+                $amountParam = '$' . ($sale->totalamount ?? 0);
+                
+                // Ejecutar createdocument de SaleController
+                $response = $saleController->createdocument($encodedId, $amountParam);
+                
+                $content = json_decode($response->getContent(), true);
+                if (isset($content['codEstado']) && ($content['codEstado'] == '02' || $content['codEstado'] == '01')) { // Recibido/Procesado con éxito
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Venta finalizada y DTE procesado exitosamente'
+                    ]);
+                } else {
+                    $msg = $content['descripcionMsg'] ?? $content['mensaje'] ?? $content['error'] ?? 'Error de validación o rechazo de Hacienda';
+                    if (isset($content['observacionesMsg']) && !empty($content['observacionesMsg'])) {
+                        $msg .= ' - Obs: ' . strip_tags($content['observacionesMsg']);
+                    }
+                    return response()->json([
+                        'success' => false,
+                        'message' => $msg
+                    ], 400);
+                }
             }
-        } catch (Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Tipo de documento no soportado'
+            ], 400);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()

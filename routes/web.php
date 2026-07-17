@@ -386,7 +386,7 @@ Route::middleware('auth')->group(function () {
         Route::post('procesar-cola', [DteAdminController::class, 'procesarCola'])->name('procesar-cola');
         Route::post('procesar-reintentos', [DteAdminController::class, 'procesarReintentos'])->name('procesar-reintentos');
         Route::post('reintentar/{dteId}', [DteAdminController::class, 'reintentarDte'])->name('reintentar-dte');
-        Route::post('procesar/{dteId}', [DteAdminController::class, 'procesarDteAdmin'])->name('procesar-dte');
+        Route::post('procesar/{id}/{type}', [DteAdminController::class, 'procesarDteAdmin'])->name('procesar-dte');
 
         // Gestión de errores
         Route::get('errores', [DteAdminController::class, 'errores'])->name('errores');
