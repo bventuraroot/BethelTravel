@@ -218,6 +218,106 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Mostrar detalle de contingencia
+    $('.ver-detalle').click(function() {
+        const btn = $(this);
+        const nombre = btn.data('nombre');
+        const empresa = btn.data('empresa');
+        const tipo = btn.data('tipo');
+        const fInicio = btn.data('f-inicio');
+        const fFin = btn.data('f-fin');
+        const docs = btn.data('docs');
+        const estado = btn.data('estado');
+        const generacion = btn.data('generacion');
+        const sello = btn.data('sello');
+        const fRecibido = btn.data('fecha-recibido');
+        const estadoMh = btn.data('estado-mh');
+        const observaciones = btn.data('observaciones');
+        const responsable = btn.data('responsable');
+
+        // Determinar color de badge de estado
+        let estadoBadge = '<span class="badge bg-secondary">' + estado + '</span>';
+        if (estado.toLowerCase() === 'enviado' || estado.toLowerCase() === 'aprobada' || estado.toLowerCase() === 'aceptado') {
+            estadoBadge = '<span class="badge bg-success">' + estado + '</span>';
+        } else if (estado.toLowerCase() === 'pendiente') {
+            estadoBadge = '<span class="badge bg-warning">' + estado + '</span>';
+        } else if (estado.toLowerCase() === 'rechazado') {
+            estadoBadge = '<span class="badge bg-danger">' + estado + '</span>';
+        }
+
+        Swal.fire({
+            title: 'Detalle de Contingencia',
+            html: `
+                <div class="text-start mt-3" style="max-height: 450px; overflow-y: auto; font-size: 14px;">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr>
+                                <th class="bg-light" style="width: 35%;">Empresa</th>
+                                <td>${empresa}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Nombre / Motivo</th>
+                                <td><strong>${nombre}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Tipo Contingencia</th>
+                                <td>${tipo}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Responsable</th>
+                                <td>${responsable}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Vigencia</th>
+                                <td>
+                                    <div><small class="text-muted">Inicio:</small> ${fInicio}</div>
+                                    <div><small class="text-muted">Fin:</small> ${fFin}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">DTEs Afectados</th>
+                                <td><span class="badge bg-info">${docs}</span></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Estado Interno</th>
+                                <td>${estadoBadge}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="bg-primary text-white text-center py-1 fw-bold">RESPUESTA DE MINISTERIO DE HACIENDA</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Estado MH</th>
+                                <td><strong>${estadoMh}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Código Generación</th>
+                                <td style="font-family: monospace; font-size: 12px; word-break: break-all;">${generacion}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Sello de Recepción</th>
+                                <td style="font-family: monospace; font-size: 12px; word-break: break-all;">${sello}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Fecha de Recibido</th>
+                                <td>${fRecibido}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Observaciones MH</th>
+                                <td class="text-danger">${observaciones}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `,
+            width: '650px',
+            confirmButtonText: 'Cerrar',
+            customClass: {
+                confirmButton: 'btn btn-primary'
+            },
+            buttonsStyling: false
+        });
+    });
 });
 </script>
 @endsection
@@ -504,7 +604,23 @@ $(document).ready(function() {
                                                     Activar
                                                 </button>
                                             @endif
-                                            <button class="btn btn-sm btn-outline-info" title="Ver detalles">
+                                            <button class="btn btn-sm btn-outline-info ver-detalle" 
+                                                    title="Ver detalles"
+                                                    data-id="{{ $contingencia->id }}"
+                                                    data-nombre="{{ $contingencia->nombre ?? $contingencia->codInterno ?? 'N/A' }}"
+                                                    data-empresa="{{ $contingencia->company->name ?? 'N/A' }}"
+                                                    data-tipo="{{ strip_tags($contingencia->tipo_texto) }}"
+                                                    data-f-inicio="{{ $contingencia->fecha_inicio ? (($contingencia->fecha_inicio instanceof \Carbon\Carbon || $contingencia->fecha_inicio instanceof \Illuminate\Support\Carbon) ? $contingencia->fecha_inicio->format('d/m/Y H:i') : \Carbon\Carbon::parse($contingencia->fecha_inicio)->format('d/m/Y H:i')) : 'N/A' }}"
+                                                    data-f-fin="{{ $contingencia->fecha_fin ? (($contingencia->fecha_fin instanceof \Carbon\Carbon || $contingencia->fecha_fin instanceof \Illuminate\Support\Carbon) ? $contingencia->fecha_fin->format('d/m/Y H:i') : \Carbon\Carbon::parse($contingencia->fecha_fin)->format('d/m/Y H:i')) : 'N/A' }}"
+                                                    data-docs="{{ $contingencia->documentos_afectados }}"
+                                                    data-estado-cod="{{ $contingencia->codEstado }}"
+                                                    data-estado="{{ $contingencia->estado }}"
+                                                    data-generacion="{{ $contingencia->codigoGeneracion ?? 'N/A' }}"
+                                                    data-sello="{{ $contingencia->selloRecibido ?? 'N/A' }}"
+                                                    data-fecha-recibido="{{ $contingencia->fhRecibido ? (($contingencia->fhRecibido instanceof \Carbon\Carbon || $contingencia->fhRecibido instanceof \Illuminate\Support\Carbon) ? $contingencia->fhRecibido->format('d/m/Y H:i:s') : \Carbon\Carbon::parse($contingencia->fhRecibido)->format('d/m/Y H:i:s')) : 'N/A' }}"
+                                                    data-estado-mh="{{ $contingencia->estadoHacienda ?? 'Pendiente de envío/No recibido' }}"
+                                                    data-observaciones="{{ $contingencia->observacionesMsg ?? 'Ninguna' }}"
+                                                    data-responsable="{{ $contingencia->nombreResponsable ?? 'N/A' }} ({{ $contingencia->nuDocResponsable ?? 'N/A' }})">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </div>
