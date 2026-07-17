@@ -62,6 +62,26 @@ $(function () {
           render: function (data, type, full, meta) {
             return '';
           }
+        },
+        {
+          responsivePriority: 1,
+          targets: 9 // Acciones
+        },
+        {
+          responsivePriority: 2,
+          targets: 1 // Doc
+        },
+        {
+          responsivePriority: 3,
+          targets: 6 // Estado
+        },
+        {
+          responsivePriority: 4,
+          targets: 2 // Fecha
+        },
+        {
+          responsivePriority: 9,
+          targets: 5 // Estado Recibido (se oculta primero si falta espacio)
         }
       ],
       order: [[2, 'desc']],

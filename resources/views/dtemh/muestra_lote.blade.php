@@ -37,7 +37,7 @@
 @endsection
 
 @section('page-script')
-    <script src="{{ asset('assets/js/app-muestracola-list.js') }}"></script>
+    <script src="{{ asset('assets/js/app-muestracola-list.js') }}?v={{ time() }}"></script>
     <script>
         $(document).ready(function() {
             // Transmitir DTE individual a Hacienda
