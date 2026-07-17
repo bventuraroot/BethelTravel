@@ -18,7 +18,7 @@
 @endsection
 
 @section('page-script')
-    <script src="{{ asset('assets/js/form-wizard-icons.js') }}"></script>
+    <script src="{{ asset('assets/js/form-wizard-icons.js') }}?v={{ time() }}"></script>
     @if(request('typedocument')==2)
     <script>
     $(document).ready(function() {

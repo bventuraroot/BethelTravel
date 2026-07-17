@@ -2151,6 +2151,24 @@ function creardocuments() {
                                         data: response
                                     });
                                 }
+                            // Convertir a objeto si viene como string
+                            var resObj = response;
+                            if (typeof response === 'string') {
+                                try {
+                                    resObj = JSON.parse(response);
+                                } catch (e) {
+                                    resObj = null;
+                                }
+                            }
+
+                            if (resObj && (resObj.codEstado === "03" || resObj.estado === "Rechazado" || resObj.descripcionMsg || resObj.mensaje)) {
+                                reject({
+                                    type: 'hacienda_rejected',
+                                    message: resObj.descripcionMsg || resObj.mensaje || 'Documento rechazado por Hacienda',
+                                    codigo: resObj.codigoMsg || resObj.codEstado || null,
+                                    observaciones: resObj.observacionesMsg || resObj.error || resObj.detailsMessage || '',
+                                    data: resObj
+                                });
                             } else if (response.res == 1) {
                                 resolve(response); // Resuelve la promesa si la solicitud es exitosa
                             } else if (response.res == 0) {
@@ -2159,37 +2177,11 @@ function creardocuments() {
                                     message: response.message || response.error || 'Algo salió mal al emitir el DTE',
                                     response: response
                                 }); // Rechaza la promesa con detalle del backend
-                            } else if (typeof response === 'string') {
-                                // Respuesta de error de Hacienda (JSON string)
-                                try {
-                                    const errorData = JSON.parse(response);
-                                    if (errorData.codEstado === "03") {
-                                        reject({
-                                            type: 'hacienda_rejected',
-                                            message: errorData.descripcionMsg || 'Documento rechazado por Hacienda',
-                                            codigo: errorData.codigoMsg,
-                                            observaciones: errorData.observacionesMsg,
-                                            data: errorData
-                                        });
-                                    } else {
-                                        reject({
-                                            type: 'hacienda_error',
-                                            message: errorData.descripcionMsg || 'Error en Hacienda',
-                                            data: errorData
-                                        });
-                                    }
-                                } catch (e) {
-                                    reject({
-                                        type: 'parse_error',
-                                        message: 'Error al procesar respuesta de Hacienda',
-                                        rawResponse: response
-                                    });
-                                }
                             } else if (response.error) {
                                 // Error del servidor
                                 reject({
                                     type: 'server_error',
-                                    message: response.message || 'Error del servidor',
+                                    message: response.mensaje || response.message || response.error || 'Error del servidor',
                                     error: response.error
                                 });
                             } else {
@@ -2303,6 +2295,7 @@ function creardocuments() {
                         message = `
                             <div class="text-left">
                                 <p><strong>Error:</strong> ${error.message}</p>
+                                ${error.error ? `<p><strong>Detalle Técnico:</strong> ${error.error}</p>` : ''}
                                 <hr>
                                 <p class="text-muted small">Comunícate con el administrador si el problema persiste.</p>
                             </div>
