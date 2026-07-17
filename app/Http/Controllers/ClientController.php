@@ -92,6 +92,9 @@ class ClientController extends Controller
             a.nit,
             a.ncr,
             a.email,
+            a.extranjero,
+            a.pasaporte,
+            a.contribuyente,
             (CASE a.tpersona
                 WHEN 'J' THEN COALESCE(NULLIF(a.name_contribuyente,''), a.comercial_name)
                 ELSE TRIM(CONCAT_WS(' ',
