@@ -139,13 +139,26 @@
                         const isInvalidated = child.state == 0;
 
                         // Estado DTE: priorizar invalidado sobre otros estados
-                        const dteStatus = isInvalidated
-                            ? '<span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>'
-                            : (child.has_dte
+                        const isContingencia = child.id_contingencia ? true : false;
+                        const isDraft = child.typesale == 2;
+                        
+                        let dteStatus = '';
+                        if (isInvalidated) {
+                            dteStatus = '<span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>';
+                        } else if (isDraft) {
+                            dteStatus = isContingencia 
+                                ? '<span class="badge bg-warning">BORRADOR EN CONTINGENCIA</span>' 
+                                : '<span class="badge bg-warning">BORRADOR</span>';
+                        } else {
+                            dteStatus = child.has_dte
                                 ? (child.is_success
                                     ? '<span class="badge bg-success">PROCESADO</span>'
                                     : '<span class="badge bg-danger">ERROR</span>')
-                                : '<span class="badge bg-warning">PENDIENTE</span>');
+                                : '<span class="badge bg-warning">PENDIENTE</span>';
+                            if (isContingencia) {
+                                dteStatus += '<br><span class="badge bg-info mt-1" style="font-size: 0.65rem;">CONTINGENCIA</span>';
+                            }
+                        }
 
                         const provider = child.acuenta || 'Servicio Propio';
 
@@ -1227,49 +1240,56 @@
                                 </td>
                                 <td>{{ $sale->document_name ?? 'N/A' }}</td>
                                 <td>
-                                    @if($sale->typesale == 2)
-                                        <span class="badge bg-warning">BORRADOR</span>
-                                    @else
-                                        @php
-                                            // Buscar DTE de invalidación si está anulado
-                                            $dteInvalidacion = null;
-                                            if ($sale->state == 0) {
-                                                $dteInvalidacion = \App\Models\Dte::where('sale_id', $sale->id)
-                                                    ->where('codTransaction', '02')
-                                                    ->latest()
-                                                    ->first();
-                                            }
-                                        @endphp
-
-                                        @switch($sale->state)
-                                            @case(0)
-                                                <span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>
-                                                @if($dteInvalidacion && $dteInvalidacion->fhRecibido)
-                                                    <br><small class="text-danger" style="font-size: 0.65rem;">
-                                                        <i class="ti ti-alert-circle"></i> Invalidado: {{ \Carbon\Carbon::parse($dteInvalidacion->fhRecibido)->format('d/m/Y H:i') }}
-                                                    </small>
-                                                @endif
-                                            @break
-
-                                            @case(1)
-                                                @if($sale->estadoHacienda == 'PROCESADO')
-                                                    <span class="badge bg-success">PROCESADO</span>
-                                                @else
-                                                    <span class="badge bg-success">CONFIRMADO</span>
-                                                @endif
-                                            @break
-
-                                            @case(2)
-                                                <span class="badge bg-warning">PENDIENTE</span>
-                                            @break
-
-                                            @case(3)
-                                                <span class="badge bg-info">FACTURADO</span>
-                                            @break
-
-                                            @default
-                                        @endswitch
-                                    @endif
+                                     @if($sale->typesale == 2)
+                                         @if($sale->id_contingencia)
+                                             <span class="badge bg-warning">BORRADOR EN CONTINGENCIA</span>
+                                         @else
+                                             <span class="badge bg-warning">BORRADOR</span>
+                                         @endif
+                                     @else
+                                         @php
+                                             // Buscar DTE de invalidación si está anulado
+                                             $dteInvalidacion = null;
+                                             if ($sale->state == 0) {
+                                                 $dteInvalidacion = \App\Models\Dte::where('sale_id', $sale->id)
+                                                     ->where('codTransaction', '02')
+                                                     ->latest()
+                                                     ->first();
+                                             }
+                                         @endphp
+ 
+                                         @switch($sale->state)
+                                             @case(0)
+                                                 <span class="badge bg-danger"><i class="ti ti-x me-1"></i>INVALIDADO</span>
+                                                 @if($dteInvalidacion && $dteInvalidacion->fhRecibido)
+                                                     <br><small class="text-danger" style="font-size: 0.65rem;">
+                                                         <i class="ti ti-alert-circle"></i> Invalidado: {{ \Carbon\Carbon::parse($dteInvalidacion->fhRecibido)->format('d/m/Y H:i') }}
+                                                     </small>
+                                                 @endif
+                                             @break
+ 
+                                             @case(1)
+                                                 @if($sale->estadoHacienda == 'PROCESADO')
+                                                     <span class="badge bg-success">PROCESADO</span>
+                                                 @else
+                                                     <span class="badge bg-success">CONFIRMADO</span>
+                                                 @endif
+                                             @break
+ 
+                                             @case(2)
+                                                 <span class="badge bg-warning">PENDIENTE</span>
+                                             @break
+ 
+                                             @case(3)
+                                                 <span class="badge bg-info">FACTURADO</span>
+                                             @break
+ 
+                                             @default
+                                         @endswitch
+                                         @if($sale->id_contingencia)
+                                             <br><span class="badge bg-info mt-1" style="font-size: 0.65rem;">CONTINGENCIA</span>
+                                         @endif
+                                     @endif
                                 </td>
                                 <td>
                                     @if($sale->tpersona == 'N')

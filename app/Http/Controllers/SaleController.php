@@ -4739,6 +4739,8 @@ class SaleController extends Controller
                 }
                 return [
                     'id' => $child->id,
+                    'id_contingencia' => $child->id_contingencia,
+                    'typesale' => $child->typesale,
                     'date' => $fechaColumna ? $fechaColumna->format('d/m/Y') : 'N/A',
                     'created_at' => $fechaColumna ? $fechaColumna->format('H:i') : null,
                     'date_venta' => $child->date ? $child->date->format('d/m/Y') : 'N/A',

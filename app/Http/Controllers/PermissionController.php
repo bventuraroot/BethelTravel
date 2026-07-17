@@ -263,7 +263,7 @@ class PermissionController extends Controller
                 "name" => "Administración DTE",
                 "icon" => "menu-icon fa-solid fa-cogs",
                 "slug" => "dte.dashboard",
-                "badge" => ["primary", "8"],
+                "badge" => ["primary", "6"],
                 "submenu" => [
                     [
                         "url" => "/correlativos",
@@ -294,18 +294,6 @@ class PermissionController extends Controller
                         "name" => "Gestión de Contingencias",
                         "icon" => "menu-icon fa-solid fa-shield-alt",
                         "slug" => "dte.dashboard"
-                    ],
-                    [
-                        "url" => "/factmh/contingencias/dashboard",
-                        "name" => "Dashboard Contingencias",
-                        "icon" => "menu-icon fa-solid fa-chart-pie",
-                        "slug" => "factmh.contingencias.dashboard"
-                    ],
-                    [
-                        "url" => "/factmh/contingencias",
-                        "name" => "Contingencias MH",
-                        "icon" => "menu-icon fa-solid fa-satellite-dish",
-                        "slug" => "factmh.contingencias"
                     ],
                     [
                         "url" => "/config/index",

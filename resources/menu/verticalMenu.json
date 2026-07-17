@@ -190,10 +190,10 @@
             "name": "Administracion DTE",
             "icon": "menu-icon fa-solid fa-satellite-dish",
             "slug": "factmh.index",
-            "badge": ["primary", "5"],
+            "badge": ["primary", "3"],
             "submenu": [
                 {
-                    "url": "/factmh/contingencias",
+                    "url": "/dte-admin/contingencias",
                     "name": "Contingencias",
                     "slug": "factmh.contingencias"
                 },
