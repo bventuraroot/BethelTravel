@@ -320,16 +320,20 @@ if (!function_exists('convertir_json')) {
         $compro = $compro_procesar;
         //dd(is_array($compro));
         //dd($compro["documento"][0]["tipodocumento"]);
+        $existing_uuid = null;
         if ($codTransaccion=="02") {
             $tipo_comprobante = $compro["documento"][0]["tipodocumento"];
+            $existing_uuid = $compro["documento"][0]["codigoGeneracion"] ?? null;
         } else if($codTransaccion=="05") {
             $tipo_comprobante = $compro["documento"][0]["tipodocumento"];
+            $existing_uuid = $compro["documento"][0]["codigoGeneracion"] ?? null;
         } else {
-            $tipo_comprobante = $compro["documento"][0]->tipodocumento;
+            $tipo_comprobante = is_array($compro["documento"][0]) ? ($compro["documento"][0]["tipodocumento"] ?? null) : ($compro["documento"][0]->tipodocumento ?? null);
+            $existing_uuid = is_array($compro["documento"][0]) ? ($compro["documento"][0]["codigoGeneracion"] ?? null) : ($compro["documento"][0]->codigoGeneracion ?? null);
         }
         //dd($tipo_comprobante);
         $retorno = [];
-        $uuid_generado = strtoupper(Str::uuid()->toString());
+        $uuid_generado = $existing_uuid ?: strtoupper(Str::uuid()->toString());
         //$retorno=[$compro, $uuid_generado];
         switch ($tipo_comprobante) {
             case '03': //CRF

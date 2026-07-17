@@ -161,6 +161,31 @@ class DteAdminController extends Controller
         }
     }
 
+    public function procesarDteAdmin(Request $request, int $dteId): JsonResponse
+    {
+        try {
+            $dte = Dte::findOrFail($dteId);
+            $resultado = $this->dteService->procesarDte($dte);
+
+            if ($resultado['exitoso']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'DTE procesado exitosamente'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al procesar DTE: ' . $resultado['error']
+                ], 400);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Mostrar lista de errores
      */

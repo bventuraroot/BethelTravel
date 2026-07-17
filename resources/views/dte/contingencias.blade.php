@@ -220,8 +220,9 @@ $(document).ready(function() {
     });
 
     // Mostrar detalle de contingencia
-    $('.ver-detalle').click(function() {
+    $('.ver-detail, .ver-detalle').click(function() {
         const btn = $(this);
+        const id = btn.data('id');
         const nombre = btn.data('nombre');
         const empresa = btn.data('empresa');
         const tipo = btn.data('tipo');
@@ -277,7 +278,12 @@ $(document).ready(function() {
                             </tr>
                             <tr>
                                 <th class="bg-light">DTEs Afectados</th>
-                                <td><span class="badge bg-info">${docs}</span></td>
+                                <td>
+                                    <span class="badge bg-info">${docs}</span>
+                                    <a href="{{ url('factmh/muestra_lote') }}/${id}" class="btn btn-xs btn-outline-primary ms-2">
+                                        <i class="fas fa-list me-1"></i> Ver y Procesar
+                                    </a>
+                                </td>
                             </tr>
                             <tr>
                                 <th class="bg-light">Estado Interno</th>

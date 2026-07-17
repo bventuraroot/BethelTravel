@@ -813,6 +813,7 @@ class SaleController extends Controller
         e.url_firmador,
         d.typeTransmission tipogeneracion,
         e.cod ambiente,
+        (SELECT codigoGeneracion FROM dte WHERE sale_id = a.id AND codTransaction = '01' LIMIT 1) as codigoGeneracion,
         a.updated_at,
         1 aparece_ventas
         FROM sales a

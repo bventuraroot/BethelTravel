@@ -472,12 +472,31 @@ class ContingenciasController extends Controller
     public function muestra_lote($id)
     {
         date_default_timezone_set('America/El_Salvador');
-        $dtes = Sale::leftjoin('dte', 'dte.sale_id', '=', 'sales.id')
+        $dtes = Sale::leftJoin('dte', function($join) {
+            $join->on('dte.sale_id', '=', 'sales.id')
+                 ->where('dte.codTransaction', '=', '01');
+        })
         ->join('typedocuments', 'typedocuments.id', '=', 'sales.typedocument_id')
+        ->leftJoin('clients', 'clients.id', '=', 'sales.client_id')
         ->where('sales.id_contingencia', $id)
-        ->select('sales.created_at',
-                'typedocuments.type as tipo_doc',
-                'sales.id as numero_factura')
+        ->select(
+            'sales.id as id_factura',
+            'sales.nu_doc as numero_factura',
+            'typedocuments.type as tipo_doc',
+            'sales.created_at',
+            'dte.id as dte_id',
+            'dte.desTransaction as desTransaccion',
+            'dte.id_doc',
+            'dte.codigoGeneracion',
+            'dte.selloRecibido',
+            'dte.fhRecibido',
+            'dte.estadoHacienda',
+            'dte.tipoModelo',
+            'dte.descriptionMessage as descripcionMsg',
+            'dte.detailsMessage as observacionesMsg',
+            'clients.email as email_cliente',
+            DB::raw("COALESCE(NULLIF(TRIM(CONCAT(COALESCE(clients.firstname,''), ' ', COALESCE(clients.secondname,''), ' ', COALESCE(clients.firstlastname,''), ' ', COALESCE(clients.secondlastname,''))), ''), clients.name_contribuyente, clients.comercial_name, 'Cliente') as nombre_cliente")
+        )
         ->get();
         // dd($dtes);
         return view('dtemh.muestra_lote')

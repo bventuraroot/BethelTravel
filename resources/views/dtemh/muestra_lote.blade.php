@@ -38,6 +38,57 @@
 
 @section('page-script')
     <script src="{{ asset('assets/js/app-muestracola-list.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            // Transmitir DTE individual a Hacienda
+            $('.procesar-dte').click(function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const dteId = btn.data('dte-id');
+
+                Swal.fire({
+                    title: 'Transmitir DTE',
+                    text: '¿Está seguro de transmitir esta factura individual a Hacienda?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Transmitir',
+                    cancelButtonText: 'Cancelar',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return $.ajax({
+                            url: `{{ url('dte-admin/procesar') }}/${dteId}`,
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            }
+                        })
+                        .done(function(response) {
+                            return response;
+                        })
+                        .fail(function(xhr) {
+                            let message = 'Error desconocido';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+                            Swal.showValidationMessage(`Error: ${message}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'DTE Procesado',
+                            text: result.value.message || 'El DTE fue procesado exitosamente',
+                            timer: 2000
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 @endsection
 
 @section('title', 'Muestra Lote')
@@ -82,14 +133,22 @@
                                 <td>{{$d->estadoHacienda}}</td>
                                 <td>{{$d->descripcionMsg}}</td>
                                 <td>{!!$d->observacionesMsg!!}</td>
-                                <td><div class="d-flex align-items-center">
+                                <td><div class="d-flex align-items-center gap-1">
                                     @if ($d->tipoModelo == 2)
-                                    <a href="{{route('factura.print', $d->id_factura)}}" class="btn btn-icon btn-secondary btn-xs" target="_blank"><i
-                                        class="fas fa-print"></i></a>
+                                        <a href="{{route('factura.print', $d->id_factura)}}" class="btn btn-icon btn-secondary btn-xs" target="_blank" title="Imprimir"><i
+                                            class="fas fa-print"></i></a>
                                         <a href="#"
-                                        onclick="EnviarCorreo({{$d->id_factura}} ,'{{ $d->email_cliente}}',{{$d->numero_factura }},'{{ $d->nombre_cliente}}')"
-                                        class="btn btn-icon btn-success btn-xs"><i class="fas fa-paper-plane"></i></a>
-                                    @endif</td>
+                                            onclick="EnviarCorreo({{$d->id_factura}} ,'{{ $d->email_cliente}}',{{$d->numero_factura }},'{{ $d->nombre_cliente}}')"
+                                            class="btn btn-icon btn-success btn-xs" title="Enviar por Correo"><i class="fas fa-envelope"></i></a>
+                                    @endif
+                                    @if ($d->estadoHacienda != 'RECIBIDO' && $d->dte_id)
+                                        <button class="btn btn-icon btn-primary btn-xs procesar-dte" 
+                                                title="Transmitir a Hacienda"
+                                                data-dte-id="{{ $d->dte_id }}">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </button>
+                                    @endif
+                                </div></td>
                             </tr>
                             @empty
                                 <tr>
