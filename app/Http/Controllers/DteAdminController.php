@@ -588,24 +588,40 @@ class DteAdminController extends Controller
         $ventasSinDte = \DB::table('sales as a')
             ->leftJoin('dte as b', 'b.sale_id', '=', 'a.id')
             ->leftJoin('typedocuments as t', 't.id', '=', 'a.typedocument_id')
+            ->leftJoin('clients as c', 'c.id', '=', 'a.client_id')
             ->where('a.company_id', $empresaId)
             ->whereNull('b.sale_id')
             ->select(
                 'a.id',
                 'a.created_at',
-                't.type as tipo_documento'
+                't.type as tipo_documento',
+                'c.firstname',
+                'c.firstlastname',
+                'c.name_contribuyente',
+                'c.comercial_name',
+                'c.tpersona'
             )
             ->orderBy('a.created_at', 'desc')
             ->limit(300)
             ->get()
             ->map(function($row){
+                $nombre_cliente = 'Cliente';
+                if ($row->tpersona == 'J') {
+                    $nombre_cliente = $row->name_contribuyente ?: $row->comercial_name ?: 'Empresa';
+                } else {
+                    $nombre_cliente = trim(($row->firstname ?: '') . ' ' . ($row->firstlastname ?: ''));
+                }
+                if (empty($nombre_cliente)) {
+                    $nombre_cliente = $row->name_contribuyente ?: $row->comercial_name ?: 'N/A';
+                }
+
                 return [
                     'id' => 'SALE-' . $row->id,
                     'numero_control' => $row->id,
-                    'cliente' => 'N/A',
+                    'cliente' => $nombre_cliente,
                     'tipo_documento' => $row->tipo_documento ?? 'N/A',
                     'estado' => 'Sin DTE (Borrador)',
-                    'fecha' => optional($row->created_at)->format('d/m/Y')
+                    'fecha' => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d/m/Y') : 'N/A'
                 ];
             });
 

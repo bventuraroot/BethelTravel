@@ -148,7 +148,7 @@ class Contingencia extends Model
             5 => 'Otro'
         ];
 
-        $tipoTexto = $tipos[$this->tipoContingencia ?? 0] ?? 'Desconocido';
+        $tipoTexto = $tipos[intval($this->tipoContingencia ?? 0)] ?? 'Desconocido';
         return '<span class="badge bg-label-primary">' . $tipoTexto . '</span>';
     }
 }
