@@ -2135,6 +2135,16 @@ function creardocuments() {
                         },
                         success: function (response) {
 
+                            // Convertir a objeto si viene como string
+                            var resObj = response;
+                            if (typeof response === 'string') {
+                                try {
+                                    resObj = JSON.parse(response);
+                                } catch (e) {
+                                    resObj = null;
+                                }
+                            }
+
                             // Verificar si es venta con múltiples proveedores
                             if (response.type === 'multi_provider') {
                                 // Cerrar SweetAlert actual
@@ -2151,17 +2161,7 @@ function creardocuments() {
                                         data: response
                                     });
                                 }
-                            // Convertir a objeto si viene como string
-                            var resObj = response;
-                            if (typeof response === 'string') {
-                                try {
-                                    resObj = JSON.parse(response);
-                                } catch (e) {
-                                    resObj = null;
-                                }
-                            }
-
-                            if (resObj && (resObj.codEstado === "03" || resObj.estado === "Rechazado" || resObj.descripcionMsg || resObj.mensaje)) {
+                            } else if (resObj && (resObj.codEstado === "03" || resObj.estado === "Rechazado" || resObj.descripcionMsg || resObj.mensaje)) {
                                 reject({
                                     type: 'hacienda_rejected',
                                     message: resObj.descripcionMsg || resObj.mensaje || 'Documento rechazado por Hacienda',
