@@ -50,13 +50,14 @@ class ConfigController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validar campos requeridos
             $request->validate([
                 'company' => 'required|exists:companies,id',
                 'version' => 'required|string',
+                'ambiente' => 'required|string',
                 'typemodel' => 'required|string',
                 'typetransmission' => 'required|string',
                 'typecontingencia' => 'required|string',
+                'versionjson' => 'required|string',
                 'passprivatekey' => 'required|string',
                 'passpublickey' => 'required|string',
                 'passmh' => 'required|string',
@@ -64,9 +65,11 @@ class ConfigController extends Controller
                 'company.required' => 'Debe seleccionar una empresa',
                 'company.exists' => 'La empresa seleccionada no existe',
                 'version.required' => 'El campo Versión es requerido',
+                'ambiente.required' => 'El campo Ambiente es requerido',
                 'typemodel.required' => 'El campo Tipo Modelo es requerido',
                 'typetransmission.required' => 'El campo Tipo Transmisión es requerido',
                 'typecontingencia.required' => 'El campo Tipo Contingencia es requerido',
+                'versionjson.required' => 'El campo Versión JSON es requerido',
                 'passprivatekey.required' => 'El campo Contraseña Llave Privada es requerido',
                 'passpublickey.required' => 'El campo Contraseña Llave Pública es requerido',
                 'passmh.required' => 'El campo Contraseña MH es requerido',
@@ -135,14 +138,15 @@ class ConfigController extends Controller
     public function update(Request $request)
     {
         try {
-            // Validar campos requeridos
             $request->validate([
                 'idedit' => 'required|exists:config,id',
                 'companyedit' => 'required|exists:companies,id',
                 'versionedit' => 'required|string',
+                'ambienteedit' => 'required|string',
                 'typemodeledit' => 'required|string',
                 'typetransmissionedit' => 'required|string',
                 'typecontingenciaedit' => 'required|string',
+                'versionjsonedit' => 'required|string',
                 'passprivatekeyedit' => 'required|string',
                 'passpublickeyedit' => 'required|string',
                 'passmhedit' => 'required|string',
@@ -152,9 +156,11 @@ class ConfigController extends Controller
                 'companyedit.required' => 'Debe seleccionar una empresa',
                 'companyedit.exists' => 'La empresa seleccionada no existe',
                 'versionedit.required' => 'El campo Versión es requerido',
+                'ambienteedit.required' => 'El campo Ambiente es requerido',
                 'typemodeledit.required' => 'El campo Tipo Modelo es requerido',
                 'typetransmissionedit.required' => 'El campo Tipo Transmisión es requerido',
                 'typecontingenciaedit.required' => 'El campo Tipo Contingencia es requerido',
+                'versionjsonedit.required' => 'El campo Versión JSON es requerido',
                 'passprivatekeyedit.required' => 'El campo Contraseña Llave Privada es requerido',
                 'passpublickeyedit.required' => 'El campo Contraseña Llave Pública es requerido',
                 'passmhedit.required' => 'El campo Contraseña MH es requerido',

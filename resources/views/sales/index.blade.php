@@ -1153,7 +1153,17 @@
                                         @break
                                         @case(0)
                                         <div class="d-flex align-items-center">
-                                            <span class="text-muted">Sin acciones</span>
+                                            @if(!$sale->is_parent)
+                                                <a href="{{route('sale.print', $sale->id)}}"
+                                                        class="btn btn-icon btn-outline-secondary btn-sm me-1" target="_blank" title="Imprimir">
+                                                    <i class="ti ti-printer"></i>
+                                                </a>
+                                            @endif
+                                            <a href="#"
+                                                    onclick="EnviarCorreo({{$sale->id}} ,'{{ $sale->mailClient}}','{{$sale->id_doc }}')"
+                                                    class="btn btn-icon btn-outline-success btn-sm me-1" title="Enviar por correo">
+                                                <i class="ti ti-mail"></i>
+                                            </a>
                                         </div>
                                         @break
 

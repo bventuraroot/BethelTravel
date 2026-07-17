@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Mail\EnviarCorreo;
+use App\Mail\EnviarDteInvalidado;
 use App\Models\Correlativo;
 use Illuminate\Http\JsonResponse;
 
@@ -2347,7 +2348,7 @@ class SaleController extends Controller
         FROM sales a
         INNER JOIN clients clie ON a.client_id=clie.id
         INNER JOIN companies comp ON a.company_id=comp.id
-        INNER JOIN dte b ON b.sale_id=a.id
+        INNER JOIN dte b ON b.sale_id=a.id AND b.codEstado = '02'
         LEFT JOIN ambientes am ON CONCAT('0',b.ambiente_id)=am.cod
         WHERE a.id = $idFactura";
             $invalidacion = DB::select(DB::raw($queryinvalidacion));
@@ -2589,6 +2590,12 @@ class SaleController extends Controller
             $anular->save();
 
             if ($dtecreate && $anular) {
+                try {
+                    $this->enviarCorreoInvalidacion($idFactura, $dtecreate);
+                } catch (\Exception $e) {
+                    \Log::error("Error enviando correo de invalidación automático: " . $e->getMessage());
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Documento invalidado correctamente',
@@ -3036,6 +3043,131 @@ class SaleController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    private function enviarCorreoInvalidacion($saleId, $dteInvalidado, $customEmail = null)
+    {
+        try {
+            // Obtener datos de la venta, empresa y cliente
+            $venta = Sale::join('companies', 'companies.id', '=', 'sales.company_id')
+                ->join('clients', 'clients.id', '=', 'sales.client_id')
+                ->select(
+                    'sales.*',
+                    'companies.name as company_name',
+                    'companies.giro as company_giro',
+                    'clients.firstname',
+                    'clients.secondname',
+                    'clients.firstlastname',
+                    'clients.secondlastname',
+                    'clients.comercial_name as client_comercial_name',
+                    'clients.name_contribuyente as client_name_contribuyente',
+                    'clients.email as client_email',
+                    'clients.email2 as client_email2',
+                    'clients.email3 as client_email3',
+                    'clients.email4 as client_email4',
+                    'clients.email5 as client_email5',
+                    'clients.tpersona'
+                )
+                ->where('sales.id', $saleId)
+                ->first();
+
+            if (!$venta) {
+                \Log::warning("No se encontró la venta ID: {$saleId} para envío de correo de invalidación");
+                return;
+            }
+
+            // Prioridad: usar correo personalizado si se provee, luego el seleccionado al facturar, luego los de la base de datos
+            if ($customEmail && filter_var($customEmail, FILTER_VALIDATE_EMAIL)) {
+                $emailCliente = $customEmail;
+            } else if (!empty($venta->selected_email) && filter_var($venta->selected_email, FILTER_VALIDATE_EMAIL)) {
+                $emailCliente = $venta->selected_email;
+            } else {
+                // Obtener todos los correos disponibles del cliente (hasta 5)
+                $emailsDisponibles = collect([
+                    $venta->client_email,
+                    $venta->client_email2,
+                    $venta->client_email3,
+                    $venta->client_email4,
+                    $venta->client_email5,
+                ])->filter(function ($email) {
+                    return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+                })->values()->all();
+
+                // Verificar si el cliente tiene al menos un email válido
+                if (empty($emailsDisponibles)) {
+                    \Log::info("Cliente de venta ID: {$saleId} no tiene emails válidos configurados. No se enviará correo de invalidación.");
+                    return;
+                }
+
+                // Usar el correo principal (primero de la lista) por defecto
+                $emailCliente = $emailsDisponibles[0];
+            }
+
+            $nombreCompleto = '';
+            if ($venta->tpersona === 'N') {
+                $nombreCompleto = trim(($venta->firstname ?: '') . ' ' . ($venta->secondname ?: '') . ' ' . ($venta->firstlastname ?: '') . ' ' . ($venta->secondlastname ?: ''));
+            } else {
+                $nombreCompleto = $venta->client_comercial_name ?: $venta->client_name_contribuyente;
+            }
+
+            $nombreCliente = $nombreCompleto ?: 'Cliente';
+
+            // Buscar el DTE original (el de emisión: codTransaction = '01')
+            $dteOriginal = Dte::where('sale_id', $saleId)
+                ->where('codTransaction', '01')
+                ->first();
+
+            if (!$dteOriginal) {
+                \Log::warning("No se encontró el DTE original para la venta ID: {$saleId} al enviar correo de invalidación");
+                return;
+            }
+
+            // Generar PDF del DTE original
+            $pdf = $this->genera_pdf($saleId);
+
+            // Preparar JSON de la invalidación enviado a MH
+            $json_root = json_decode($dteInvalidado->json);
+            $json_enviado = $json_root->json->json_enviado ?? null;
+            if (!$json_enviado) {
+                throw new \Exception('JSON de Invalidad no disponible para adjuntar');
+            }
+            $jsonInvalidacion = json_encode($json_enviado, JSON_PRETTY_PRINT);
+
+            // Adjuntos
+            $archivos = [
+                'INVALIDADO-' . ($dteOriginal->codigoGeneracion ?? ('DTE-' . $venta->id)) . '.pdf' => $pdf->output(),
+                ($dteInvalidado->codigoGeneracion ?? ('ANUL-' . $venta->id)) . '.json' => $jsonInvalidacion,
+            ];
+
+            // Datos para correo
+            $data = [
+                'nombre' => $nombreCliente,
+                'numero_original' => $dteOriginal->id_doc ?? $venta->numero_control ?? "#{$venta->id}",
+                'codigo_generacion_original' => $dteOriginal->codigoGeneracion,
+                'fecha_emision_original' => $dteOriginal->fhRecibido ? date('d/m/Y H:i:s', strtotime($dteOriginal->fhRecibido)) : '',
+                'total_original' => $venta->totalamount ?? 0,
+
+                'codigo_generacion_invalidacion' => $dteInvalidado->codigoGeneracion,
+                'sello_recibido_invalidacion' => $dteInvalidado->selloRecibido,
+                'fecha_invalidacion' => $dteInvalidado->fhRecibido ? date('d/m/Y H:i:s', strtotime($dteInvalidado->fhRecibido)) : date('d/m/Y H:i:s'),
+                'motivo' => $json_enviado->motivo->motivoAnulacion ?? 'Rescindir de la operacion realizada.',
+            ];
+
+            $asunto = 'Comprobante de Invalidad / Anulación DTE No.' . ($dteOriginal->id_doc ?? $venta->numero_control) . ' de Proveedor: ' . ($venta->company_name ?? '');
+
+            // Crear y enviar
+            $correo = new EnviarDteInvalidado($data);
+            $correo->subject($asunto);
+            foreach ($archivos as $nombreArchivo => $contenido) {
+                $correo->attachData($contenido, $nombreArchivo);
+            }
+
+            Mail::to($emailCliente)->send($correo);
+
+            \Log::info("Correo de invalidación enviado exitosamente para venta ID: {$saleId} a: {$emailCliente}");
+        } catch (\Exception $e) {
+            \Log::error("Error enviando correo de invalidación para venta ID: {$saleId} - " . $e->getMessage());
+        }
+    }
+
     public function enviar_correo_offline(Request $request)
     {
         try {
@@ -3049,6 +3181,25 @@ class SaleController extends Controller
             $id_factura = $request->id_factura;
             $email = $request->email;
             $nombre_cliente = $request->nombre_cliente;
+
+            // Verificar si existe un DTE de invalidación para esta venta
+            $dteInvalidado = DB::table('dte')
+                ->where('sale_id', $id_factura)
+                ->where('codTransaction', '02')
+                ->where('codEstado', '02')
+                ->first();
+
+            if ($dteInvalidado) {
+                // Si la factura está invalidada, enviar el correo de invalidación
+                $this->enviarCorreoInvalidacion($id_factura, $dteInvalidado, $email);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Correo de invalidación enviado exitosamente',
+                    'data' => [
+                        'numero_factura' => 'ANULADO-' . $id_factura
+                    ]
+                ]);
+            }
 
             // Verificar si es una venta padre
             $sale = Sale::find($id_factura);
@@ -3393,7 +3544,10 @@ class SaleController extends Controller
 
     public function genera_pdf($id)
     {
-        $factura = Sale::leftjoin('dte', 'dte.sale_id', '=', 'sales.id')
+        $factura = Sale::leftjoin('dte', function($join) {
+            $join->on('dte.sale_id', '=', 'sales.id')
+                 ->where('dte.codTransaction', '!=', '02');
+        })
             ->join('companies', 'companies.id', '=', 'sales.company_id')
             ->join('addresses', 'addresses.id', '=', 'companies.address_id')
             ->join('countries', 'countries.id', '=', 'addresses.country_id')
@@ -3417,7 +3571,9 @@ class SaleController extends Controller
                 'cou.name as PaisR',
                 'dep.name as DepartamentoR',
                 'muni.name as MunicipioR',
-                'typedoc.codemh'
+                'typedoc.codemh',
+                'sales.typesale',
+                'sales.state'
             )
             ->where('sales.id', '=', $id)
             ->get();
@@ -4013,7 +4169,11 @@ class SaleController extends Controller
         @$fecha = $json["fhRecibido"] ?? null;
         @$qr = base64_encode(codigoQR(($documento[0]["ambiente"] ?? ($json["identificacion"]["ambiente"] ?? null)), ($json["codigoGeneracion"] ?? ($json["identificacion"]["codigoGeneracion"] ?? null)), $fecha));
         //return  '<img src="data:image/png;base64,'.$qr .'">';
-        $data["codTransaccion"] = "01";
+        if (isset($factura[0]['typesale']) && (string)$factura[0]['typesale'] === '0') {
+            $data["codTransaccion"] = "02";
+        } else {
+            $data["codTransaccion"] = "01";
+        }
         $data["PaisE"] = $factura[0]['PaisE'];
         $data["DepartamentoE"] = $factura[0]['DepartamentoE'];
         $data["MunicipioE"] = $factura[0]['MunicipioE'];
@@ -4073,7 +4233,10 @@ class SaleController extends Controller
     }
     public function genera_pdflocal($id)
     {
-        $factura = Sale::leftjoin('dte', 'dte.sale_id', '=', 'sales.id')
+        $factura = Sale::leftjoin('dte', function($join) {
+            $join->on('dte.sale_id', '=', 'sales.id')
+                 ->where('dte.codTransaction', '!=', '02');
+        })
             ->join('companies', 'companies.id', '=', 'sales.company_id')
             ->join('addresses', 'addresses.id', '=', 'companies.address_id')
             ->join('countries', 'countries.id', '=', 'addresses.country_id')
@@ -4149,7 +4312,11 @@ class SaleController extends Controller
         $fecha = $data['documento'][0]['fechacreacion'];
         @$qr = base64_encode(codigoQR($data["documento"][0]["ambiente"], $data["json"]["codigoGeneracion"], $fecha));
         //return  '<img src="data:image/png;base64,'.$qr .'">';
-        $data["codTransaccion"] = "01";
+        if (isset($factura[0]['typesale']) && (string)$factura[0]['typesale'] === '0') {
+            $data["codTransaccion"] = "02";
+        } else {
+            $data["codTransaccion"] = "01";
+        }
         $data["PaisE"] = $factura[0]['PaisE'];
         $data["DepartamentoE"] = $factura[0]['DepartamentoE'];
         $data["MunicipioE"] = $factura[0]['MunicipioE'];

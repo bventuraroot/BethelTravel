@@ -169,7 +169,7 @@
             <input type="hidden" name="iduser" id="iduser" value="{{Auth::user()->id}}">
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Empresa</label>
-              <select class="select2 form-select" id="company" name="company" aria-label="Seleccionar opcion"></select>
+              <select class="select2 form-select" id="company" name="company" aria-label="Seleccionar opcion" required></select>
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Version</label>
@@ -177,7 +177,7 @@
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Ambiente</label>
-              <select class="select2 form-select" id="ambiente" name="ambiente" aria-label="Seleccionar opcion">
+              <select class="select2 form-select" id="ambiente" name="ambiente" aria-label="Seleccionar opcion" required>
                 <option value="1">Ambiente Desarrollo</option>
                 <option value="2">Ambiente Produccion</option>
               </select>
@@ -196,7 +196,7 @@
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Version Json</label>
-              <select class="select2versionjson form-select" id="versionjson" name="versionjson" aria-label="Seleccionar opcion">
+              <select class="select2versionjson form-select" id="versionjson" name="versionjson" aria-label="Seleccionar opcion" required>
                 <option value="1">v1</option>
                 <option value="2">v2</option>
                 <option value="3">v3</option>
@@ -261,7 +261,7 @@
             <input type="hidden" name="idedit" id="idedit">
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Empresa</label>
-              <select class="select2 form-select" id="companyedit" name="companyedit" aria-label="Seleccionar opcion"></select>
+              <select class="select2 form-select" id="companyedit" name="companyedit" aria-label="Seleccionar opcion" required></select>
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Version</label>
@@ -269,7 +269,7 @@
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Ambiente</label>
-              <select class="select2 form-select" id="ambienteedit" name="ambienteedit" aria-label="Seleccionar opcion">
+              <select class="select2 form-select" id="ambienteedit" name="ambienteedit" aria-label="Seleccionar opcion" required>
                 <option value="1">Ambiente Desarrollo</option>
                 <option value="2">Ambiente Produccion</option>
               </select>
@@ -288,7 +288,7 @@
             </div>
             <div class="mb-3 col-12">
               <label class="form-label" for="name">Version Json</label>
-              <select class="select2 form-select" id="versionjsonedit" name="versionjsonedit" aria-label="Seleccionar opcion">
+              <select class="select2 form-select" id="versionjsonedit" name="versionjsonedit" aria-label="Seleccionar opcion" required>
                 <option value="1">v1</option>
                 <option value="2">v2</option>
                 <option value="3">v3</option>
