@@ -362,6 +362,9 @@
                 const fecha_viaje = document.getElementById('modal-fecha-viaje').value;
                 const notes = document.getElementById('modal-notes').value;
 
+                // Ocultar modal primero para evitar problemas de z-index y bloqueo con el backdrop de Bootstrap
+                $('#modalUpdateReserva').modal('hide');
+
                 Swal.fire({
                     title: '¿Guardar cambios?',
                     text: "Se actualizará la información de la reserva.",
@@ -387,7 +390,6 @@
                                 precheckin_notes: notes
                             },
                             success: function (res) {
-                                $('#modalUpdateReserva').modal('hide');
                                 Swal.fire({
                                     icon: 'success',
                                     title: '¡Actualizado!',
@@ -403,8 +405,13 @@
                                     text: xhr.responseJSON?.message || 'No se pudo guardar la información.',
                                     customClass: { confirmButton: 'btn btn-danger' }
                                 });
+                                // Reabrir el modal si ocurre un error
+                                $('#modalUpdateReserva').modal('show');
                             }
                         });
+                    } else {
+                        // Reabrir el modal si el usuario canceló
+                        $('#modalUpdateReserva').modal('show');
                     }
                 });
             });
