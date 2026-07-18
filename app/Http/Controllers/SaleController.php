@@ -4192,6 +4192,8 @@ class SaleController extends Controller
         $data["json"] = $data["json"] ?? [];
         $data["documento"] = $data["documento"] ?? [];
 
+        $this->injectComprobanteForFex($data, $factura, $tipo_comprobante);
+
         // Debug: Log para verificar que detalle esté definido antes de pasar a la vista
         Log::info('genera_pdf: Verificación final antes de loadView', [
             'sale_id' => $id,
@@ -4332,6 +4334,8 @@ class SaleController extends Controller
         $data["MunicipioR"] = $factura[0]['MunicipioR'];
         $data["DepartamentoR"] = $factura[0]['DepartamentoR'];
 
+        $this->injectComprobanteForFex($data, $factura, $tipo_comprobante);
+
         $tamaño = "Letter";
         $orientacion = "Portrait";
         $pdf = app('dompdf.wrapper');
@@ -4346,6 +4350,87 @@ class SaleController extends Controller
         //dd($pdf);
         return $pdf;
     }
+
+    private function injectComprobanteForFex(&$data, $factura, $tipo_comprobante)
+    {
+        $data["comprobante"] = [];
+
+        if ($tipo_comprobante == '11') {
+            $emisorItem = $data["emisor"][0] ?? [];
+            $clienteItem = $data["cliente"][0] ?? [];
+            $docItem = $data["documento"][0] ?? [];
+            $totalesItem = $data["totales"] ?? [];
+            $jsonItem = $data["json"] ?? [];
+
+            $condicionOperacionVal = $totalesItem["condicionOperacion"] ?? 1;
+            if ($condicionOperacionVal == 1 || $condicionOperacionVal === "01" || $condicionOperacionVal === "Contado") {
+                $condicionOperacion = 'Contado';
+            } elseif ($condicionOperacionVal == 2 || $condicionOperacionVal === "02" || $condicionOperacionVal === "Crédito") {
+                $condicionOperacion = 'Crédito';
+            } else {
+                $condicionOperacion = 'Otro';
+            }
+
+            $comprobanteHeader = [
+                "nombre_empresa"        => $emisorItem["nombre"] ?? "",
+                "nit_emisor"            => $emisorItem["nit"] ?? "",
+                "nrc_emisor"            => $emisorItem["nrc"] ?? ($emisorItem["ncr"] ?? ""),
+                "descActividad"         => $emisorItem["descActividad"] ?? "",
+                "complemento_emisor"    => $emisorItem["direccion"]["complemento"] ?? ($emisorItem["direccion"] ?? ""),
+                "municipio_emisor"      => $factura[0]['MunicipioE'] ?? "",
+                "departamento_emisor"   => $factura[0]['DepartamentoE'] ?? "",
+                "telefono"              => $emisorItem["telefono"] ?? "",
+                "correo"                => $emisorItem["correo"] ?? "",
+                "nombreComercial"       => $emisorItem["nombreComercial"] ?? "",
+                "tipo_establecimiento"  => $emisorItem["tipoEstablecimiento"] ?? "M001",
+                "nombre_tienda"         => $emisorItem["nombreComercial"] ?? "",
+                "codigoGeneracion"      => $jsonItem["codigoGeneracion"] ?? ($docItem["codigoGeneracion"] ?? ""),
+                "selloRecibido"         => $jsonItem["selloRecibido"] ?? "",
+                "version"               => $docItem["version"] ?? ($jsonItem["identificacion"]["version"] ?? "3"),
+                "fecEmi"                => $jsonItem["fecEmi"] ?? ($jsonItem["identificacion"]["fecEmi"] ?? date('Y-m-d')),
+                "horEmi"                => $jsonItem["horEmi"] ?? ($jsonItem["identificacion"]["horEmi"] ?? date('H:i:s')),
+                "nu_doc"                => $docItem["actual"] ?? ($jsonItem["identificacion"]["numeroControl"] ?? ""),
+                "id_cliente"            => $clienteItem["numDocumento"] ?? "",
+                "nombre"                => $clienteItem["nombre"] ?? "",
+                "dsTipoDocumento"       => $clienteItem["tipoDocumento"] ?? "",
+                "numDocumento"          => $clienteItem["numDocumento"] ?? "",
+                "correo_receptor"       => $clienteItem["correo"] ?? "",
+                "complemento_receptor"  => $clienteItem["direccion"]["complemento"] ?? ($clienteItem["direccion"] ?? ""),
+                "telefono_receptor"     => $clienteItem["telefono"] ?? "",
+                "descActividad_receptor"=> $clienteItem["descActividad"] ?? "",
+                "condicionOperacion"    => $condicionOperacion,
+                "Pais"                  => $factura[0]['PaisR'] ?? "",
+                "total_letras"          => $totalesItem["totalLetras"] ?? ($totalesItem["total_letras"] ?? ""),
+                "nombEntrega"           => $jsonItem["extension"]["nombEntrega"] ?? "",
+                "docuEntrega"           => $jsonItem["extension"]["docuEntrega"] ?? "",
+                "nombRecibe"            => $jsonItem["extension"]["nombRecibe"] ?? "",
+                "docuRecibe"            => $jsonItem["extension"]["docuRecibe"] ?? "",
+                "credito"               => $totalesItem["credito"] ?? 0,
+                "contado"               => $totalesItem["contado"] ?? 0,
+                "tarjeta"               => $totalesItem["tarjeta"] ?? 0,
+                "tot_gravado"           => $totalesItem["totalGravada"] ?? ($totalesItem["totalGravel"] ?? 0),
+                "subTotalVentas"        => $totalesItem["subTotalVentas"] ?? 0,
+                "subTotal"              => $totalesItem["subTotal"] ?? 0,
+                "totalNoGravado"        => $totalesItem["totalNoGravado"] ?? 0,
+                "totalPagar"            => $totalesItem["totalPagar"] ?? 0,
+            ];
+
+            $comprobanteProvider = [];
+            if (!empty($factura[0]['provider_name']) && !empty($factura[0]['provider_nit'])) {
+                $comprobanteProvider = [[
+                    "nombre" => $factura[0]['provider_name'],
+                    "nit" => $factura[0]['provider_nit']
+                ]];
+            }
+
+            $data["comprobante"] = [
+                0 => [ $comprobanteHeader ],
+                1 => $data["detalle"],
+                3 => $comprobanteProvider
+            ];
+        }
+    }
+
     public function print($id)
     {
         // Verificar si existe DTE para esta venta
