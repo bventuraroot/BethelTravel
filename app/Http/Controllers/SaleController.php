@@ -3814,7 +3814,7 @@ class SaleController extends Controller
 
         // Para FAC, CRF, CLQ, FSE, NCR y NDB, alinear estructura (emisor/cliente/detalle/totales del tope de sales.json)
         // Misma lógica que funcionaba antes, pero con validaciones adicionales
-        if (in_array($tipo_comprobante, ['01', '03', '08', '14', '05', '06'])) {
+        if (in_array($tipo_comprobante, ['01', '03', '08', '14', '05', '06', '11'])) {
             // PRIORIDAD 1: Usar datos desde sales.json (como funcionaba originalmente)
             // CRÍTICO: Convertir TODOS los objetos stdClass a arrays asociativos
             if (isset($salesJson["emisor"])) {
@@ -4371,6 +4371,42 @@ class SaleController extends Controller
                 $condicionOperacion = 'Otro';
             }
 
+            $totalPagar = $totalesItem["totalPagar"] ?? 0;
+            $credito = 0;
+            $contado = 0;
+            $tarjeta = 0;
+
+            if ($condicionOperacion == 'Contado') {
+                $contado = $totalPagar;
+            } elseif ($condicionOperacion == 'Crédito') {
+                $credito = $totalPagar;
+            } else {
+                $tarjeta = $totalPagar;
+            }
+
+            // Normalizar el detalle para usar las claves esperadas por fex.blade.php
+            $normalizedDetalle = [];
+            $detalleSrc = $data["detalle"] ?? [];
+            foreach ($detalleSrc as $d) {
+                // Soportar tanto objetos como arreglos
+                $dArr = is_object($d) ? json_decode(json_encode($d), true) : $d;
+                if (!is_array($dArr)) {
+                    continue;
+                }
+
+                $descripcion = $dArr["descripcion"] ?? "";
+                $pre_unitario = $dArr["pre_unitario"] ?? ($dArr["precioUni"] ?? ($dArr["precio_unitario"] ?? 0));
+                $imp_int_det = $dArr["imp_int_det"] ?? ($dArr["noGravado"] ?? ($dArr["no_imponible"] ?? 0));
+                $gravado = $dArr["gravado"] ?? ($dArr["ventaGravada"] ?? ($dArr["gravadas"] ?? 0));
+
+                $normalizedDetalle[] = [
+                    "descripcion"   => $descripcion,
+                    "pre_unitario"  => $pre_unitario,
+                    "imp_int_det"   => $imp_int_det,
+                    "gravado"       => $gravado,
+                ];
+            }
+
             $comprobanteHeader = [
                 "nombre_empresa"        => $emisorItem["nombre"] ?? "",
                 "nit_emisor"            => $emisorItem["nit"] ?? "",
@@ -4405,14 +4441,14 @@ class SaleController extends Controller
                 "docuEntrega"           => $jsonItem["extension"]["docuEntrega"] ?? "",
                 "nombRecibe"            => $jsonItem["extension"]["nombRecibe"] ?? "",
                 "docuRecibe"            => $jsonItem["extension"]["docuRecibe"] ?? "",
-                "credito"               => $totalesItem["credito"] ?? 0,
-                "contado"               => $totalesItem["contado"] ?? 0,
-                "tarjeta"               => $totalesItem["tarjeta"] ?? 0,
+                "credito"               => $credito,
+                "contado"               => $contado,
+                "tarjeta"               => $tarjeta,
                 "tot_gravado"           => $totalesItem["totalGravada"] ?? ($totalesItem["totalGravel"] ?? 0),
                 "subTotalVentas"        => $totalesItem["subTotalVentas"] ?? 0,
                 "subTotal"              => $totalesItem["subTotal"] ?? 0,
                 "totalNoGravado"        => $totalesItem["totalNoGravado"] ?? 0,
-                "totalPagar"            => $totalesItem["totalPagar"] ?? 0,
+                "totalPagar"            => $totalPagar,
             ];
 
             $comprobanteProvider = [];
@@ -4425,7 +4461,7 @@ class SaleController extends Controller
 
             $data["comprobante"] = [
                 0 => [ $comprobanteHeader ],
-                1 => $data["detalle"],
+                1 => $normalizedDetalle,
                 3 => $comprobanteProvider
             ];
         }
