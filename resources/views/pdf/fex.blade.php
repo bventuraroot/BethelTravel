@@ -7,39 +7,49 @@
 
     <style type="text/css">
         * {
-            font-family: Verdana, Arial, sans-serif;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            color: #333;
         }
 
         table {
-            font-size: xx-small;
+            font-size: 10px;
+            border-collapse: collapse;
         }
 
         tfoot tr td {
             font-weight: bold;
-            font-size: xx-small;
+            font-size: 10px;
         }
 
         .gray {
-            background-color: lightgray
+            background-color: #f5f5f5;
         }
 
         .cuadro{
-            border:1px solid #000;
+            border: 1.5px solid #333333;
             border-spacing: 0 0;
-            padding: 0;
+            padding: 6px;
         }
         .cuadro-izq{
-        border-left:1px solid #000;
+        border-left: 0.75px solid #666666;
         border-spacing: 0 0;
+        padding: 6px;
 
         }
         .sumas{
-        border-left:1px solid #000;
-        border-bottom:1px solid #000;
+        border-left: 0.75px solid #666666;
+        border-bottom: 0.75px solid #666666;
         border-spacing: 0 0;
         margin: 0;
+        padding: 6px;
 
         }
+
         #watermark {
         position: fixed;
 
@@ -48,7 +58,7 @@
         This should center it vertically
         **/
 
-        bottom: 10cm;
+        bottom: 5cm;
         left: 6.5cm;
 
         /** Change image dimensions**/
@@ -80,93 +90,95 @@
 <body>
     @if ($codTransaccion == "02")
     <div id="watermark">
-        anulado
+        ANULADO
     </div>
     @endif
 <!-- Encabezado y QR -->
-    <table width="100%">
+    <table width="100%" style="margin-bottom: 10px;">
         <tr valign="top">
-            <td width=45%>
-                <table width="100%">
+            <td width=45% style="padding-right: 10px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
-                        <td>
-                            <img src="{{ logo_pdf($comprobante[0][0]['nrc_emisor'] ?? ($comprobante[0][0]['nit_emisor'] ?? '')) }}" alt="logo" width="120px" style="display: block; object-fit: contain;">
+                        <td style="padding-bottom: 4px;">
+                            <img src="{{ logo_pdf($emisor[0]['nrc'] ?? ($emisor[0]['ncr'] ?? '')) }}" alt="logo" width="125px" style="display: block; margin: 0 auto; object-fit: contain;">
                         </td>
                     </tr>
                     <tr>
-                        <td style="font-size: x-small;">
-                            <strong>{{$comprobante[0][0]["nombre_empresa"]}}</strong>
+                        <td style="font-size: 10px; padding-bottom: 2px; font-weight: bold; color: #2c3e50;">
+                            {{$emisor[0]["nombre"] ?? ($emisor[0]["nombreComercial"] ?? '')}}
                         </td>
                     </tr>
-
                     <tr>
-                        <td>NIT:{{$comprobante[0][0]["nit_emisor"]}}</td>
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>Tipo:</strong> {{ Tipo_Establecimiento($emisor[0]["tipoEstablecimiento"] ?? '01') }}</td>
                     </tr>
                     <tr>
-                        <td>NRC:{{$comprobante[0][0]["nrc_emisor"]}}</td>
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>NIT:</strong> {{$emisor[0]["nit"] ?? ''}} | <strong>NRC:</strong> {{$emisor[0]["nrc"] ?? ($emisor[0]["ncr"] ?? '')}}</td>
                     </tr>
                     <tr>
-                        <td>Actividad económica:{{$comprobante[0][0]["descActividad"]}}</td>
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>Act. económica:</strong> {{$emisor[0]["descActividad"] ?? ''}}</td>
                     </tr>
                     <tr>
-                        <td>Dirección: {{$comprobante[0][0]["complemento_emisor"]}}<br>
-                        {{$comprobante[0][0]["municipio_emisor"]}},{{$comprobante[0][0]["departamento_emisor"]}}</td>
-                    </tr>
-                    <tr>
-                        <td>Número de teléfono:{{$comprobante[0][0]["telefono"]}}</td>
-                    </tr>
-                    <tr>
-                        <td>Correo electrónico:{{$comprobante[0][0]["correo"]}}</td>
-                    </tr>
-                    <tr>
-                        <td>Nombre comercial:{{$comprobante[0][0]["nombreComercial"]}}</td>
-                    </tr>
-                    <tr>
-                        <td>Tipo de establecimiento:{{Tipo_Establecimiento($comprobante[0][0]["tipo_establecimiento"])}}
-                             - {{$comprobante[0][0]["nombre_tienda"]}}
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>Dirección:</strong>
+                            @if(isset($emisor[0]["direccion"]["complemento"]))
+                                {{$emisor[0]["direccion"]["complemento"]}}, {{$MunicipioE}}, {{$DepartamentoE}}
+                            @else
+                                {{$emisor[0]["direccion"] ?? ''}}, {{$MunicipioE}}, {{$DepartamentoE}}
+                            @endif
                         </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>Tel:</strong> {{$emisor[0]["telefono"] ?? ''}} | <strong>Correo:</strong> {{$emisor[0]["correo"] ?? ''}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding-bottom: 2px; font-size: 10px; line-height: 1.3;"><strong>Nombre comercial:</strong> {{$emisor[0]["nombreComercial"] ?? ''}}</td>
                     </tr>
 
                 </table>
             </td>
             <td>
-                <table width="100%" style="border:1px solid #000;">
-                    <tr style="background-color: lightgray;">
-                        <td colspan="3" align="center" style="font-size: x-small;">
-                            <strong>DOCUMENTO TRIBUTARIO ELECTRÓNICO</strong><br>
-                            <strong>FACTURA DE EXPORTACION</strong>
+                <table width="100%" style="border: 2px solid #333333;" cellpadding="3" cellspacing="0">
+                    <tr style="background-color: #e8e8e8;">
+                        <td colspan="3" align="center" style="font-size: 10px; padding: 7px; border-bottom: 2px solid #333333;">
+                            <strong style="color: #000000; letter-spacing: 0.3px;">DOCUMENTO TRIBUTARIO ELECTRÓNICO</strong><br>
+                            <strong style="color: #000000; font-size: 10px; letter-spacing: 0.3px;">FACTURA DE EXPORTACION</strong>
                         </td>
                     </tr>
-                    <tr>
-                        <td><strong>Código de Generación:</strong></td>
-                        <td colspan="2">{{$comprobante[0][0]["codigoGeneracion"]}}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Código Generación:</strong></td>
+                        <td colspan="2" style="padding: 3px; font-size: 10px;">{{ $json["codigoGeneracion"] ?? ($json["identificacion"]["codigoGeneracion"] ?? '') }}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Sello de recepción:</strong></td>
-                        <td colspan="2">{{$comprobante[0][0]["selloRecibido"]}}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Sello recepción:</strong></td>
+                        <td colspan="2" style="padding: 3px; font-size: 10px;">{{$json["selloRecibido"] ?? 'N/A'}}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Número de Control:</strong></td>
-                        <td colspan="2">{{ $json["identificacion"]["numeroControl"] ?? ($json["numeroControl"] ?? '') }}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Número Control:</strong></td>
+                        <td colspan="2" style="padding: 3px; font-size: 10px;">{{ $json["identificacion"]["numeroControl"] ?? ($json["numeroControl"] ?? '') }}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Modélo facturación:</strong></td>
-                        <td>Previo</td>
-                        <td><strong>Versión del Json:</strong> {{$comprobante[0][0]["version"]}}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Modelo:</strong></td>
+                        <td style="padding: 3px; font-size: 10px;">Previo</td>
+                        <td style="padding: 3px; font-size: 10px;"><strong>Versión Json:</strong> {{ $documento[0]["versionjson"] ?? ($documento[0]["versionJson"] ?? ($documento[0]["version"] ?? ($json["version"] ?? ''))) }}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Tipo de transmisión</strong></td>
-                        <td>Normal</td>
-                        <td><strong>Fecha emisión:</strong> {{$comprobante[0][0]["fecEmi"]}}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Transmisión:</strong></td>
+                        <td style="padding: 3px; font-size: 10px;">Normal</td>
+                        <td style="padding: 3px; font-size: 10px;"><strong>Fecha:</strong> {{ isset($json["fhRecibido"]) ? date('d/m/Y', strtotime($json["fhRecibido"])) : (isset($json["identificacion"]["fecEmi"]) ? date('d/m/Y', strtotime($json["identificacion"]["fecEmi"])) : (isset($json["fecEmi"]) ? date('d/m/Y', strtotime($json["fecEmi"])) : '')) }}</td>
                     </tr>
-                    <tr>
-                        <td><strong>Hora de emisión:</strong></td>
-                        <td>{{$comprobante[0][0]["horEmi"]}}</td>
-                        <td><strong>Documento interno No:</strong>{{$comprobante[0][0]["nu_doc"]}}</td>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Hora:</strong></td>
+                        <td style="padding: 3px; font-size: 10px;">{{ isset($json["fhRecibido"]) ? substr($json["fhRecibido"],12,8) : ($json["identificacion"]["horEmi"] ?? ($json["horEmi"] ?? '')) }}</td>
+                        <td style="padding: 3px; font-size: 10px;"><strong>Doc. Interno:</strong> {{$documento[0]["actual"] ?? ''}}</td>
                     </tr>
-                    <tr>
-                        <td colspan="3" align="center">
-                            <img src="data:image/png;base64,{{$qr}}" alt="">
+                    @if(isset($json["estadoHacienda"]))
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 3px; font-size: 10px;"><strong>Estado:</strong></td>
+                        <td colspan="2" style="padding: 3px; font-size: 10px;">{{$json["estadoHacienda"]}}</td>
+                    </tr>
+                    @endif
+                    <tr style="background-color: #ffffff;">
+                        <td colspan="3" align="center" style="padding: 4px;">
+                            <img src="data:image/png;base64,{{$qr}}" alt="Código QR" width="100px" style="max-width: 125px; height: auto;">
                         </td>
                     </tr>
 
@@ -179,241 +191,231 @@
  <!-- Final de Encabezado y QR -->
 
  <!-- Datos Receptor -->
-    <table width="100%" style="border-collapse:collapse;"">
-        <tr valign="top" >
-
-            <td width="480px">
-                <table width="100%" style="border-top:1px solid #000;">
-
+    <table width="100%" style="border-collapse:collapse; margin-bottom: 12px;">
+        <tr valign="top">
+            <td width="100%">
+                <table width="100%" style="border-top: 2px solid #333333; padding-top: 8px;" cellpadding="3" cellspacing="0">
                     <tr>
-                        <td align="right" width="100px"><strong>Nombre:</strong></td>
-                        <td colspan="2" >{{$comprobante[0][0]["id_cliente"]}} - {{$comprobante[0][0]["nombre"]}}  </td>
+                        <td width="50%" valign="top" style="padding: 4px;">
+                            <table width="100%" cellpadding="2" cellspacing="0">
+                                <tr>
+                                    <td width="40%" style="padding: 3px; font-size: 10px; vertical-align: top;"><strong>Nombre:</strong></td>
+                                    <td width="60%" style="padding: 3px; font-size: 10px;">{{$cliente[0]["nombre"] ?? ($json["receptor"]["nombre"] ?? '')}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px; vertical-align: top;"><strong>Tipo Documento:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">{{ tipoDocumento(($cliente[0]["tipoDocumento"] ?? ($json["receptor"]["tipoDocumento"] ?? null))) }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px; vertical-align: top;"><strong>No. Documento:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">{{ $cliente[0]["numDocumento"] ?? ($json["receptor"]["numDocumento"] ?? '') }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px; vertical-align: top;"><strong>Correo electrónico:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">{{$cliente[0]["correo"] ?? ($json["receptor"]["correo"] ?? '')}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px; vertical-align: top;"><strong>Dirección:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">
+                                        @if(isset($cliente[0]["direccion"]) && is_array($cliente[0]["direccion"]))
+                                            {{$cliente[0]["direccion"]["complemento"] ?? ''}}, {{$MunicipioR}}, {{$DepartamentoR}}
+                                        @else
+                                            {{$cliente[0]["direccion"] ?? ($json["receptor"]["direccion"]["complemento"] ?? '')}}, {{$MunicipioR}}, {{$DepartamentoR}}
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td width="50%" valign="top" style="padding: 4px;">
+                            <table width="100%" cellpadding="2" cellspacing="0">
+                                <tr>
+                                    <td width="40%" style="padding: 3px; font-size: 10px;"><strong>Actividad:</strong></td>
+                                    <td width="60%" style="padding: 3px; font-size: 10px;">{{$cliente[0]["descActividad"] ?? ($json["receptor"]["descActividad"] ?? '')}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px;"><strong>Forma pago:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">
+                                        @if(($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="1" || ($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="01" || ($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="Contado")
+                                            CONTADO
+                                        @elseif (($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="2" || ($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="02" || ($totales['condicionOperacion'] ?? ($json["condicionOperacion"] ?? ''))=="Crédito")
+                                            CREDITO
+                                        @else
+                                            OTRO
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px;"><strong>País Destino:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">{{$PaisR}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 3px; font-size: 10px;"><strong>Moneda:</strong></td>
+                                    <td style="padding: 3px; font-size: 10px;">USD</td>
+                                </tr>
+                            </table>
+                        </td>
                     </tr>
-                    <tr>
-                        <td align="right"><strong>Tipo Documento:</strong></td>
-                        <td width="60%">{{$comprobante[0][0]["dsTipoDocumento"]}}</td>
-                        <td><strong>No.Documento:</strong> {{$comprobante[0][0]["numDocumento"]}}</td>
-                    </tr>
-                    <tr>
-                        <td align="right"><strong>Correo electrónico:</strong></td>
-                        <td colspan="2">{{$comprobante[0][0]["correo_receptor"]}}</td>
-
-                    </tr>
-                    <tr>
-                        <td align="right"><strong>Dirección:</strong></td>
-                        <td>{{$comprobante[0][0]["complemento_receptor"]}}</td>
-                        <td><strong>Teléfono:</strong> {{$comprobante[0][0]["telefono_receptor"]}}</td>
-                    </tr>
-
-
-                    <tr>
-                        <td align="right"><strong>Actividad:</strong></td>
-                        <td>{{$comprobante[0][0]["descActividad_receptor"]}}</td>
-                        <td><strong>Forma pago:</strong> {{$comprobante[0][0]["condicionOperacion"]}}</td>
-                    </tr>
-                    <tr>
-                        <td align="right"><strong>Pais Destino:</strong></td>
-                        <td>{{$comprobante[0][0]["Pais"]}}</td>
-                        <td><strong>Moneda:</strong>USD</td>
-                    </tr>
-
                 </table>
             </td>
         </tr>
-
     </table>
 
-<!-- Datos Receptor -->
-@if (!empty($comprobante[3]))
+ <!-- Final de Datos Receptor -->
 
-
-    <table width="100%" style="border-top:1px solid #000;">
-        <tr align="center" >
-            <td colspan="2"><strong>VENTA A CUENTA DE TERCEROS</strong></td>
-        </tr>
-        <tr>
-            <td><strong>NIT:</strong>{{$comprobante[3][0]["nit"]}}</td>
-            <td><strong>Nombre, denominación o razón social:</strong>{{$comprobante[3][0]["nombre"]}}</td>
-        </tr>
-
-    </table>
-@endif
-    <br />
-
-    <table width="100%" style="border-collapse:collapse;">
-        <thead style="background-color: lightgray;">
+    <table width="100%" style="border-collapse:collapse; page-break-after: auto;">
+        <thead style="background-color: #e8e8e8;">
             <tr>
-                <th class="cuadro">No</th>
-                <th class="cuadro">Cnt</th>
-
-                <th class="cuadro">Descripcion</th>
-                <th class="cuadro">Precio<br>Unitario</th>
-                <th class="cuadro">Descuento<br>por Item</th>
-                <th class="cuadro">Otros montos<br>no afectos</th>
-
-                <th class="cuadro">Ventas<br>Gravadas</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">No</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Cantidad</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Descripcion</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Precio<br>Unitario</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Descuento<br>por Item</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Otros montos<br>no afectos</th>
+                <th class="cuadro" style="font-size: 10px; font-weight: bold; color: #000000; padding: 6px 4px;">Ventas<br>Gravadas</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($comprobante[1] as $d)
-
-
-            <tr>
-                <th>{{$loop->index+1}}</th>
-                <td>1</td>
-                <td>{{$d["descripcion"]}}</td>
-                <td align="right">{{FNumero($d["pre_unitario"])}}</td>
-                <td align="right">0.00</td>
-                <td align="right">{{FNumero($d["imp_int_det"])}}</td>
-
-                <td align="right">{{FNumero($d["gravado"])}}</td>
+            @foreach ($detalle as $d)
+            <tr style="background-color: {{ $loop->index % 2 == 0 ? '#ffffff' : '#f8f9fa' }};">
+                <td style="padding: 6px 4px; text-align: center; font-size: 10px; white-space: nowrap; ">{{$loop->index+1}}</td>
+                <td style="padding: 6px 4px; text-align: center; font-size: 10px; white-space: nowrap; ">{{$d["cantidad"] ?? '1'}}</td>
+                <td style="padding: 6px 4px; font-size: 10px; word-break: break-all;">{{$d["descripcion"] ?? ''}}</td>
+                <td align="center" style="padding: 6px 4px; font-size: 10px; white-space: nowrap; ">{{FNumero($d["precioUni"] ?? ($d["pre_unitario"] ?? 0))}}</td>
+                <td align="center" style="padding: 6px 4px; font-size: 10px; white-space: nowrap; ">{{FNumero($d["descu"] ?? 0)}}</td>
+                <td align="center" style="padding: 6px 4px; font-size: 10px; white-space: nowrap; ">{{FNumero($d["no_imponible"] ?? $d["noGravado"] ?? 0)}}</td>
+                <td align="center" style="padding: 6px 4px; font-size: 10px; white-space: nowrap; ">{{FNumero($d["ventaGravada"] ?? 0)}}</td>
             </tr>
+            @if (($loop->index+1) % 37 == 0)
+            <tr style='page-break-after: always;'>
+                <td align="right" colspan="7">Pasan ......</td>
+            </tr>
+            @endif
             @endforeach
         </tbody>
-
 
     </table>
     <footer>
         <div class="footer" style="position: absolute; bottom: 0;border-spacing: 0 0;border-collapse:collapse;margin-top:0;">
             <table width="100%" style="border-collapse:collapse;margin-top:0;border-spacing: 0 0;" class="cuadro">
                 <tr>
-                    <td width="490px">
-                        <table width="100%">
+                    <td width="460px" style="padding: 1;">
+                        <table width="100%" cellpadding="2" cellspacing="0" style="border-spacing: 0;">
                             <tr>
-                                <td colspan="2"><strong>Valor en Letras:</strong> {{$comprobante[0][0]["total_letras"]}}</td>
+                                <td colspan="2" style="padding: 3px 0; font-size: 10px;"><strong>Valor en Letras:</strong> {{$totales["totalLetras"] ?? ''}}</td>
                             </tr>
                             <tr>
-                                <td colspan="2" align="center" style="background-color: lightgray;"><strong>EXTENSIÓN</strong></td>
+                                <td colspan="2" align="center" style="padding: 3px; background-color: #f5f5f5; font-size: 10px; font-weight: bold;"><strong>EXTENSIÓN</strong></td>
                             </tr>
                             <tr>
-                                <td width="245px"><strong>Nombre entrega</strong> {{$comprobante[0][0]["nombEntrega"]}}</td>
-                                <td><strong>No Documento</strong> {{$comprobante[0][0]["docuEntrega"]}}</td>
+                                <td width="245px" style="padding: 2px 0; font-size: 10px;"><strong>Nombre entrega:</strong> {{$json["extension"]["nombEntrega"] ?? ''}}</td>
+                                <td style="padding: 2px 0; font-size: 10px;"><strong>No Documento:</strong> {{$json["extension"]["docuEntrega"] ?? ''}}</td>
                             </tr>
                             <tr>
-                                <td><strong>Nombre recibe</strong> {{$comprobante[0][0]["nombRecibe"]}}</td>
-                                <td><strong>No Documento</strong> {{$comprobante[0][0]["docuRecibe"]}}</td>
+                                <td width="245px" style="padding: 2px 0; font-size: 10px;"><strong>Nombre recibe:</strong> {{$json["extension"]["nombRecibe"] ?? ''}}</td>
+                                <td style="padding: 2px 0; font-size: 10px;"><strong>No Documento:</strong> {{$json["extension"]["docuRecibe"] ?? ''}}</td>
                             </tr>
                             <tr>
-                                <td colspan="2" align="center" style="background-color: lightgray;"><strong>OBSERVACIONES</strong></td>
+                                <td colspan="2" align="center" style="padding: 3px; background-color: #f5f5f5; font-size: 10px; font-weight: bold; margin-top: 3px;"><strong>OBSERVACIONES</strong></td>
                             </tr>
                             <tr>
-                                <td width="245px">
-                                   <center><strong>Forma de Pago</strong></center>
-                                </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td width="245px">
-                                <table width="100%">
-                                    <tr>
-                                        <td align="center"><strong>Credito</strong></td>
-                                        <td align="center"><strong>Contado</strong></td>
-                                        <td align="center"><strong>Tarjeta</strong></td>
-                                    </tr>
-                                </table>
-                                </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td width="245px">
-                                    <table width="100%">
+                                <td colspan="2" style="padding: 2px 0;">
+                                    <table width="100%" cellpadding="2" cellspacing="0" style="border-spacing: 0;">
                                         <tr>
-                                            <td align="right">{{FNumero($comprobante[0][0]["credito"])}}</td>
-                                            <td align="right">{{FNumero($comprobante[0][0]["contado"])}}</td>
-                                            <td align="right">{{FNumero($comprobante[0][0]["tarjeta"])}}</td>
+                                            <td align="center" style="font-size: 10px; font-weight: bold; padding: 2px;"><strong>Forma de Pago</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="font-size: 10px; padding: 2px;">
+                                                <table width="100%" cellpadding="2" cellspacing="0">
+                                                    <tr>
+                                                        <td align="center" style="font-size: 10px; font-weight: bold; padding: 2px;"><strong>Crédito</strong></td>
+                                                        <td align="center" style="font-size: 10px; font-weight: bold; padding: 2px;"><strong>Contado</strong></td>
+                                                        <td align="center" style="font-size: 10px; font-weight: bold; padding: 2px;"><strong>Tarjeta</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td align="center" style="font-size: 10px; padding: 2px;">{{FNumero(($totales["condicionOperacion"] ?? '') == "02" || ($totales["condicionOperacion"] ?? '') == "Crédito" ? ($totales["totalPagar"] ?? 0) : 0.00)}}</td>
+                                                        <td align="center" style="font-size: 10px; padding: 2px;">{{FNumero(($totales["condicionOperacion"] ?? '') == "01" || ($totales["condicionOperacion"] ?? '') == "Contado" ? ($totales["totalPagar"] ?? 0) : 0.00)}}</td>
+                                                        <td align="center" style="font-size: 10px; padding: 2px;">{{FNumero(($totales["condicionOperacion"] ?? '') == "03" || ($totales["condicionOperacion"] ?? '') == "Otro" ? ($totales["totalPagar"] ?? 0) : 0.00)}}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
                                         </tr>
                                     </table>
                                 </td>
                             </tr>
-
                         </table>
-
                     </td>
-                    <td style="border:1px solid #000;" width="230px">
+                    <td style="border: 2px solid #333333; padding: 2px; background-color: #f9f9f9;" width="230px">
                         <!--- Totales-->
-                        <table style="border-spacing: 0 0;">
+                        <table width="100%" cellpadding="2" cellspacing="0" style="border-spacing: 0; font-size: 10px;">
                             <tr>
-                                <td width="180px">Sumas $</td>
-                                <td colspan="3"></td>
-
-                                <td align="right" width="50px" class="sumas" colspan="2">{{FNumero($comprobante[0][0]["tot_gravado"])}}</td>
-
+                                <td width="80px" style="padding: 2px;">Sumas $</td>
+                                <td colspan="2" style="padding: 2px;"></td>
+                                <td align="right" width="50px" class="sumas" style="padding: 2px;">{{FNumero($totales["totalGravada"] ?? 0)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4" width="160px">Suma total de operaciones</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero($comprobante[0][0]["subTotalVentas"])}}</td>
-
+                                <td colspan="3" width="160px" style="padding: 2px;">Suma total de operaciones</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero($totales["subTotalVentas"] ?? 0)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4">Total descuentos</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero(0.00)}}</td>
-
-                            </tr>
-
-                            <tr>
-                                <td colspan="4">Sub-Total</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero($comprobante[0][0]["subTotal"])}}</td>
-
+                                <td colspan="3" style="padding: 2px;">Total descuentos</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero(0.00)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4">Seguro</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero(0.00)}}</td>
-
+                                <td colspan="3" style="padding: 2px;">Sub-Total</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero($totales["subTotal"] ?? 0)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4">Flete</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero(0.00)}}</td>
-
+                                <td colspan="3" style="padding: 2px;">Seguro</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero(0.00)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4">Monto Total de la operación</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero($comprobante[0][0]["subTotal"])}}</td>
-
+                                <td colspan="3" style="padding: 2px;">Flete</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero(0.00)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4">Total otros montos no afectos</td>
-                                <td align="right" class="cuadro-izq" colspan="2">{{FNumero($comprobante[0][0]["totalNoGravado"])}}</td>
-
+                                <td colspan="3" style="padding: 2px;">Monto Total de la operación</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero($totales["subTotal"] ?? 0)}}</td>
                             </tr>
                             <tr>
-                                <td colspan="4" ><strong>TOTAL A PAGAR</strong></td>
-                                <td align="right" class="cuadro-izq" colspan="2"><strong>{{FNumero($comprobante[0][0]["totalPagar"])}}</strong></td>
-
+                                <td colspan="3" style="padding: 2px;">Total otros montos no afectos</td>
+                                <td align="right" class="cuadro-izq" style="padding: 2px;">{{FNumero($totales["totalNoGravado"] ?? 0)}}</td>
                             </tr>
-
+                            <tr style="background-color: #333333;">
+                                <td colspan="3" style="padding: 4px; color: #ffffff; font-size: 10px;"><strong>TOTAL A PAGAR</strong></td>
+                                <td align="right" class="cuadro-izq" style="padding: 4px; color: #ffffff; font-size: 10px; border-left: 1px solid #666666;"><strong>{{FNumero($totales["totalPagar"] ?? 0)}}</strong></td>
+                            </tr>
                         </table>
                         <!--- Fin Totales-->
                     </td>
                 </tr>
                 <tr class="cuadro">
-                    <td colspan="2" style="font-size:6px;"><span style="margin:0;padding=0;"><center>Condiciones generales de los servicios prestados por
-                        {{$comprobante[0][0]["nombre_empresa"]}}</center><br style="margin:0;padding=0;">
-                    • {{$comprobante[0][0]["nombre_empresa"]}}. declara expresamente que actúa como agente representante o distribuidor de
-                    los
-                    transportistas aéreos, que previamente la han autorizado para vender transporte aéreo de su propiedad, atendiendo a lo
-                    estipulado en el Régimen respectivo del Código de Comercio de El Salvador, por ende, se sujeta estrictamente a las
-                    instrucciones emanadas por ellos, sin tener injerencia alguna en cuanto al precio de tarifa , políticas de equipaje,
-                    horarios de vuelos, entre otras condiciones.
-                    • El contrato de transporte Aéreo se celebra entre el consumidor o pasajero y el transportista aéreo, por ende,
-                    {{$comprobante[0][0]["nombre_empresa"]}}, no tiene responsabilidad alguna en casos de muerte o lesiones de los
-                    pasajeros, destrucción,
-                    perdida o avería de su equipaje, así como por atrasaos, huelgas, terremotos o cualquier otro acontecimiento de fuerza
-                    mayor. El contrato se rige por la Ley Orgánica de Aviación Civil y Convenios Internacionales ratificados por el Estado
-                    de El Salvador como el Convenio de Montreal y pacto de Varsovia.
-                    • El precio cancelado en concepto de boletos aéreos no es reembolsable.
-                    • Es obligación del pasajero cumplir los requisitos gubernamentales establecidos para la realización del viaje y
-                    disponer de los documentos de salida, entrada, visa, permisos y demás exigencias en El Salvador y/o cualquier otro
-                    Estado, así como llegar al aeropuerto a las horas señaladas por el transportista y con la antelación suficiente que le
-                    permite completar los tramite de chequeo y salida.
-                    • El consumidor declara que previo a la compra de su boleto aéreo o paquete vacacional, personeros de
-                    {{$comprobante[0][0]["nombre_empresa"]}}, explicaron cada una de las condiciones descritas anteriormente, entendiéndolas
-                    y aceptándolas, eximiéndola
-                    de tal forma de cualquier responsabilidad que se derive de ellas.</span>
+                    <td colspan="2" style="font-size: 7px; padding: 3px 6px; text-align: left; line-height: 1.2;">
+                        <center><strong>Condiciones generales de los servicios prestados por {{$emisor[0]["nombre"] ?? ($emisor[0]["nombreComercial"] ?? '')}}</strong></center><br>
+                        • {{$emisor[0]["nombre"] ?? ($emisor[0]["nombreComercial"] ?? '')}} declara expresamente que actúa como agente representante o distribuidor de los transportistas aéreos, que previamente la han autorizado para vender transporte aéreo de su propiedad, atendiendo a lo estipulado en el Régimen respectivo del Código de Comercio de El Salvador, por ende, se sujeta estrictamente a las instrucciones emanadas por ellos, sin tener injerencia alguna en cuanto al precio de tarifa, políticas de equipaje, horarios de vuelos, entre otras condiciones.<br>
+                        • El contrato de transporte Aéreo se celebra entre el consumidor o pasajero y el transportista aéreo, por ende, {{$emisor[0]["nombre"] ?? ($emisor[0]["nombreComercial"] ?? '')}} no tiene responsabilidad alguna en casos de muerte o lesiones de los pasajeros, destrucción, perdida o avería de su equipaje, así como por atrasos, huelgas, terremotos o cualquier otro acontecimiento de fuerza mayor. El contrato se rige por la Ley Orgánica de Aviación Civil y Convenios Internacionales ratificados por el Estado de El Salvador como el Convenio de Montreal y pacto de Varsovia.<br>
+                        • El precio cancelado en concepto de boletos aéreos no es reembolsable.<br>
+                        • Es obligación del pasajero cumplir los requisitos gubernamentales establecidos para la realización del viaje y disponer de los documentos de salida, entrada, visa, permisos y demás exigencias en El Salvador y/o cualquier otro Estado, así como llegar al aeropuerto a las horas señaladas por el transportista y con la antelación suficiente que le permite completar los tramite de chequeo y salida.<br>
+                        • El consumidor declara que previo a la compra de su boleto aéreo o paquete vacacional, personeros de {{$emisor[0]["nombre"] ?? ($emisor[0]["nombreComercial"] ?? '')}} explicaron cada una de las condiciones descritas anteriormente, entendiéndolas y aceptándolas, eximiéndola de tal forma de cualquier responsabilidad que se derive de ellas.
                     </td>
                 </tr>
             </table>
         </div>
     </footer>
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $x = 530;
+            $y = 10;
+            $text = "Página {PAGE_NUM} de {PAGE_COUNT}";
+            $font = null;
+            $size = 8;
+            $color = array(0,0,0);
+            $word_space = 0.0;  //  default
+            $char_space = 0.0;  //  default
+            $angle = 0.0;   //  default
+            $pdf->page_text($x, $y, $text, $font, $size, $color, $word_space, $char_space, $angle);
+        }
+    </script>
 </body>
 
 </html>
