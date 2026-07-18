@@ -147,7 +147,7 @@
                     </tr>
                     <tr>
                         <td><strong>Número de Control:</strong></td>
-                        <td colspan="2">{{$dte}}</td>
+                        <td colspan="2">{{ $json["identificacion"]["numeroControl"] ?? ($json["numeroControl"] ?? '') }}</td>
                     </tr>
                     <tr>
                         <td><strong>Modélo facturación:</strong></td>
