@@ -2119,120 +2119,53 @@ function creardocuments() {
             confirmButtonText: "Si, Presentar!",
             cancelButtonText: "No, Volver!",
             reverseButtons: true,
-            showLoaderOnConfirm: true, // Agrega un ícono de espera en el botón de confirmación
-            preConfirm: () => {
-                return new Promise((resolve, reject) => {
-                    var corr = $('#valcorr').val();
-                    var totalamount = $('#ventatotallhidden').val();
-                    totalamount = 0 + totalamount;
-
-                    $.ajax({
-                        url: "createdocument/" + btoa(corr) + '/' + totalamount,
-                        method: "GET",
-                        beforeSend: function() {
-                            // Si es venta múltiple, mostrar modal de progreso
-                            // (Se detectará en la respuesta)
-                        },
-                        success: function (response) {
-
-                            // Convertir a objeto si viene como string
-                            var resObj = response;
-                            if (typeof response === 'string') {
-                                try {
-                                    resObj = JSON.parse(response);
-                                } catch (e) {
-                                    resObj = null;
-                                }
-                            }
-
-                            // Verificar si es venta con múltiples proveedores
-                            if (response.type === 'multi_provider') {
-                                // Cerrar SweetAlert actual
-                                Swal.close();
-                                // Mostrar modal de progreso
-                                showMultiProviderProgress(response);
-
-                                if (response.all_success) {
-                                    resolve(response);
-                                } else {
-                                    reject({
-                                        type: 'partial_success',
-                                        message: 'Algunos DTEs fallaron',
-                                        data: response
-                                    });
-                                }
-                            } else if (resObj && (resObj.codEstado === "03" || resObj.estado === "Rechazado" || resObj.descripcionMsg || resObj.mensaje)) {
-                                reject({
-                                    type: 'hacienda_rejected',
-                                    message: resObj.descripcionMsg || resObj.mensaje || 'Documento rechazado por Hacienda',
-                                    codigo: resObj.codigoMsg || resObj.codEstado || null,
-                                    observaciones: resObj.observacionesMsg || resObj.error || resObj.detailsMessage || '',
-                                    data: resObj
-                                });
-                            } else if (response.res == 1) {
-                                resolve(response); // Resuelve la promesa si la solicitud es exitosa
-                            } else if (response.res == 0) {
-                                reject({
-                                    type: 'server_error',
-                                    message: response.message || response.error || 'Algo salió mal al emitir el DTE',
-                                    response: response
-                                }); // Rechaza la promesa con detalle del backend
-                            } else if (response.error) {
-                                // Error del servidor
-                                reject({
-                                    type: 'server_error',
-                                    message: response.mensaje || response.message || response.error || 'Error del servidor',
-                                    error: response.error
-                                });
-                            } else {
-                                reject({
-                                    type: 'unknown_error',
-                                    message: 'Error desconocido',
-                                    response: response
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error AJAX:', xhr, status, error);
-                            var parsedMessage = '';
-                            var parsedCode = null;
-
-                            try {
-                                var responseJson = xhr.responseJSON;
-                                if (!responseJson && xhr.responseText) {
-                                    responseJson = JSON.parse(xhr.responseText);
-                                }
-
-                                if (responseJson) {
-                                    parsedMessage = responseJson.message || responseJson.error || responseJson.descripcionMsg || '';
-                                    parsedCode = responseJson.codigoMsg || responseJson.codEstado || null;
-                                }
-                            } catch (e) {
-                                // Ignorar error de parseo y usar fallback
-                            }
-
-                            // status = 0 suele ser problema de red/CORS/timeout del navegador.
-                            var isConnectionIssue = xhr.status === 0;
-                            var fallbackMessage = isConnectionIssue
-                                ? 'No se pudo conectar con el servidor. Verifica red/VPN y vuelve a intentar.'
-                                : 'El servidor devolvió un error al emitir el DTE.';
-
-                            reject({
-                                type: 'ajax_error',
-                                message: parsedMessage || error || fallbackMessage,
-                                status: xhr.status,
-                                statusText: xhr.statusText || status,
-                                code: parsedCode,
-                                isConnectionIssue: isConnectionIssue,
-                                response: xhr.responseText
-                            });
-                        }
-                    });
-                });
-            },
         })
         .then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
+                enviarDocumentoSinConfirmar();
+            }
+        });
+}
+
+function enviarDocumentoSinConfirmar() {
+    Swal.fire({
+        title: 'Presentando a Hacienda...',
+        text: 'Por favor espere mientras se emite el documento.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    var corr = $('#valcorr').val();
+    var totalamount = $('#ventatotallhidden').val();
+    totalamount = 0 + totalamount;
+
+    $.ajax({
+        url: "createdocument/" + btoa(corr) + '/' + totalamount,
+        method: "GET",
+        success: function (response) {
+            var resObj = response;
+            if (typeof response === 'string') {
+                try {
+                    resObj = JSON.parse(response);
+                } catch (e) {
+                    resObj = null;
+                }
+            }
+
+            if (response.type === 'multi_provider') {
+                Swal.close();
+                showMultiProviderProgress(response);
+            } else if (resObj && (resObj.codEstado === "03" || resObj.estado === "Rechazado" || resObj.descripcionMsg || resObj.mensaje)) {
+                manejarErrorEmision({
+                    type: 'hacienda_rejected',
+                    message: resObj.descripcionMsg || resObj.mensaje || 'Documento rechazado por Hacienda',
+                    codigo: resObj.codigoMsg || resObj.codEstado || null,
+                    observaciones: resObj.observacionesMsg || resObj.error || resObj.detailsMessage || '',
+                    data: resObj
+                });
+            } else if (response.res == 1) {
                 Swal.fire({
                     title: "DTE Creado correctamente",
                     icon: "success",
@@ -2242,128 +2175,179 @@ function creardocuments() {
                         window.location.href = "index";
                     }
                 });
+            } else if (response.res == 0) {
+                manejarErrorEmision({
+                    type: 'server_error',
+                    message: response.message || response.error || 'Algo salió mal al emitir el DTE',
+                    response: response
+                });
+            } else if (response.error) {
+                manejarErrorEmision({
+                    type: 'server_error',
+                    message: response.mensaje || response.message || response.error || 'Error del servidor',
+                    error: response.error
+                });
+            } else {
+                manejarErrorEmision({
+                    type: 'unknown_error',
+                    message: 'Error desconocido',
+                    response: response
+                });
             }
-        })
-        .catch((error) => {
-            console.error('Error en creación de documento:', error);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error AJAX:', xhr, status, error);
+            var parsedMessage = '';
+            var parsedCode = null;
 
-            let title = "Error";
-            let message = "Algo sucedió y el documento no fue creado.";
-            let icon = "error";
-            let showCancelButton = false;
-            let confirmButtonText = "Entendido";
-            let cancelButtonText = null;
-
-            // Manejar diferentes tipos de errores
-            if (typeof error === 'object' && error.type) {
-                switch (error.type) {
-                    case 'partial_success':
-                        // No hacer nada aquí, ya se manejó en showMultiProviderProgress
-                        return;
-
-                    case 'hacienda_rejected':
-                        title = "Documento Rechazado por Hacienda";
-                        message = `
-                            <div class="text-left">
-                                <p><strong>Motivo:</strong> ${error.message}</p>
-                                ${error.codigo ? `<p><strong>Código:</strong> ${error.codigo}</p>` : ''}
-                                ${error.observaciones ? `<p><strong>Observaciones:</strong> ${error.observaciones}</p>` : ''}
-                                <hr>
-                                <p class="text-muted small">La venta se ha guardado como borrador. Puedes corregir los datos y reintentar.</p>
-                            </div>
-                        `;
-                        icon = "warning";
-                        showCancelButton = true;
-                        confirmButtonText = "Reintentar";
-                        cancelButtonText = "Ver Borradores";
-                        break;
-
-                    case 'hacienda_error':
-                        title = "Error en Hacienda";
-                        message = `
-                            <div class="text-left">
-                                <p><strong>Error:</strong> ${error.message}</p>
-                                <hr>
-                                <p class="text-muted small">La venta se ha guardado como borrador. Intenta nuevamente más tarde.</p>
-                            </div>
-                        `;
-                        icon = "error";
-                        break;
-
-                    case 'server_error':
-                        title = "Error del Servidor";
-                        message = `
-                            <div class="text-left">
-                                <p><strong>Error:</strong> ${error.message}</p>
-                                ${error.error ? `<p><strong>Detalle Técnico:</strong> ${error.error}</p>` : ''}
-                                <hr>
-                                <p class="text-muted small">Comunícate con el administrador si el problema persiste.</p>
-                            </div>
-                        `;
-                        icon = "error";
-                        break;
-
-                    case 'ajax_error':
-                        title = error.isConnectionIssue ? "Error de Conexión" : "Error al Emitir DTE";
-                        message = `
-                            <div class="text-left">
-                                <p><strong>Error:</strong> ${error.message}</p>
-                                <p><strong>Estado:</strong> ${error.status}</p>
-                                ${error.code ? `<p><strong>Código:</strong> ${error.code}</p>` : ''}
-                                <hr>
-                                <p class="text-muted small">${
-                                    error.isConnectionIssue
-                                        ? 'Revisa tu conexión a internet e intenta nuevamente.'
-                                        : 'No es un problema de internet. Revisa el mensaje del servidor para corregir el documento.'
-                                }</p>
-                            </div>
-                        `;
-                        icon = "error";
-                        break;
-
-                    default:
-                        title = "Error Desconocido";
-                        message = `
-                            <div class="text-left">
-                                <p><strong>Error:</strong> ${error.message || 'Error desconocido'}</p>
-                                <hr>
-                                <p class="text-muted small">Comunícate con el administrador.</p>
-                            </div>
-                        `;
-                        icon = "error";
-                        break;
+            try {
+                var responseJson = xhr.responseJSON;
+                if (!responseJson && xhr.responseText) {
+                    responseJson = JSON.parse(xhr.responseText);
                 }
-            } else if (typeof error === 'string') {
-                // Error simple (compatibilidad con código anterior)
-                title = "Error";
-                message = error;
-                icon = "error";
-            }
-
-            // Mostrar el SweetAlert con la configuración apropiada
-            const swalConfig = {
-                title: title,
-                html: message,
-                icon: icon,
-                showCancelButton: showCancelButton,
-                confirmButtonText: confirmButtonText,
-                cancelButtonText: cancelButtonText,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33'
-            };
-
-            swalWithBootstrapButtons.fire(swalConfig).then((result) => {
-                if (result.isConfirmed && error.type === 'hacienda_rejected') {
-                    // Reintentar la creación del documento
-                    // Aquí podrías llamar nuevamente a la función de creación
-                    // o recargar la página para que el usuario corrija los datos
-                    window.location.reload();
-                } else if (result.dismiss === Swal.DismissReason.cancel && error.type === 'hacienda_rejected') {
-                    // Ir a ver borradores
-                    window.location.href = "index";
+                if (responseJson) {
+                    parsedMessage = responseJson.message || responseJson.error || responseJson.descripcionMsg || '';
+                    parsedCode = responseJson.codigoMsg || responseJson.codEstado || null;
                 }
+            } catch (e) {}
+
+            var isConnectionIssue = xhr.status === 0;
+            var fallbackMessage = isConnectionIssue
+                ? 'No se pudo conectar con el servidor. Verifica red/VPN y vuelve a intentar.'
+                : 'El servidor devolvió un error al emitir el DTE.';
+
+            manejarErrorEmision({
+                type: 'ajax_error',
+                message: parsedMessage || error || fallbackMessage,
+                status: xhr.status,
+                statusText: xhr.statusText || status,
+                code: parsedCode,
+                isConnectionIssue: isConnectionIssue,
+                response: xhr.responseText
             });
-        });
+        }
+    });
+}
+
+function manejarErrorEmision(error) {
+    console.error('Error en creación de documento:', error);
+
+    let title = "Error";
+    let message = "Algo sucedió y el documento no fue creado.";
+    let icon = "error";
+    let showCancelButton = false;
+    let confirmButtonText = "Entendido";
+    let cancelButtonText = null;
+
+    if (typeof error === 'object' && error.type) {
+        switch (error.type) {
+            case 'partial_success':
+                return;
+
+            case 'hacienda_rejected':
+                title = "Documento Rechazado por Hacienda";
+                message = `
+                    <div class="text-left">
+                        <p><strong>Motivo:</strong> ${error.message}</p>
+                        ${error.codigo ? `<p><strong>Código:</strong> ${error.codigo}</p>` : ''}
+                        ${error.observaciones ? `<p><strong>Observaciones:</strong> ${error.observaciones}</p>` : ''}
+                        <hr>
+                        <p class="text-muted small">La venta se ha guardado como borrador. Puedes corregir los datos y reintentar.</p>
+                    </div>
+                `;
+                icon = "warning";
+                showCancelButton = true;
+                confirmButtonText = "Reintentar";
+                cancelButtonText = "Cancelar";
+                break;
+
+            case 'hacienda_error':
+                title = "Error en Hacienda";
+                message = `
+                    <div class="text-left">
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <hr>
+                        <p class="text-muted small">La venta se ha guardado como borrador. Intenta nuevamente más tarde.</p>
+                    </div>
+                `;
+                icon = "error";
+                break;
+
+            case 'server_error':
+                title = "Error del Servidor";
+                message = `
+                    <div class="text-left">
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        ${error.error ? `<p><strong>Detalle Técnico:</strong> ${error.error}</p>` : ''}
+                        <hr>
+                        <p class="text-muted small">Comunícate con el administrador si el problema persiste.</p>
+                    </div>
+                `;
+                icon = "error";
+                break;
+
+            case 'ajax_error':
+                title = error.isConnectionIssue ? "Error de Conexión" : "Error al Emitir DTE";
+                message = `
+                    <div class="text-left">
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Estado:</strong> ${error.status}</p>
+                        ${error.code ? `<p><strong>Código:</strong> ${error.code}</p>` : ''}
+                        <hr>
+                        <p class="text-muted small">${
+                            error.isConnectionIssue
+                                ? 'Revisa tu conexión a internet e intenta nuevamente.'
+                                : 'No es un problema de internet. Revisa el mensaje del servidor para corregir el documento.'
+                        }</p>
+                    </div>
+                `;
+                icon = "error";
+                break;
+
+            default:
+                title = "Error Desconocido";
+                message = `
+                    <div class="text-left">
+                        <p><strong>Error:</strong> ${error.message || 'Error desconocido'}</p>
+                        <hr>
+                        <p class="text-muted small">Comunícate con el administrador.</p>
+                    </div>
+                `;
+                icon = "error";
+                break;
+        }
+    } else if (typeof error === 'string') {
+        title = "Error";
+        message = error;
+        icon = "error";
+    }
+
+    const swalConfig = {
+        title: title,
+        html: message,
+        icon: icon,
+        showCancelButton: showCancelButton,
+        confirmButtonText: confirmButtonText,
+        cancelButtonText: cancelButtonText,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+    };
+
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success",
+            cancelButton: "btn btn-danger",
+        },
+        buttonsStyling: false,
+    });
+
+    swalWithBootstrapButtons.fire(swalConfig).then((result) => {
+        if (result.isConfirmed && error.type === 'hacienda_rejected') {
+            enviarDocumentoSinConfirmar();
+        } else if (result.dismiss === Swal.DismissReason.cancel && error.type === 'hacienda_rejected') {
+            window.location.href = "index";
+        }
+    });
 }
 
 
