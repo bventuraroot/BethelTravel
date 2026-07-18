@@ -100,7 +100,7 @@
                 <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td style="padding-bottom: 4px;">
-                            <img src="{{ logo_pdf($emisor[0]['nrc'] ?? ($emisor[0]['ncr'] ?? '')) }}" alt="logo" width="125px" style="display: block; margin: 0 auto; object-fit: contain;">
+                            <img src="{{ logo_pdf($emisor[0]['ncr'] ?? ($emisor[0]['nrc'] ?? '')) }}" alt="logo" width="125px" style="display: block; margin: 0 auto; object-fit: contain;">
                         </td>
                     </tr>
                     <tr>
