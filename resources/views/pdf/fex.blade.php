@@ -90,7 +90,7 @@
                 <table width="100%">
                     <tr>
                         <td>
-                            <img src="data:image/png;base64,{{$logo}}" alt="logo">
+                            <img src="{{ logo_pdf($comprobante[0][0]['nrc_emisor'] ?? ($comprobante[0][0]['nit_emisor'] ?? '')) }}" alt="logo" width="120px" style="display: block; object-fit: contain;">
                         </td>
                     </tr>
                     <tr>
