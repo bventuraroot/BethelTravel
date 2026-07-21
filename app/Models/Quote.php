@@ -71,4 +71,23 @@ class Quote extends Model
         }
         return $this->client_name ?: 'Prospecto';
     }
+
+    /**
+     * Determinar el tipo de cotización dinámicamente
+     */
+    public function getQuoteTypeAttribute()
+    {
+        $hasFlights = !empty($this->flights);
+        $hasHotels = !empty($this->hotels_grid) && !empty($this->hotels_grid['rows']);
+        
+        if ($hasFlights && $hasHotels) {
+            return 'package';
+        } elseif ($hasFlights) {
+            return 'flight';
+        } elseif ($hasHotels) {
+            return 'hotel';
+        } else {
+            return 'service';
+        }
+    }
 }

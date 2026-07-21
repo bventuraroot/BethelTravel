@@ -38,6 +38,28 @@
                 }
             });
 
+            // Toggle cards based on quote type
+            $('#quote_type').on('change', function() {
+                const type = $(this).val();
+                if (type === 'package') {
+                    $('#hotels-card-container').slideDown();
+                    $('#flights-card-container').slideDown();
+                    $('#inclusions-card-container').slideDown();
+                } else if (type === 'flight') {
+                    $('#hotels-card-container').slideUp();
+                    $('#flights-card-container').slideDown();
+                    $('#inclusions-card-container').slideUp();
+                } else if (type === 'hotel') {
+                    $('#hotels-card-container').slideDown();
+                    $('#flights-card-container').slideUp();
+                    $('#inclusions-card-container').slideUp();
+                } else if (type === 'service') {
+                    $('#hotels-card-container').slideUp();
+                    $('#flights-card-container').slideUp();
+                    $('#inclusions-card-container').slideDown();
+                }
+            });
+
             // Default Medellin values loader
             $('#predefined_destination').on('change', function() {
                 if ($(this).val() === 'medellin') {
@@ -390,10 +412,19 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
+                                <label for="quote_type" class="form-label text-warning fw-bold">Tipo de Cotización</label>
+                                <select id="quote_type" name="quote_type" class="form-select border-warning">
+                                    <option value="package" selected>Paquete Completo</option>
+                                    <option value="flight">Solo Vuelo / Segmento Aéreo</option>
+                                    <option value="hotel">Solo Hotel / Alojamiento</option>
+                                    <option value="service">Solo Traslados / Servicios de Asistencia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
                                 <label for="title" class="form-label">Destino / Título Principal</label>
                                 <input type="text" id="title" name="title" class="form-control" placeholder="Ej. MEDELLÍN" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label for="subtitle" class="form-label">Fechas / Rango de Vigencia</label>
                                 <input type="text" id="subtitle" name="subtitle" class="form-control" placeholder="Ej. DEL 14-19 DE AGOSTO 2026">
                             </div>
@@ -408,7 +439,7 @@
                 </div>
 
                 <!-- Card 2: Hotels Pricing Grid -->
-                <div class="card mb-4">
+                <div class="card mb-4" id="hotels-card-container">
                     <div class="card-header d-flex justify-content-between align-items-center pb-2">
                         <h5 class="mb-0">Tabla de Tarifas de Hotel</h5>
                         <div>
@@ -450,7 +481,7 @@
                 </div>
 
                 <!-- Card 3: Flights Itinerary -->
-                <div class="card mb-4">
+                <div class="card mb-4" id="flights-card-container">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Itinerario de Vuelos</h5>
                         <button type="button" class="btn btn-sm btn-primary" onclick="addFlight()">
@@ -509,7 +540,7 @@
                 </div>
 
                 <!-- Card 5: Inclusions -->
-                <div class="card mb-4">
+                <div class="card mb-4" id="inclusions-card-container">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">El Paquete Incluye</h5>
                         <button type="button" class="btn btn-sm btn-icon btn-outline-primary" onclick="addInclusion()" title="Añadir viñeta">
