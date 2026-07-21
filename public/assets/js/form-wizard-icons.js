@@ -515,7 +515,7 @@ function agregarp() {
         var feeConIva = parseFloat(fee);
         var feeSinIva = feeConIva / 1.13;
         priceunitariofee = parseFloat(price) + feeSinIva;
-    } else if(typedoc=='6' || typedoc=='7' || typedoc=='8'){
+    } else if(typedoc=='6' || typedoc=='7' || typedoc=='8' || typedoc=='12'){
         // Facturas: precio + fee sin IVA (BD guarda sin IVA)
         var feeConIva = parseFloat(fee);
         var feeSinIva = feeConIva / 1.13;
@@ -674,7 +674,7 @@ function agregarp() {
                 var pricegravadasMostrar = pricegravada;
                 var totaltempMostrar = totaltemp;
 
-                if(typedoc=='6' || typedoc=='7' || typedoc=='8'){
+                if(typedoc=='6' || typedoc=='7' || typedoc=='8' || typedoc=='12'){
                     // Facturas: BD guarda sin IVA, tabla muestra con IVA
                     if(type == 'gravada') {
                         //var ivaGravadas = pricegravada * 0.13;
@@ -776,7 +776,7 @@ function agregarp() {
                     iva13l = parseFloat(totalIva) || 0;
                 } else {
                     // Para Facturas: BD guarda sin IVA, pero tabla muestra con IVA
-                    if(typedoc=='6' || typedoc=='7' || typedoc=='8'){
+                    if(typedoc=='6' || typedoc=='7' || typedoc=='8' || typedoc=='12'){
                         // Calcular sumando con IVA para mostrar
                         var filasContadas = [];
                         $("#tblproduct tbody tr").each(function() {
@@ -1164,8 +1164,8 @@ function totalamount() {
 
             // Actualizar totalamount para que refleje el subtotal total
             totalamount = subtotalTotal;
-        } else if (typedoc === '6') {
-            // FACTURA: El precio que ingresa el usuario ya incluye IVA, IVA mostrado como 0
+        } else if (typedoc === '6' || typedoc === '12') {
+            // FACTURA/RECIBO: El precio que ingresa el usuario ya incluye IVA, IVA mostrado como 0
             // NO modificar el precio que ingresa el usuario
             $("#ivarete13").val(0);
             ivarete13 = 0.00;
@@ -1375,7 +1375,7 @@ function searchproduct(idpro) {
         success: function (response) {
             $.each(response, function (index, value) {
 
-                if(typedoc=='6' || typedoc=='7' || typedoc=='8'){
+                if(typedoc=='6' || typedoc=='7' || typedoc=='8' || typedoc=='12'){
                     pricevalue = parseFloat(value.price);
                 }else if(typedoc=='3' || typedoc=='2'){
                     // Crédito Fiscal y Comprobante de Liquidación: precio unitario SIN IVA
@@ -2442,7 +2442,7 @@ function agregarfacdetails(corr) {
                     }
                     // Total de la fila
                     var totaltemp = parseFloat(value.nosujeta) + parseFloat(value.exempt) + parseFloat(preciogravadas);
-                } else if(typedoc=='6' || typedoc=='7' || typedoc=='8'){
+                } else if(typedoc=='6' || typedoc=='7' || typedoc=='8' || typedoc=='12'){
                     // FACTURAS: BD guarda todo sin IVA (igual que CCF)
                     if(isGravado) {
                         // GRAVADA: pricesale sin IVA + detained13

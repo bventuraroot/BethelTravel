@@ -267,13 +267,20 @@
         </thead>
         <tbody>
             @foreach($detalle as $prod)
+                @php
+                    $cant = (float)($prod['cantidad'] ?? 1);
+                    $cant = $cant > 0 ? $cant : 1;
+                    $ivaUnitario = ((float)($prod['iva'] ?? 0)) / $cant;
+                    $precioUnitarioConIva = (float)($prod['precio_unitario'] ?? 0) + $ivaUnitario;
+                    $subtotalConIva = (float)($prod['subtotal'] ?? 0) + (float)($prod['iva'] ?? 0);
+                @endphp
                 <tr>
-                    <td align="center">{{ number_format($prod['cantidad'] ?? 0, 0) }}</td>
+                    <td align="center">{{ number_format($cant, 0) }}</td>
                     <td align="left">
                         {{ $prod['descripcion'] ?? '' }}
                     </td>
-                    <td align="right">$ {{ number_format($prod['precio_unitario'] ?? 0, 2) }}</td>
-                    <td align="right">$ {{ number_format($prod['subtotal'] ?? 0, 2) }}</td>
+                    <td align="right">$ {{ number_format($precioUnitarioConIva, 2) }}</td>
+                    <td align="right">$ {{ number_format($subtotalConIva, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -298,14 +305,8 @@
                 <table style="width: 220px; font-size: 11px;">
                     <tr>
                         <td align="right" style="padding: 5px;"><strong>Subtotal Ventas:</strong></td>
-                        <td align="right" style="padding: 5px; width: 90px;">$ {{ number_format($totales['subTotal'], 2) }}</td>
+                        <td align="right" style="padding: 5px; width: 90px;">$ {{ number_format($totales['subTotal'] + ($totales['totalIva'] ?? 0), 2) }}</td>
                     </tr>
-                    @if(!empty($totales['totalIva']) && $totales['totalIva'] > 0)
-                        <tr>
-                            <td align="right" style="padding: 5px;"><strong>IVA (Calculado):</strong></td>
-                            <td align="right" style="padding: 5px;">$ {{ number_format($totales['totalIva'], 2) }}</td>
-                        </tr>
-                    @endif
                     <tr>
                         <td colspan="2"><hr style="border: 0; border-top: 1px solid #cccccc; margin: 5px 0;"></td>
                     </tr>
