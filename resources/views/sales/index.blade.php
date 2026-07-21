@@ -1098,6 +1098,7 @@
                                                     class="btn btn-icon btn-outline-success btn-sm me-1" title="Enviar por correo">
                                                 <i class="ti ti-mail"></i>
                                             </a>
+                                            @if($sale->typedocument_id != 12)
                                             <a href="#"
                                                     onclick="enviarFacturaElectronica({
                                                         saleId: {{ $sale->id }},
@@ -1112,6 +1113,7 @@
                                                     class="btn btn-icon btn-outline-primary btn-sm me-1" title="Enviar factura electrónica">
                                                 <i class="ti ti-brand-whatsapp"></i>
                                             </a>
+                                            @endif
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
                                                     <i class="ti ti-dots-vertical"></i>
@@ -1204,6 +1206,8 @@
                                     $mostrarId = $sale->id;
                                     if (!$esAnulado && $sale->estadoHacienda=='PROCESADO' && !empty($sale->id_doc)) {
                                         $mostrarId = $sale->id_doc;
+                                    } elseif (!empty($sale->nu_doc)) {
+                                        $mostrarId = $sale->nu_doc;
                                     }
                                 @endphp
                                 <td style="{{ (!$esAnulado && $sale->estadoHacienda=='PROCESADO') ? 'color: green; font-weight: bold; font-size: 0.7rem;' : '' }}">
@@ -1416,6 +1420,18 @@
                                           <small>Creación de documento de liquidación para agentes de retención o percepción.</small>
                                         </span>
                                         <input name="typedocument" class="form-check-input" type="radio" value="2" id="liquidacion" />
+                                      </label>
+                                    </div>
+                                  </div>
+                                <div class="mb-2 col-md mb-md-0">
+                                    <div class="form-check custom-option custom-option-icon">
+                                      <label class="form-check-label custom-option-content" for="recibo">
+                                        <span class="custom-option-body">
+                                          <i class="mb-2 ti ti-file-text"></i>
+                                          <span class="custom-option-title">RECIBO DE INGRESO</span>
+                                          <small>Creación de recibo de ingreso interno para el control de efectivo de la empresa.</small>
+                                        </span>
+                                        <input name="typedocument" class="form-check-input" type="radio" value="12" id="recibo" />
                                       </label>
                                     </div>
                                   </div>

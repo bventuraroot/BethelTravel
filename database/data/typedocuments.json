@@ -152,5 +152,19 @@
     "invalidation": 0,
     "periodinvalidation": 0,
     "versionjsoncontingenciainvalidation": 0
+  },
+  {
+    "id": 12,
+    "company_id": 1,
+    "type": "REC",
+    "description": "RECIBO DE INGRESO",
+    "codemh": "00",
+    "versionjson": 1,
+    "versionjsoncontingencia": 0,
+    "contingencia": 0,
+    "ambiente": 0,
+    "invalidation": 0,
+    "periodinvalidation": 0,
+    "versionjsoncontingenciainvalidation": 0
   }
 ]

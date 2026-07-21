@@ -2073,6 +2073,7 @@ function getinfodoc(){
 }
 
 function creardocuments() {
+    var typedoc = $('#typedocument').val();
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
             confirmButton: "btn btn-success",
@@ -2081,27 +2082,53 @@ function creardocuments() {
         buttonsStyling: false,
     });
 
-    swalWithBootstrapButtons
-        .fire({
-            title: "Presentar Documento a Hacienda?",
-            text: "Es seguro de presentar el documento a Hacienda?",
-            icon: "info",
-            showCancelButton: true,
-            confirmButtonText: "Si, Presentar!",
-            cancelButtonText: "No, Volver!",
-            reverseButtons: true,
-        })
-        .then((result) => {
-            if (result.isConfirmed) {
-                enviarDocumentoSinConfirmar();
-            }
-        });
+    if (typedoc === '12') {
+        swalWithBootstrapButtons
+            .fire({
+                title: "¿Generar Recibo de Ingreso?",
+                text: "¿Está seguro de finalizar y generar el recibo?",
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonText: "Sí, Generar!",
+                cancelButtonText: "No, Volver!",
+                reverseButtons: true,
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    enviarDocumentoSinConfirmar();
+                }
+            });
+    } else {
+        swalWithBootstrapButtons
+            .fire({
+                title: "Presentar Documento a Hacienda?",
+                text: "Es seguro de presentar el documento a Hacienda?",
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonText: "Si, Presentar!",
+                cancelButtonText: "No, Volver!",
+                reverseButtons: true,
+            })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    enviarDocumentoSinConfirmar();
+                }
+            });
+    }
 }
 
 function enviarDocumentoSinConfirmar() {
+    var typedoc = $('#typedocument').val();
+    var titleText = 'Presentando a Hacienda...';
+    var bodyText = 'Por favor espere mientras se emite el documento.';
+    if (typedoc === '12') {
+        titleText = 'Generando Recibo...';
+        bodyText = 'Por favor espere mientras se procesa el ingreso.';
+    }
+
     Swal.fire({
-        title: 'Presentando a Hacienda...',
-        text: 'Por favor espere mientras se emite el documento.',
+        title: titleText,
+        text: bodyText,
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
@@ -2137,8 +2164,9 @@ function enviarDocumentoSinConfirmar() {
                     data: resObj
                 });
             } else if (response.res == 1) {
+                var successTitle = typedoc === '12' ? "Recibo Creado correctamente" : "DTE Creado correctamente";
                 Swal.fire({
-                    title: "DTE Creado correctamente",
+                    title: successTitle,
                     icon: "success",
                     confirmButtonText: "Ok",
                 }).then((result) => {

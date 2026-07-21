@@ -745,6 +745,9 @@
         case '2':
             $document = 'Comprobante de Liquidación';
             break;
+        case '12':
+            $document = 'Recibo de Ingreso';
+            break;
         default:
             $document = 'Documento';
             break;
@@ -986,7 +989,7 @@
                                 <input type="number" id="precio" name="precio" step="0.00000001" min="0" max="1000000" placeholder="0.00000000" class="form-control" onchange="totalamount();">
                                 @endif
                             </div>
-                            @if(request('typedocument')==6 || request('typedocument')==3 || request('typedocument')==7)
+                            @if(request('typedocument')==6 || request('typedocument')==3 || request('typedocument')==7 || request('typedocument')==12)
                             <div class="col-sm-2">
                                 @if(request('typedocument')==3)
                                 <label class="form-label" for="fee">Fee (Con IVA)</label>

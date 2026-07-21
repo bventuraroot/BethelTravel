@@ -966,8 +966,11 @@ class SaleController extends Controller
                 "totales"   => $totales,
                 "cliente"   => $cliente
             ];
-            // Verificar si la emisión de DTE está habilitada para esta empresa
-            if (Config::isDteEmissionEnabled($idempresa)) {
+            // Verificar si es un Recibo de Ingreso (no sujeto a DTE)
+            $isRecibo = ($documento[0]->id_tipo_doc === 'REC');
+
+            // Verificar si la emisión de DTE está habilitada para esta empresa y no es un recibo
+            if (!$isRecibo && Config::isDteEmissionEnabled($idempresa)) {
                 $contingencia = [];
                 $respuesta_hacienda = [];
                 if ($documento[0]->tipogeneracion == 1) {
@@ -1087,12 +1090,13 @@ class SaleController extends Controller
                     ]);
                 }
             } else {
-                // DTE deshabilitado - solo guardar la venta sin emisión
-                Log::info("DTE deshabilitado para empresa ID: {$idempresa}. Venta guardada sin emisión DTE.");
+                // No es DTE (ej: Recibo) o DTE deshabilitado - solo guardar la venta sin emisión
+                Log::info("Venta guardada sin emisión DTE. Tipo de documento: {$documento[0]->id_tipo_doc}");
 
-                // Envío automático de correo para ventas sin DTE
-                //$this->enviarCorreoAutomatico(base64_decode($corr), null);
-
+                // Si es un recibo de ingreso, confirmar la venta directamente
+                if ($isRecibo) {
+                    $salesave->state = 1;
+                }
             }
 
             // update correlativo como en RomaCopies
@@ -4302,6 +4306,9 @@ class SaleController extends Controller
             case '05': // NCR local - usar plantilla local de NCR
                 $rptComprobante = 'pdf.ncrlocal';
                 break;
+            case '00': // RECIBO DE INGRESO
+                $rptComprobante = 'pdf.recibolocal';
+                break;
             case '06': // NDB local - usar plantilla oficial de NDB (misma estructura)
                 $rptComprobante = 'pdf.ndb';
                 break;
@@ -4313,7 +4320,11 @@ class SaleController extends Controller
         //$fecha = $data["json"]["fhRecibido"];
         //dd($data);
         $fecha = $data['documento'][0]['fechacreacion'];
-        @$qr = base64_encode(codigoQR($data["documento"][0]["ambiente"], $data["json"]["codigoGeneracion"], $fecha));
+        if ($tipo_comprobante === '00') {
+            $qr = '';
+        } else {
+            @$qr = base64_encode(codigoQR($data["documento"][0]["ambiente"], $data["json"]["codigoGeneracion"], $fecha));
+        }
         //return  '<img src="data:image/png;base64,'.$qr .'">';
         if (isset($factura[0]['typesale']) && (string)$factura[0]['typesale'] === '0') {
             $data["codTransaccion"] = "02";
