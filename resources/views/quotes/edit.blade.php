@@ -21,6 +21,12 @@
             // Select2 initialization
             $('.select2').select2();
 
+            // Select2 tags for title/destination selection
+            $('.select2-tags').select2({
+                tags: true,
+                placeholder: 'Seleccione o escriba destino...'
+            });
+
             // Flatpickr initialization
             $('.datepicker').flatpickr({
                 dateFormat: 'Y-m-d',
@@ -263,10 +269,18 @@
         function addHotelRow(hotelName = '', prices = {}) {
             hotelRowIndex++;
             
+            // Generate hotels option html
+            let hotelOptions = '<option value="">Seleccione o escriba hotel...</option>';
+            @foreach($allHotels as $hName)
+                hotelOptions += `<option value="{{ $hName }}">{{ $hName }}</option>`;
+            @endforeach
+            
             let rowHtml = `
                 <tr class="hotel-row" id="hotel-row-${hotelRowIndex}" data-index="${hotelRowIndex}">
-                    <td>
-                        <input type="text" name="hotels_grid_rows[${hotelRowIndex}]" class="form-control form-control-sm" placeholder="Ej. Loyds Hotel***" value="${hotelName}">
+                    <td style="min-width: 320px;">
+                        <select name="hotels_grid_rows[${hotelRowIndex}]" class="form-select select2-in-hotel" required>
+                            ${hotelOptions}
+                        </select>
                     </td>
             `;
             
@@ -290,6 +304,23 @@
             `;
             
             $('#hotel-grid-body').append(rowHtml);
+
+            // Initialize select2 with tags on the new input
+            const selectEl = $(`#hotel-row-${hotelRowIndex} select[name="hotels_grid_rows[${hotelRowIndex}]"]`);
+            selectEl.select2({
+                tags: true,
+                placeholder: 'Seleccione o escriba hotel...'
+            });
+
+            // Set value if passed
+            if (hotelName) {
+                if (selectEl.find(`option[value="${hotelName}"]`).length === 0) {
+                    const newOption = new Option(hotelName, hotelName, true, true);
+                    selectEl.append(newOption).trigger('change');
+                } else {
+                    selectEl.val(hotelName).trigger('change');
+                }
+            }
         }
 
         function loadMedellinHotelsGrid() {
@@ -335,7 +366,13 @@
             // Generate airlines option html
             let airlineOptions = '<option value="">Seleccione aerolínea...</option>';
             @foreach($airlines as $airline)
-                airlineOptions += `<option value="{{ $airline->iata }}" ${airlineCode == '{{ $airline->iata }}' ? 'selected' : ''}>{{ $airline->nombre }} ({{ $airline->iata }})</option>`;
+                airlineOptions += `<option value="{{ $airline->iata }}" \${airlineCode == '{{ $airline->iata }}' ? 'selected' : ''}>{{ $airline->nombre }} ({{ $airline->iata }})</option>`;
+            @endforeach
+
+            // Generate airports option html
+            let airportOptions = '<option value="">Seleccione aeropuerto...</option>';
+            @foreach($airports as $ap)
+                airportOptions += `<option value="{{ $ap->iata }}">{{ $ap->ciudad }} - {{ $ap->pais }} ({{ $ap->iata }})</option>`;
             @endforeach
 
             const html = `
@@ -358,13 +395,11 @@
                                 <label class="form-label">Nº Vuelo</label>
                                 <input type="text" name="flights[${flightIndex}][flight_number]" class="form-control" placeholder="Ej. AV 369" value="${flightNumber}">
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">IATA Origen</label>
-                                <input type="text" name="flights[${flightIndex}][origin_code]" class="form-control text-uppercase" placeholder="Ej. SAL" max="4" value="${originCode}">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Nombre Ciudad/Aeropuerto Origen</label>
-                                <input type="text" name="flights[${flightIndex}][origin_name]" class="form-control" placeholder="Ej. San Salvador (SAL)" value="${originName}">
+                            <div class="col-md-6">
+                                <label class="form-label">Origen (Aeropuerto / Ciudad)</label>
+                                <select name="flights[${flightIndex}][origin_code]" class="form-select select2-in-flight select2-airport-origin">
+                                    ${airportOptions}
+                                </select>
                             </div>
                             
                             <div class="col-md-3">
@@ -375,13 +410,11 @@
                                 <label class="form-label">Hora Salida</label>
                                 <input type="text" name="flights[${flightIndex}][departure_time]" class="form-control" placeholder="Ej. 09:20" value="${depTime}">
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">IATA Destino</label>
-                                <input type="text" name="flights[${flightIndex}][destination_code]" class="form-control text-uppercase" placeholder="Ej. MDE" max="4" value="${destCode}">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Nombre Ciudad/Aeropuerto Destino</label>
-                                <input type="text" name="flights[${flightIndex}][destination_name]" class="form-control" placeholder="Ej. Medellín (MDE)" value="${destName}">
+                            <div class="col-md-6">
+                                <label class="form-label">Destino (Aeropuerto / Ciudad)</label>
+                                <select name="flights[${flightIndex}][destination_code]" class="form-select select2-in-flight select2-airport-destination">
+                                    ${airportOptions}
+                                </select>
                             </div>
                             
                             <div class="col-md-3">
@@ -398,11 +431,22 @@
             `;
             
             $('#flights-container').append(html);
+
+            // Set values if passed
+            if (originCode) {
+                $(`#flight-group-${flightIndex} select[name="flights[${flightIndex}][origin_code]"]`).val(originCode).trigger('change');
+            }
+            if (destCode) {
+                $(`#flight-group-${flightIndex} select[name="flights[${flightIndex}][destination_code]"]`).val(destCode).trigger('change');
+            }
             
-            // Re-init flatpickr on the new inputs
+            // Re-init flatpickr and select2 on the new inputs
             $(`#flight-group-${flightIndex} .datepicker`).flatpickr({
                 dateFormat: 'Y-m-d',
                 locale: 'es'
+            });
+            $(`#flight-group-${flightIndex} .select2-in-flight`).select2({
+                placeholder: 'Seleccione opción...'
             });
         }
 
@@ -479,8 +523,15 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="title" class="form-label">Destino / Título Principal</label>
-                                <input type="text" id="title" name="title" class="form-control" placeholder="Ej. MEDELLÍN" value="{{ $quote->title }}" required>
+                                <label for="title" class="form-label text-primary fw-bold">Destino / Título Principal</label>
+                                <select id="title" name="title" class="select2-tags form-select" required>
+                                    <option value="{{ strtoupper($quote->title) }}" selected>{{ $quote->title }}</option>
+                                    @foreach($airports as $ap)
+                                        @if(strtoupper($ap->ciudad) !== strtoupper($quote->title))
+                                            <option value="{{ strtoupper($ap->ciudad) }}">{{ $ap->ciudad }} ({{ $ap->pais }})</option>
+                                        @endif
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-12">
                                 <label for="subtitle" class="form-label">Fechas / Rango de Vigencia</label>
@@ -535,7 +586,7 @@
                             <table class="table table-sm">
                                 <thead>
                                     <tr id="hotel-grid-headers">
-                                        <th>Hotel / Opción</th>
+                                        <th style="min-width: 320px;">Hotel / Opción</th>
                                         <!-- Columns injected here -->
                                         <th class="text-center" style="width: 80px;">Acciones</th>
                                     </tr>

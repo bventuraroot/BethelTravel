@@ -38,6 +38,41 @@ class QuoteController extends Controller
         return view('quotes.index', compact('quotes', 'company_selected'));
     }
 
+    private function getUniqueHotels()
+    {
+        $hotels = [];
+        $quotesWithHotels = DB::table('quotes')->whereNotNull('hotels_grid')->get();
+        foreach ($quotesWithHotels as $q) {
+            $grid = json_decode($q->hotels_grid, true);
+            if (!empty($grid['rows'])) {
+                foreach ($grid['rows'] as $row) {
+                    if (!empty($row['hotel'])) {
+                        $hotels[] = $row['hotel'];
+                    }
+                }
+            }
+        }
+        
+        $defaultHotels = [
+            'Hotel Sociatel Medellin***',
+            'Loyds Hotel***',
+            'Hotel The Morgana Poblado Suites****',
+            'V Grand Hotel, A Member Of Radisson Individuals****',
+            'Hotel Dann Carlton Medellín*****',
+            'Hotel San Fernando Plaza*****',
+            'Hotel Estelar Milla de Oro*****',
+            'Decameron Galeón (Santa Marta)',
+            'Decameron Aquarium (San Andrés)',
+            'Hotel Riu Plaza España (Madrid)',
+            'Hard Rock Hotel Cancún'
+        ];
+        
+        $allHotels = array_unique(array_merge($hotels, $defaultHotels));
+        sort($allHotels);
+        
+        return array_values($allHotels);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -46,8 +81,10 @@ class QuoteController extends Controller
         $company_selected = $request->session()->get('company_selected') ?? 1;
         $clients = Client::where('company_id', $company_selected)->get();
         $airlines = DB::table('aerolineas')->orderBy('nombre', 'asc')->get();
+        $airports = DB::table('aeropuertos')->where('iata', '!=', 'NA')->orderBy('ciudad', 'asc')->get();
+        $allHotels = $this->getUniqueHotels();
         
-        return view('quotes.create', compact('clients', 'airlines', 'company_selected'));
+        return view('quotes.create', compact('clients', 'airlines', 'airports', 'allHotels', 'company_selected'));
     }
 
     /**
@@ -129,16 +166,32 @@ class QuoteController extends Controller
                     }
                 }
                 
+                $originName = '';
+                if (!empty($f['origin_code'])) {
+                    $ap = DB::table('aeropuertos')->where('iata', $f['origin_code'])->first();
+                    if ($ap) {
+                        $originName = $ap->ciudad . ' (' . $ap->iata . ')';
+                    }
+                }
+                
+                $destName = '';
+                if (!empty($f['destination_code'])) {
+                    $ap = DB::table('aeropuertos')->where('iata', $f['destination_code'])->first();
+                    if ($ap) {
+                        $destName = $ap->ciudad . ' (' . $ap->iata . ')';
+                    }
+                }
+
                 $flights[] = [
                     'airline_code' => $f['airline_code'] ?? '',
                     'airline_name' => $airlineName,
                     'flight_number' => $f['flight_number'] ?? '',
                     'origin_code' => $f['origin_code'] ?? '',
-                    'origin_name' => $f['origin_name'] ?? '',
+                    'origin_name' => $originName ?: ($f['origin_code'] ?? ''),
                     'departure_date' => $f['departure_date'] ?? null,
                     'departure_time' => $f['departure_time'] ?? '',
                     'destination_code' => $f['destination_code'] ?? '',
-                    'destination_name' => $f['destination_name'] ?? '',
+                    'destination_name' => $destName ?: ($f['destination_code'] ?? ''),
                     'arrival_date' => $f['arrival_date'] ?? null,
                     'arrival_time' => $f['arrival_time'] ?? ''
                 ];
@@ -178,8 +231,10 @@ class QuoteController extends Controller
         $company_selected = $request->session()->get('company_selected') ?? $quote->company_id;
         $clients = Client::where('company_id', $company_selected)->get();
         $airlines = DB::table('aerolineas')->orderBy('nombre', 'asc')->get();
+        $airports = DB::table('aeropuertos')->where('iata', '!=', 'NA')->orderBy('ciudad', 'asc')->get();
+        $allHotels = $this->getUniqueHotels();
         
-        return view('quotes.edit', compact('quote', 'clients', 'airlines', 'company_selected'));
+        return view('quotes.edit', compact('quote', 'clients', 'airlines', 'airports', 'allHotels', 'company_selected'));
     }
 
     /**
@@ -269,16 +324,32 @@ class QuoteController extends Controller
                     }
                 }
                 
+                $originName = '';
+                if (!empty($f['origin_code'])) {
+                    $ap = DB::table('aeropuertos')->where('iata', $f['origin_code'])->first();
+                    if ($ap) {
+                        $originName = $ap->ciudad . ' (' . $ap->iata . ')';
+                    }
+                }
+                
+                $destName = '';
+                if (!empty($f['destination_code'])) {
+                    $ap = DB::table('aeropuertos')->where('iata', $f['destination_code'])->first();
+                    if ($ap) {
+                        $destName = $ap->ciudad . ' (' . $ap->iata . ')';
+                    }
+                }
+
                 $flights[] = [
                     'airline_code' => $f['airline_code'] ?? '',
                     'airline_name' => $airlineName,
                     'flight_number' => $f['flight_number'] ?? '',
                     'origin_code' => $f['origin_code'] ?? '',
-                    'origin_name' => $f['origin_name'] ?? '',
+                    'origin_name' => $originName ?: ($f['origin_code'] ?? ''),
                     'departure_date' => $f['departure_date'] ?? null,
                     'departure_time' => $f['departure_time'] ?? '',
                     'destination_code' => $f['destination_code'] ?? '',
-                    'destination_name' => $f['destination_name'] ?? '',
+                    'destination_name' => $destName ?: ($f['destination_code'] ?? ''),
                     'arrival_date' => $f['arrival_date'] ?? null,
                     'arrival_time' => $f['arrival_time'] ?? ''
                 ];
