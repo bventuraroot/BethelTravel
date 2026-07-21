@@ -188,18 +188,22 @@ if (!function_exists('logo_pdf')) {
     function logo_pdf($ncr) {
         $company = Company::where('ncr', $ncr)->select('logo')->first();
 
-        if (!$company || !$company->logo) {
-            return null; // Si no hay logo, retorna null
+        if ($company && $company->logo) {
+            $logoPath = public_path('assets/img/logo/' . $company->logo);
+            if (File::exists($logoPath)) {
+                $logoData = File::get($logoPath);
+                return 'data:image/png;base64,' . base64_encode($logoData);
+            }
         }
 
-        $logoPath = public_path('assets/img/logo/' . $company->logo);
-
-        if (File::exists($logoPath)) {
-            $logoData = File::get($logoPath);
+        // Fallback al logo genérico si no se encuentra el de la base de datos
+        $fallbackPath = public_path('assets/img/logo/logo.png');
+        if (File::exists($fallbackPath)) {
+            $logoData = File::get($fallbackPath);
             return 'data:image/png;base64,' . base64_encode($logoData);
         }
 
-        return null; // Si la imagen no existe, retorna null
+        return null; // Si no hay ningún logo disponible
     }
 }
 

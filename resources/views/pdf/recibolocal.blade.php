@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Recibo de Ingreso No. {{ $documento[0]['id_doc'] }}</title>
+    <title>Recibo de Ingreso No. {{ $documento[0]['nu_doc'] ?? $documento[0]['id_doc'] }}</title>
 
     <style type="text/css">
         * {
@@ -189,7 +189,7 @@
             <td width="45%" align="right">
                 <div style="width: 280px; text-align: left;" class="cuadro-recibo">
                     <div class="titulo-recibo">Recibo de Ingreso</div>
-                    <div class="numero-recibo">No. {{ str_pad($documento[0]['id_doc'], 6, '0', STR_PAD_LEFT) }}</div>
+                    <div class="numero-recibo">No. {{ str_pad($documento[0]['nu_doc'] ?? $documento[0]['id_doc'], 6, '0', STR_PAD_LEFT) }}</div>
                     <hr style="border: 0; border-top: 1px solid #dddddd; margin: 8px 0;">
                     <table width="100%" style="font-size: 10px;">
                         <tr>
@@ -268,12 +268,12 @@
         <tbody>
             @foreach($detalle as $prod)
                 <tr>
-                    <td align="center">{{ number_format($prod->cantidad, 0) }}</td>
+                    <td align="center">{{ number_format($prod['cantidad'] ?? 0, 0) }}</td>
                     <td align="left">
-                        {{ $prod->descripcion }}
+                        {{ $prod['descripcion'] ?? '' }}
                     </td>
-                    <td align="right">$ {{ number_format($prod->precio_unitario, 2) }}</td>
-                    <td align="right">$ {{ number_format($prod->subtotal, 2) }}</td>
+                    <td align="right">$ {{ number_format($prod['precio_unitario'] ?? 0, 2) }}</td>
+                    <td align="right">$ {{ number_format($prod['subtotal'] ?? 0, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

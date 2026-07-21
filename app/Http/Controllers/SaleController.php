@@ -791,6 +791,7 @@ class SaleController extends Controller
             //detalle del comprobante como url de firmador y mh etc
             $querydocumento = "SELECT
         a.id id_doc,
+        a.nu_doc,
         b.`type` id_tipo_doc,
         docs.serie serie,
         docs.inicial inicial,
@@ -824,6 +825,7 @@ class SaleController extends Controller
         LEFT JOIN ambientes e ON d.ambiente = e.id
         WHERE a.id = " . base64_decode($corr) . "";
             $documento = DB::select(DB::raw($querydocumento));
+            $isRecibo = (!empty($documento) && $documento[0]->id_tipo_doc === 'REC');
 
             //informacion del producto
             $queryproducto = "SELECT
@@ -936,7 +938,7 @@ class SaleController extends Controller
             $cliente = DB::select(DB::raw($querycliente));
             // Validaciones previas a encolar DTE (alineadas a RomaCopies y requisitos de Explorer)
             $erroresValidacion = [];
-            if (empty($emisor) || empty($emisor[0]->nit) || empty($emisor[0]->clavePrivadaMH)) {
+            if (empty($emisor) || empty($emisor[0]->nit) || (!$isRecibo && empty($emisor[0]->clavePrivadaMH))) {
                 $erroresValidacion[] = 'Datos del emisor incompletos (NIT/clave privada MH)';
             }
             if (empty($cliente)) {
@@ -967,7 +969,6 @@ class SaleController extends Controller
                 "cliente"   => $cliente
             ];
             // Verificar si es un Recibo de Ingreso (no sujeto a DTE)
-            $isRecibo = ($documento[0]->id_tipo_doc === 'REC');
 
             // Verificar si la emisión de DTE está habilitada para esta empresa y no es un recibo
             if (!$isRecibo && Config::isDteEmissionEnabled($idempresa)) {
@@ -4273,6 +4274,9 @@ class SaleController extends Controller
         $comprobante = json_decode($factura, true);
         //dd(json_decode($comprobante[0]["json"]));
         $data = json_decode($comprobante[0]["jsonlocal"], true);
+        if (isset($data['documento'][0])) {
+            $data['documento'][0]['nu_doc'] = $factura[0]['nu_doc'];
+        }
         //dd($data);
 
         //print_r($data);
