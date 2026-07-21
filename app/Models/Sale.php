@@ -78,7 +78,10 @@ class Sale extends Model
 
     public function dte()
     {
-        return $this->hasOne(Dte::class, 'sale_id');
+        return $this->hasOne(Dte::class, 'sale_id')
+            ->whereIn('codTransaction', ['01','05','06'])
+            ->orderByRaw('CASE WHEN codEstado = "02" THEN 1 ELSE 2 END ASC')
+            ->orderBy('id', 'desc');
     }
 
     // Relaciones para ventas padre/hijo
