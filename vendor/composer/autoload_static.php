@@ -723,6 +723,7 @@ class ComposerStaticInit147113823b1f7c0ea292bb992dedc9ea
         'App\\Http\\Requests\\ClientRequest' => __DIR__ . '/../..' . '/app/Http/Requests/ClientRequest.php',
         'App\\Http\\Requests\\ProfileUpdateRequest' => __DIR__ . '/../..' . '/app/Http/Requests/ProfileUpdateRequest.php',
         'App\\Mail\\EnviarCorreo' => __DIR__ . '/../..' . '/app/Mail/EnviarCorreo.php',
+        'App\\Mail\\EnviarDteInvalidado' => __DIR__ . '/../..' . '/app/Mail/EnviarDteInvalidado.php',
         'App\\Mail\\PrecheckinNotificationMail' => __DIR__ . '/../..' . '/app/Mail/PrecheckinNotificationMail.php',
         'App\\Models\\Address' => __DIR__ . '/../..' . '/app/Models/Address.php',
         'App\\Models\\Airline' => __DIR__ . '/../..' . '/app/Models/Airline.php',

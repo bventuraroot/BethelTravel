@@ -31,6 +31,7 @@ use App\Http\Controllers\ManualController;
 use App\Http\Controllers\DteDashboardController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\QuoteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -454,6 +455,20 @@ Route::middleware('auth')->group(function () {
         Route::post('update-status/{id}', [App\Http\Controllers\PrecheckinController::class, 'updateStatus'])->name('update-status');
         Route::post('config', [App\Http\Controllers\PrecheckinController::class, 'saveConfig'])->name('config');
         Route::post('send-mail/{id}', [App\Http\Controllers\PrecheckinController::class, 'sendMailManual'])->name('send-mail');
+    });
+
+    // Gestión de Cotizaciones
+    Route::group(['prefix' => 'quote', 'as' => 'quote.'], function(){
+        Route::get('index', [QuoteController::class, 'index'])->name('index');
+        Route::get('create', [QuoteController::class, 'create'])->name('create');
+        Route::post('store', [QuoteController::class, 'store'])->name('store');
+        Route::get('edit/{id}', [QuoteController::class, 'edit'])->name('edit');
+        Route::post('update/{id}', [QuoteController::class, 'update'])->name('update');
+        Route::get('destroy/{id}', [QuoteController::class, 'destroy'])->name('destroy');
+        Route::get('pdf/{id}', [QuoteController::class, 'generatePdf'])->name('pdf');
+        Route::post('send-email/{id}', [QuoteController::class, 'sendEmail'])->name('send-email');
+        Route::get('convert-to-sale/{id}', [QuoteController::class, 'showConvertToSale'])->name('convert-to-sale');
+        Route::post('convert-to-sale/{id}', [QuoteController::class, 'storeConvertToSale'])->name('store-convert-to-sale');
     });
 });
 });

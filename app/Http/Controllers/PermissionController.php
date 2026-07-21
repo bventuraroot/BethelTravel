@@ -161,6 +161,12 @@ class PermissionController extends Controller
                 "slug" => "sale.index"
             ],
             [
+                "url" => "/quote/index",
+                "name" => "Cotizaciones",
+                "icon" => "menu-icon fa-solid fa-file-invoice-dollar",
+                "slug" => "quote.index"
+            ],
+            [
                 "url" => "/precheckin",
                 "name" => "Reservas y Prechequeo",
                 "icon" => "menu-icon fa-solid fa-plane-departure",

@@ -89,6 +89,7 @@ return array(
     'App\\Http\\Requests\\ClientRequest' => $baseDir . '/app/Http/Requests/ClientRequest.php',
     'App\\Http\\Requests\\ProfileUpdateRequest' => $baseDir . '/app/Http/Requests/ProfileUpdateRequest.php',
     'App\\Mail\\EnviarCorreo' => $baseDir . '/app/Mail/EnviarCorreo.php',
+    'App\\Mail\\EnviarDteInvalidado' => $baseDir . '/app/Mail/EnviarDteInvalidado.php',
     'App\\Mail\\PrecheckinNotificationMail' => $baseDir . '/app/Mail/PrecheckinNotificationMail.php',
     'App\\Models\\Address' => $baseDir . '/app/Models/Address.php',
     'App\\Models\\Airline' => $baseDir . '/app/Models/Airline.php',
