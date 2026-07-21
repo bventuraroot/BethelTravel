@@ -821,15 +821,15 @@ if (!function_exists('fac')) {
                 "codTributo"        => null,
                 "uniMedida"         => intval($item->uniMedida),
                 "descripcion"       => $item->descripcion,
-                "precioUni"         => round((float)($precioUnitario + $iva_calculadofac), 3),
+                "precioUni"         => round((float)($precioUnitario + $iva_calculadofac), 2),
                 "montoDescu"        => 0.00,
-                "ventaNoSuj"        => round((float)$item->no_sujetas, 3),
-                "ventaExenta"       => round((float)$item->exentas, 3),
-                "ventaGravada"      => round((float)$ventagravada, 3),
+                "ventaNoSuj"        => round((float)$item->no_sujetas, 2),
+                "ventaExenta"       => round((float)$item->exentas, 2),
+                "ventaGravada"      => round((float)$ventagravada, 2),
                 "tributos"          =>  null,
                 "psv"               => (float)"0.00",
-                "noGravado"         => round((float)$item->no_imponible, 3),
-                "ivaItem"           => round((float)$ivaItem, 3)
+                "noGravado"         => round((float)$item->no_imponible, 2),
+                "ivaItem"           => round((float)$ivaItem, 2)
             ];
 
             $items_cuerpoDocumento[] = $properties_items_cuerpoDocumento;
