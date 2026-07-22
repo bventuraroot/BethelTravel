@@ -579,7 +579,7 @@ class QuoteController extends Controller
             $sale->client_id = $clientId;
             $sale->user_id = Auth::id();
             $sale->date = now();
-            $sale->typesale = 1; // Confirmed sale
+            $sale->typesale = 2; // Borrador (Draft) initially, finalized upon DTE issuance
             $sale->state = 1; // Active
             $sale->state_credit = 0;
             $sale->waytopay = 1; // cash/efectivo default
@@ -590,12 +590,40 @@ class QuoteController extends Controller
             $sale->save();
             
             // 3. Create Salesdetail
+            $product = DB::table('products')->where('id', $request->input('product_id'))->first();
+            $isGravado = $product && $product->cfiscal === 'gravado';
+            $priceSale = $request->input('selected_price');
+            
             $detail = new Salesdetail();
             $detail->sale_id = $sale->id;
             $detail->product_id = $request->input('product_id');
             $detail->amountp = 1;
-            $detail->priceunit = $request->input('selected_price');
-            $detail->pricesale = $request->input('selected_price');
+            
+            if ($isGravado) {
+                $priceWithoutIva = round($priceSale / 1.13, 8);
+                $ivaVal = round($priceSale - $priceWithoutIva, 8);
+                
+                $detail->priceunit = $priceWithoutIva;
+                $detail->pricesale = $priceWithoutIva;
+                $detail->nosujeta = 0.00;
+                $detail->exempt = 0.00;
+                $detail->detained13 = $ivaVal;
+            } else {
+                $detail->priceunit = $priceSale;
+                $detail->pricesale = 0.00;
+                $detail->nosujeta = 0.00;
+                $detail->exempt = $priceSale;
+                $detail->detained13 = 0.00;
+            }
+            
+            $detail->detained = 0.00;
+            $detail->detainedP = 0;
+            $detail->renta = 0.00;
+            $detail->fee = 0.00;
+            $detail->feeiva = 0.00;
+            $detail->linea = null;
+            $detail->canal = null;
+            
             $detail->description = "Paquete turístico a: " . $quote->title . " - Hotel: " . $request->input('selected_hotel') . " (" . $request->input('selected_occupancy') . ")";
             
             // Copy flight details if any
