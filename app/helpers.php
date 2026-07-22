@@ -2098,7 +2098,7 @@ if (!function_exists('fse')) {
         $comprobante["resumen"]                  = $resumen;
         $comprobante["apendice"]                 = $apendice;
         //$comprobante2 = [];
-        //dd($comprobante);
+        dd($comprobante);
         return ($comprobante);
     }
 }
