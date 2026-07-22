@@ -1574,7 +1574,7 @@ if (!function_exists('fex')) {
         $comprobante["resumen"]                  = $resumen;
         //$comprobante["extension"]                = $extension;
         $comprobante["apendice"]                 = $apendice;
-        //dd($comprobante);
+        dd($comprobante);
         return ($comprobante);
     }
 }
@@ -2098,7 +2098,7 @@ if (!function_exists('fse')) {
         $comprobante["resumen"]                  = $resumen;
         $comprobante["apendice"]                 = $apendice;
         //$comprobante2 = [];
-        dd($comprobante);
+        //dd($comprobante);
         return ($comprobante);
     }
 }
