@@ -869,6 +869,9 @@
                                 </select>
                                 <input type="hidden" name="typecontribuyenteclient" id="typecontribuyenteclient">
                                 <input type="hidden" name="cliente_agente_retencion" id="cliente_agente_retencion" value="0">
+                                <input type="hidden" id="client_tpersona" value="">
+                                <input type="hidden" id="client_extranjero" value="0">
+                                <input type="hidden" id="client_contribuyente" value="0">
                                 <!-- Información del cliente (replicado de RomaCopies) -->
                                 <div id="client-info" class="mt-2" style="display: none;">
                                     <div class="alert alert-info">

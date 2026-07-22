@@ -1689,6 +1689,9 @@ function valtrypecontri(idcliente) {
         method: "GET",
         success: function (response) {
             $("#typecontribuyenteclient").val(response.tipoContribuyente);
+            $("#client_tpersona").val(response.tpersona);
+            $("#client_extranjero").val(response.extranjero);
+            $("#client_contribuyente").val(response.contribuyente);
 
             // Guardar si el cliente es agente de retención para usar en cálculos
             if (response.agente_retencion == "1") {
@@ -2737,6 +2740,50 @@ function updateCLQTotals() {
                             }
                             break;
                         case "step2":
+                            var typedocument = $("#typedocument").val();
+                            var clientId = $("#client").val();
+                            
+                            if (!clientId || clientId === '0' || clientId === '') {
+                                Swal.fire({
+                                    title: "Falta seleccionar cliente",
+                                    text: "Por favor, seleccione un cliente para continuar.",
+                                    icon: "warning",
+                                    confirmButtonText: "Entendido"
+                                });
+                                break;
+                            }
+                            
+                            if (typedocument === '3') { // Crédito Fiscal (CCF)
+                                var tpersona = $("#client_tpersona").val();
+                                var contribuyente = $("#client_contribuyente").val();
+                                if (tpersona === 'N' && contribuyente !== '1') {
+                                    Swal.fire({
+                                        title: "No se puede crear Crédito Fiscal",
+                                        text: "Solo se permiten personas naturales contribuyentes y personas jurídicas.",
+                                        icon: "warning",
+                                        confirmButtonText: "Entendido"
+                                    });
+                                    break;
+                                }
+                            } else if (typedocument === '7') { // Factura de Exportación (FEX)
+                                var tpersona = $("#client_tpersona").val();
+                                var contribuyente = $("#client_contribuyente").val();
+                                var extranjero = $("#client_extranjero").val();
+                                
+                                var esExtranjero = (extranjero == 1 || extranjero === '1' || tpersona === 'E');
+                                var esContribuyente = (contribuyente == 1 || contribuyente === '1');
+                                var esJuridico = (tpersona === 'J');
+                                
+                                if (!esExtranjero && !esContribuyente && !esJuridico) {
+                                    Swal.fire({
+                                        title: "No se puede crear Factura de Exportación",
+                                        text: "Solo se permiten clientes extranjeros, contribuyentes de IVA o personas jurídicas.",
+                                        icon: "warning",
+                                        confirmButtonText: "Entendido"
+                                    });
+                                    break;
+                                }
+                            }
                             iconsStepper.to(3);
                             break;
                         case "step3":
