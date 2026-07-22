@@ -130,6 +130,45 @@
                 }
             });
         }
+
+        // Accept and lock quote proposal
+        function acceptQuote(quoteId) {
+            Swal.fire({
+                title: '¿Aceptar propuesta?',
+                text: "Esto aprobará la cotización y la bloqueará, impidiendo cualquier edición o eliminación futura.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28c76f',
+                cancelButtonColor: '#8592a3',
+                confirmButtonText: 'Sí, aceptar y cerrar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success me-3',
+                    cancelButton: 'btn btn-label-secondary'
+                },
+                buttonsStyling: false
+            }).then(function (result) {
+                if (result.value) {
+                    window.location.href = "{{ url('quote/accept') }}/" + quoteId;
+                }
+            });
+        }
+
+        // Open PDF modal
+        function openPdfModal(quoteId, title) {
+            const pdfUrl = "{{ route('quote.pdf', ':id') }}".replace(':id', quoteId);
+            $('#pdfViewerFrame').attr('src', pdfUrl);
+            $('#downloadPdfBtn').attr('href', pdfUrl + '?download=1');
+            $('#pdfModalTitle').text('Cotización: ' + title);
+            $('#viewPdfModal').modal('show');
+        }
+
+        $(document).ready(function() {
+            // Clear iframe src on modal hide to release resources
+            $('#viewPdfModal').on('hidden.bs.modal', function () {
+                $('#pdfViewerFrame').attr('src', '');
+            });
+        });
     </script>
 @endsection
 
@@ -177,10 +216,12 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <!-- Print/View PDF -->
-                                    <a href="{{ route('quote.pdf', $quote->id) }}" target="_blank" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" title="Ver / Descargar PDF">
+                                    <!-- Print/View PDF (Modal) -->
+                                    <button type="button" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" 
+                                            onclick="openPdfModal({{ $quote->id }}, '{{ addslashes($quote->title) }}')"
+                                            title="Ver PDF en Modal">
                                         <i class="fa-solid fa-file-pdf text-danger fs-5"></i>
-                                    </a>
+                                    </button>
                                     
                                     <!-- Send Email -->
                                     <button type="button" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" 
@@ -189,14 +230,17 @@
                                         <i class="fa-solid fa-envelope text-primary fs-5"></i>
                                     </button>
 
-                                    <!-- Convert to Sale -->
+                                    <!-- Accept Proposal -->
                                     @if($quote->status !== 'approved')
-                                        <a href="{{ route('quote.convert-to-sale', $quote->id) }}" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" title="Convertir a Venta">
-                                            <i class="fa-solid fa-circle-check text-success fs-5"></i>
-                                        </a>
+                                        <button type="button" class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" 
+                                                onclick="acceptQuote({{ $quote->id }})"
+                                                title="Aceptar Propuesta / Cerrar Cotización">
+                                            <i class="fa-solid fa-check-double text-success fs-5"></i>
+                                        </button>
                                     @else
-                                        <button disabled class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" title="Venta Realizada">
-                                            <i class="fa-solid fa-circle-check text-muted fs-5"></i>
+                                        <button disabled class="btn btn-sm btn-icon btn-text-secondary rounded-pill waves-effect waves-light" 
+                                                title="Propuesta Aprobada y Cerrada (Bloqueada)">
+                                            <i class="fa-solid fa-lock text-warning fs-5"></i>
                                         </button>
                                     @endif
 
@@ -206,13 +250,19 @@
                                             <i class="ti ti-dots-vertical fs-5"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end m-0">
-                                            <a href="{{ route('quote.edit', $quote->id) }}" class="dropdown-item">
-                                                <i class="ti ti-edit me-2"></i>Editar
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a href="javascript:deleteQuote({{ $quote->id }});" class="dropdown-item text-danger">
-                                                <i class="ti ti-trash me-2"></i>Eliminar
-                                            </a>
+                                            @if($quote->status !== 'approved')
+                                                <a href="{{ route('quote.edit', $quote->id) }}" class="dropdown-item">
+                                                    <i class="ti ti-edit me-2"></i>Editar
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                <a href="javascript:deleteQuote({{ $quote->id }});" class="dropdown-item text-danger">
+                                                    <i class="ti ti-trash me-2"></i>Eliminar
+                                                </a>
+                                            @else
+                                                <span class="dropdown-item text-muted">
+                                                    <i class="ti ti-lock me-2"></i>Cerrada (No modificable)
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -291,6 +341,29 @@
                         <span class="spinner-border spinner-border-sm me-2 d-none" id="sendEmailSpinner" role="status" aria-hidden="true"></span>
                         Enviar Correo
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver PDF -->
+    <div class="modal fade" id="viewPdfModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 90%; height: 90vh;">
+            <div class="modal-content" style="height: 100%;">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title" id="pdfModalTitle">Visualización de Cotización</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0" style="height: calc(100% - 130px); background: #f4f5fa;">
+                    <iframe id="pdfViewerFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+                <div class="modal-footer py-2 d-flex justify-content-between">
+                    <div>
+                        <a id="downloadPdfBtn" href="" class="btn btn-primary">
+                            <i class="ti ti-download me-1"></i>Descargar PDF
+                        </a>
+                    </div>
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>

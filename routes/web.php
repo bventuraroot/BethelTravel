@@ -487,6 +487,7 @@ Route::middleware('auth')->group(function () {
         Route::post('send-email/{id}', [QuoteController::class, 'sendEmail'])->name('send-email');
         Route::get('convert-to-sale/{id}', [QuoteController::class, 'showConvertToSale'])->name('convert-to-sale');
         Route::post('convert-to-sale/{id}', [QuoteController::class, 'storeConvertToSale'])->name('store-convert-to-sale');
+        Route::get('accept/{id}', [QuoteController::class, 'acceptProposal'])->name('accept');
     });
 });
 });

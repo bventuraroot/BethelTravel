@@ -198,6 +198,9 @@ class QuoteController extends Controller
     public function edit(Request $request, $id)
     {
         $quote = Quote::findOrFail($id);
+        if ($quote->status === 'approved') {
+            return redirect()->route('quote.index')->with('error', 'No se puede editar una cotización que ya ha sido aprobada.');
+        }
         $company_selected = $request->session()->get('company_selected') ?? $quote->company_id;
         $clients = Client::where('company_id', $company_selected)->get();
         $airlines = DB::table('aerolineas')->orderBy('nombre', 'asc')->get();
@@ -213,6 +216,9 @@ class QuoteController extends Controller
     public function update(Request $request, $id)
     {
         $quote = Quote::findOrFail($id);
+        if ($quote->status === 'approved') {
+            return redirect()->route('quote.index')->with('error', 'No se puede actualizar una cotización que ya ha sido aprobada.');
+        }
         
         $request->validate([
             'title' => 'required|string|max:255',
@@ -352,6 +358,9 @@ class QuoteController extends Controller
     public function destroy($id)
     {
         $quote = Quote::findOrFail($id);
+        if ($quote->status === 'approved') {
+            return redirect()->route('quote.index')->with('error', 'No se puede eliminar una cotización que ya ha sido aprobada.');
+        }
         
         // Delete banner images
         if (is_array($quote->banner_images)) {
@@ -366,6 +375,16 @@ class QuoteController extends Controller
         
         $quote->delete();
         return redirect()->route('quote.index')->with('success', 'Cotización eliminada correctamente.');
+    }
+
+    /**
+     * Accept the quote proposal and lock it.
+     */
+    public function acceptProposal($id)
+    {
+        $quote = Quote::findOrFail($id);
+        $quote->update(['status' => 'approved']);
+        return redirect()->route('quote.index')->with('success', 'La cotización ha sido aprobada y cerrada con éxito.');
     }
 
     /**
@@ -393,6 +412,9 @@ class QuoteController extends Controller
         $pdf->loadView('quotes.pdf', compact('quote', 'bannerImagesPaths', 'logoPath'));
         
         $filename = 'Cotizacion_' . str_replace(' ', '_', $quote->title) . '.pdf';
+        if (request()->has('download')) {
+            return $pdf->download($filename);
+        }
         return $pdf->stream($filename);
     }
 

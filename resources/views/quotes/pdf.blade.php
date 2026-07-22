@@ -410,8 +410,8 @@
                         </td>
                         
                         <!-- Arrow -->
-                        <td style="width: 10%; text-align: center; vertical-align: middle; color: #9ca3af; font-size: 14px;">
-                            ➔
+                        <td style="width: 10%; text-align: center; vertical-align: middle; color: #9ca3af; font-size: 16px; font-weight: bold;">
+                            &gt;
                         </td>
                         
                         <!-- Arrival Info -->
