@@ -278,7 +278,7 @@
                 const rowIndex = $(this).data('index');
                 const tdHtml = `
                     <td id="td-price-${rowIndex}-${colName}">
-                        <input type="number" step="any" name="hotels_grid_prices[${rowIndex}][${colName}]" class="form-control form-control-sm text-center" placeholder="0.00" value="0">
+                        <input type="number" step="any" name="hotels_grid_prices[${rowIndex}][${colName}]" class="form-control form-control-sm text-center" placeholder="0.00" value="0" style="min-width: 100px;">
                     </td>
                 `;
                 $(this).find('td:last-child').before(tdHtml);
@@ -331,7 +331,7 @@
                 const priceVal = prices[col] !== undefined ? prices[col] : '0';
                 rowHtml += `
                     <td id="td-price-${hotelRowIndex}-${col}">
-                        <input type="number" step="any" name="hotels_grid_prices[${hotelRowIndex}][${col}]" class="form-control form-control-sm text-center" placeholder="0.00" value="${priceVal}">
+                        <input type="number" step="any" name="hotels_grid_prices[${hotelRowIndex}][${col}]" class="form-control form-control-sm text-center" placeholder="0.00" value="${priceVal}" style="min-width: 100px;">
                     </td>
                 `;
             });
