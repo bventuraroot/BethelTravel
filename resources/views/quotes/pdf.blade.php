@@ -389,39 +389,44 @@
     @if(!empty($quote->flights))
         <div class="section-title">Itinerario de vuelo:</div>
         
-        @foreach($quote->flights as $index => $flight)
-            <div class="flight-card" style="margin-bottom: 8px;">
-                <div class="flight-header">
-                    <span class="airline-badge">{{ $flight['airline_code'] ?? 'AÉREO' }}</span> 
-                    {{ $flight['airline_name'] ?? 'Vuelo' }} - Vuelo Nº {{ $flight['flight_number'] ?? 'N/A' }}
-                </div>
-                
-                <table class="flight-card-table">
-                    <tr>
-                        <!-- Departure -->
-                        <td style="width: 45%;" class="flight-details-td">
-                            <div class="airport-code">{{ $flight['origin_code'] ?? 'ORIGEN' }}</div>
-                            <div class="airport-name">{{ $flight['origin_name'] ?? '' }}</div>
-                            <div class="flight-time" style="margin-top: 4px;">{{ $flight['departure_time'] ?? '' }}</div>
-                            <div class="flight-date">{{ !empty($flight['departure_date']) ? \Carbon\Carbon::parse($flight['departure_date'])->locale('es')->isoFormat('ddd, D MMM YYYY') : '' }}</div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 5px; page-break-inside: avoid;">
+            <tbody>
+                @foreach($quote->flights as $flight)
+                    <tr style="page-break-inside: avoid; border-bottom: 1px solid #e5e7eb;">
+                        <!-- Logo & Flight Number -->
+                        <td style="width: 20%; vertical-align: middle; padding: 6px 0;">
+                            <div style="font-weight: bold; color: #1e3a8a; font-size: 11px;">{{ $flight['airline_name'] ?? ($flight['airline_code'] ?? 'AÉREO') }}</div>
+                            <div style="font-size: 10px; color: #4b5563; font-weight: bold; margin-top: 2px;">{{ $flight['airline_code'] ?? '' }} {{ $flight['flight_number'] ?? '' }}</div>
                         </td>
                         
-                        <!-- Separator / Arrow -->
-                        <td class="flight-separator" style="width: 10%;">
+                        <!-- Departure Info -->
+                        <td style="width: 35%; vertical-align: middle; padding: 6px 10px;">
+                            <div style="font-size: 11.5px; font-weight: bold; color: #333333;">
+                                {{ $flight['origin_name'] ?? '' }} ({{ $flight['origin_code'] ?? '' }})
+                            </div>
+                            <div style="font-size: 10.5px; color: #6b7280; margin-top: 1px;">
+                                {{ !empty($flight['departure_date']) ? \Carbon\Carbon::parse($flight['departure_date'])->locale('es')->isoFormat('ddd, D MMM') : '' }} | <strong style="color: #111827;">{{ $flight['departure_time'] ?? '' }}</strong>
+                            </div>
+                        </td>
+                        
+                        <!-- Arrow -->
+                        <td style="width: 10%; text-align: center; vertical-align: middle; color: #9ca3af; font-size: 14px;">
                             ➔
                         </td>
                         
-                        <!-- Arrival -->
-                        <td style="width: 45%; text-align: right;" class="flight-details-td">
-                            <div class="airport-code">{{ $flight['destination_code'] ?? 'DESTINO' }}</div>
-                            <div class="airport-name">{{ $flight['destination_name'] ?? '' }}</div>
-                            <div class="flight-time" style="margin-top: 4px;">{{ $flight['arrival_time'] ?? '' }}</div>
-                            <div class="flight-date">{{ !empty($flight['arrival_date']) ? \Carbon\Carbon::parse($flight['arrival_date'])->locale('es')->isoFormat('ddd, D MMM YYYY') : '' }}</div>
+                        <!-- Arrival Info -->
+                        <td style="width: 35%; vertical-align: middle; padding: 6px 10px; text-align: right;">
+                            <div style="font-size: 11.5px; font-weight: bold; color: #333333;">
+                                {{ $flight['destination_name'] ?? '' }} ({{ $flight['destination_code'] ?? '' }})
+                            </div>
+                            <div style="font-size: 10.5px; color: #6b7280; margin-top: 1px;">
+                                {{ !empty($flight['arrival_date']) ? \Carbon\Carbon::parse($flight['arrival_date'])->locale('es')->isoFormat('ddd, D MMM') : '' }} | <strong style="color: #111827;">{{ $flight['arrival_time'] ?? '' }}</strong>
+                            </div>
                         </td>
                     </tr>
-                </table>
-            </div>
-        @endforeach
+                @endforeach
+            </tbody>
+        </table>
     @endif
 
     <!-- Important / Notes -->
