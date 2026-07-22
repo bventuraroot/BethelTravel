@@ -1119,6 +1119,11 @@
                                                     <i class="ti ti-dots-vertical"></i>
                                                 </button>
                                                 <div class="dropdown-menu">
+                                                    @if($sale->estadoHacienda != 'PROCESADO' && !$sale->is_parent)
+                                                    <a href="javascript:retomarsale({{ $sale->id }}, {{ $sale->typedocument_id }});" class="dropdown-item text-warning fw-bold">
+                                                        <i class="ti ti-pencil me-2"></i>Retomar Borrador
+                                                    </a>
+                                                    @endif
                                                     @if ($sale->state != 0 && !$sale->is_parent)
                                                     <a href="javascript:cancelsale({{ $sale->id }});" class="dropdown-item">
                                                         <i class="ti ti-x me-2"></i>Anular
