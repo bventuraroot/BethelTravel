@@ -1700,7 +1700,7 @@ function valtrypecontri(idcliente) {
             }
 
 
-            // Validar si se puede crear crédito fiscal
+            // Validar si se puede crear crédito fiscal o factura de exportación
             var typedocument = $("#typedocument").val();
             if (typedocument === '3') { // Crédito Fiscal
                 var tpersona = response.tpersona;
@@ -1710,6 +1710,25 @@ function valtrypecontri(idcliente) {
                     Swal.fire({
                         title: "No se puede crear Crédito Fiscal",
                         text: "Solo se permiten personas naturales contribuyentes y personas jurídicas.",
+                        icon: "warning",
+                        confirmButtonText: "Entendido"
+                    });
+                    $("#client").val('').trigger('change');
+                    return;
+                }
+            } else if (typedocument === '7') { // Factura de Exportación (FEX)
+                var tpersona = response.tpersona;
+                var contribuyente = response.contribuyente;
+                var extranjero = response.extranjero;
+                
+                var esExtranjero = (extranjero == 1 || extranjero === '1' || tpersona === 'E');
+                var esContribuyente = (contribuyente == 1 || contribuyente === '1');
+                var esJuridico = (tpersona === 'J');
+                
+                if (!esExtranjero && !esContribuyente && !esJuridico) {
+                    Swal.fire({
+                        title: "No se puede crear Factura de Exportación",
+                        text: "Solo se permiten clientes extranjeros, contribuyentes de IVA o personas jurídicas.",
                         icon: "warning",
                         confirmButtonText: "Entendido"
                     });

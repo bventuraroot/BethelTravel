@@ -893,7 +893,7 @@
                                     <h6><i class="ti ti-world-upload me-2"></i>Datos de Exportación</h6>
                                     <small class="text-muted">
                                         <i class="ti ti-info-circle me-1"></i>
-                                        <strong>Restricción:</strong> Solo se pueden seleccionar personas naturales extranjeras para facturas de exportación.
+                                        <strong>Restricción:</strong> Solo se pueden seleccionar clientes extranjeros, contribuyentes de IVA o personas jurídicas para facturas de exportación.
                                     </small>
                                 </div>
                                 @endif

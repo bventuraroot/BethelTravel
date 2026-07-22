@@ -952,8 +952,9 @@ class SaleController extends Controller
             if (!empty($cliente) && !empty($documento) && $documento[0]->tipodocumento === '11') {
                 $esExtranjero = ($cliente[0]->extranjero == 1 || $cliente[0]->tpersona === 'E');
                 $esContribuyente = ($cliente[0]->contribuyente == 1);
-                if (!$esExtranjero && !$esContribuyente) {
-                    $erroresValidacion[] = 'Las Facturas de Exportación (FEX) solo pueden generarse para clientes extranjeros o contribuyentes de IVA.';
+                $esJuridico = ($cliente[0]->tpersona === 'J');
+                if (!$esExtranjero && !$esContribuyente && !$esJuridico) {
+                    $erroresValidacion[] = 'Las Facturas de Exportación (FEX) solo pueden generarse para clientes extranjeros, contribuyentes de IVA o personas jurídicas.';
                 }
             }
             if (empty($detalle)) {
