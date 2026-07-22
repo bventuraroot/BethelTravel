@@ -448,6 +448,15 @@ Route::middleware('auth')->group(function () {
         Route::get('destroy/{id}', [App\Http\Controllers\AirlineController::class, 'destroy'])->name('destroy');
     });
 
+    // Gestión de Hoteles
+    Route::group(['prefix' => 'hotel', 'as' => 'hotel.'], function(){
+        Route::get('index', [App\Http\Controllers\HotelController::class, 'index'])->name('index');
+        Route::post('store', [App\Http\Controllers\HotelController::class, 'store'])->name('store');
+        Route::post('update', [App\Http\Controllers\HotelController::class, 'update'])->name('update');
+        Route::get('gethotelid/{id}', [App\Http\Controllers\HotelController::class, 'gethotelid'])->name('gethotelid');
+        Route::get('destroy/{id}', [App\Http\Controllers\HotelController::class, 'destroy'])->name('destroy');
+    });
+
     // Gestión de Reservas y Prechequeo
     Route::group(['prefix' => 'precheckin', 'as' => 'precheckin.'], function(){
         Route::get('/', [App\Http\Controllers\PrecheckinController::class, 'index'])->name('index');

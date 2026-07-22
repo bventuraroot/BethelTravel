@@ -27,6 +27,36 @@
                 placeholder: 'Seleccione o escriba destino...'
             });
 
+            // Listen to destination title changes to filter hotel lists
+            $('#title').on('change', function() {
+                const selectedDest = ($(this).val() || '').toUpperCase().trim();
+                
+                $('.select2-in-hotel').each(function() {
+                    const selectEl = $(this);
+                    const currentVal = selectEl.val();
+                    
+                    // Clear and rebuild options
+                    selectEl.empty();
+                    selectEl.append(new Option('Seleccione o escriba hotel...', ''));
+                    
+                    allHotels.forEach(hotel => {
+                        if (!selectedDest || hotel.destino === selectedDest) {
+                            selectEl.append(new Option(hotel.nombre, hotel.nombre));
+                        }
+                    });
+                    
+                    // Restore previous value
+                    if (currentVal) {
+                        if (selectEl.find(`option[value="${currentVal}"]`).length === 0) {
+                            selectEl.append(new Option(currentVal, currentVal, true, true));
+                        } else {
+                            selectEl.val(currentVal);
+                        }
+                    }
+                    selectEl.trigger('change.select2');
+                });
+            });
+
             // Flatpickr initialization
             $('.datepicker').flatpickr({
                 dateFormat: 'Y-m-d',
@@ -206,14 +236,26 @@
             $(`#hidden-col-${colName}`).remove();
         }
 
+        // Master list of hotels and their destinations from the database
+        const allHotels = [
+            @foreach($allHotels as $h)
+                { nombre: "{{ addslashes($h->nombre) }}", destino: "{{ strtoupper(addslashes($h->destino)) }}" },
+            @endforeach
+        ];
+
         function addHotelRow(hotelName = '', prices = {}) {
             hotelRowIndex++;
             
+            // Get currently selected destination
+            const selectedDest = ($('#title').val() || '').toUpperCase().trim();
+            
             // Generate hotels option html
             let hotelOptions = '<option value="">Seleccione o escriba hotel...</option>';
-            @foreach($allHotels as $hName)
-                hotelOptions += `<option value="{{ $hName }}">{{ $hName }}</option>`;
-            @endforeach
+            allHotels.forEach(hotel => {
+                if (!selectedDest || hotel.destino === selectedDest) {
+                    hotelOptions += `<option value="${hotel.nombre}">${hotel.nombre}</option>`;
+                }
+            });
             
             let rowHtml = `
                 <tr class="hotel-row" id="hotel-row-${hotelRowIndex}" data-index="${hotelRowIndex}">

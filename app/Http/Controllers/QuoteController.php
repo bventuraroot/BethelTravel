@@ -40,37 +40,7 @@ class QuoteController extends Controller
 
     private function getUniqueHotels()
     {
-        $hotels = [];
-        $quotesWithHotels = DB::table('quotes')->whereNotNull('hotels_grid')->get();
-        foreach ($quotesWithHotels as $q) {
-            $grid = json_decode($q->hotels_grid, true);
-            if (!empty($grid['rows'])) {
-                foreach ($grid['rows'] as $row) {
-                    if (!empty($row['hotel'])) {
-                        $hotels[] = $row['hotel'];
-                    }
-                }
-            }
-        }
-        
-        $defaultHotels = [
-            'Hotel Sociatel Medellin***',
-            'Loyds Hotel***',
-            'Hotel The Morgana Poblado Suites****',
-            'V Grand Hotel, A Member Of Radisson Individuals****',
-            'Hotel Dann Carlton Medellín*****',
-            'Hotel San Fernando Plaza*****',
-            'Hotel Estelar Milla de Oro*****',
-            'Decameron Galeón (Santa Marta)',
-            'Decameron Aquarium (San Andrés)',
-            'Hotel Riu Plaza España (Madrid)',
-            'Hard Rock Hotel Cancún'
-        ];
-        
-        $allHotels = array_unique(array_merge($hotels, $defaultHotels));
-        sort($allHotels);
-        
-        return array_values($allHotels);
+        return \App\Models\Hotel::orderBy('nombre', 'asc')->get();
     }
 
     /**
