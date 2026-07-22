@@ -1263,6 +1263,8 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
+            for ($i=0; $i < 100; $i++) { 
+         
             $request = request();
 
             // Obtener la venta original
@@ -1770,13 +1772,14 @@ class SaleController extends Controller
             $nfactura->save();
 
             // El correlativo ya fue actualizado arriba
-
+            }
             DB::commit();
             if (request()->ajax()) {
                 return response('1');
             }
             return redirect()->route('sale.index')
                 ->with('success', 'Nota de crédito creada y enviada a Hacienda exitosamente.');
+            
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error creando nota de crédito: ' . $e->getMessage());
