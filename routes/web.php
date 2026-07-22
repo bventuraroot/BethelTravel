@@ -500,6 +500,7 @@ Route::middleware('auth')->group(function () {
     Route::group(['prefix' => 'precheckin', 'as' => 'precheckin.'], function(){
         Route::get('/', [App\Http\Controllers\PrecheckinController::class, 'index'])->name('index');
         Route::get('data', [App\Http\Controllers\PrecheckinController::class, 'getData'])->name('data');
+        Route::get('run-alerts', [App\Http\Controllers\PrecheckinController::class, 'runCronAlerts'])->name('run-alerts');
         Route::post('update-status/{id}', [App\Http\Controllers\PrecheckinController::class, 'updateStatus'])->name('update-status');
         Route::post('config', [App\Http\Controllers\PrecheckinController::class, 'saveConfig'])->name('config');
         Route::post('send-mail/{id}', [App\Http\Controllers\PrecheckinController::class, 'sendMailManual'])->name('send-mail');
@@ -517,12 +518,12 @@ Route::middleware('auth')->group(function () {
         Route::post('send-email/{id}', [QuoteController::class, 'sendEmail'])->name('send-email');
         Route::get('convert-to-sale/{id}', [QuoteController::class, 'showConvertToSale'])->name('convert-to-sale');
         Route::post('convert-to-sale/{id}', [QuoteController::class, 'storeConvertToSale'])->name('store-convert-to-sale');
-        Route::get('accept/{id}', [QuoteController::class, 'acceptProposal'])->name('accept');
     });
 });
 });
 });
 
-
+// Ruta pública accesible para Cronjob de cPanel o cURL externo
+Route::get('/cron/send-precheckin-alerts', [App\Http\Controllers\PrecheckinController::class, 'runCronAlerts'])->name('cron.precheckin-alerts');
 
 require __DIR__.'/auth.php';

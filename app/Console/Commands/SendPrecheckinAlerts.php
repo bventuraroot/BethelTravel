@@ -44,7 +44,7 @@ class SendPrecheckinAlerts extends Command
             $config = PrecheckinConfig::firstOrCreate(
                 ['company_id' => $company->id],
                 [
-                    'dias_antes' => 2,
+                    'dias_antes' => 1,
                     'enviar_cliente' => true,
                     'email_agencia' => $company->email,
                     'asunto' => 'Prechequeo disponible para tu vuelo - Reserva {reserva}',

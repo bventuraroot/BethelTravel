@@ -24,7 +24,7 @@ class PrecheckinController extends Controller
         $config = PrecheckinConfig::firstOrCreate(
             ['company_id' => $selectedCompanyId],
             [
-                'dias_antes' => 2,
+                'dias_antes' => 1,
                 'enviar_cliente' => true,
                 'email_agencia' => $companies->where('id', $selectedCompanyId)->first()?->email ?? '',
                 'asunto' => 'Prechequeo disponible para tu vuelo - Reserva {reserva}',
@@ -71,8 +71,12 @@ class PrecheckinController extends Controller
                 'sd.precheckin_completed_at',
                 's.id as sale_id',
                 'c.firstname',
+                'c.secondname',
                 'c.firstlastname',
+                'c.secondlastname',
+                'c.comercial_name',
                 'c.name_contribuyente',
+                'c.tpersona',
                 'c.email as client_email',
                 'al.nombre as airline_name',
                 'ap.ciudad as destination_city',
@@ -96,10 +100,15 @@ class PrecheckinController extends Controller
         $query->orderBy('sd.fecha_viaje', 'asc');
 
         $data = $query->get()->map(function ($row) {
-            // Nombre formateado del cliente
-            $fullname = trim(($row->firstname ?? '') . ' ' . ($row->firstlastname ?? ''));
-            if (empty($fullname)) {
-                $fullname = $row->name_contribuyente ?: 'Pasajero';
+            // Nombre formateado del cliente (natural o jurídico)
+            $fullname = '';
+            if (isset($row->tpersona) && $row->tpersona === 'J') {
+                $fullname = !empty($row->comercial_name) ? $row->comercial_name : (!empty($row->name_contribuyente) ? $row->name_contribuyente : trim(($row->firstname ?? '') . ' ' . ($row->firstlastname ?? '')));
+            } else {
+                $fullname = trim(($row->firstname ?? '') . ' ' . ($row->secondname ?? '') . ' ' . ($row->firstlastname ?? '') . ' ' . ($row->secondlastname ?? ''));
+                if (empty($fullname)) {
+                    $fullname = !empty($row->comercial_name) ? $row->comercial_name : (!empty($row->name_contribuyente) ? $row->name_contribuyente : 'Cliente');
+                }
             }
 
             // Calcular si la alerta debe mostrarse (si está pendiente y la fecha de viaje está cerca)
@@ -268,6 +277,31 @@ class PrecheckinController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al enviar el correo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Revisa las fechas de viaje y envía correos de alerta de prechequeo.
+     * Diseñado para ser llamado desde un cronjob HTTP (curl/wget) o ejecutor externo.
+     */
+    public function runCronAlerts(Request $request)
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('alerts:send-precheckin');
+            $output = \Illuminate\Support\Facades\Artisan::output();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Revisión de fechas de viaje y envío de alertas completado exitosamente.',
+                'timestamp' => now()->toDateTimeString(),
+                'details' => trim($output)
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error ejecutando cron de alertas de prechequeo: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error al procesar las alertas de prechequeo: ' . $e->getMessage()
             ], 500);
         }
     }

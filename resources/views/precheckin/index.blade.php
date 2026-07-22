@@ -93,7 +93,7 @@
                                 <thead>
                                     <tr>
                                         <th>Alerta</th>
-                                        <th>Pasajero</th>
+                                        <th>Cliente</th>
                                         <th>Aerolínea / Ruta</th>
                                         <th>Reserva #</th>
                                         <th>Fecha Viaje</th>
@@ -150,7 +150,7 @@
 
                                         <div class="mb-3 form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="config-enviar-cliente" name="enviar_cliente" value="1" {{ $config->enviar_cliente ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="config-enviar-cliente">Enviar correo al Pasajero</label>
+                                            <label class="form-check-label" for="config-enviar-cliente">Enviar correo al Cliente</label>
                                         </div>
 
                                         <div class="mb-3 form-check form-switch">
