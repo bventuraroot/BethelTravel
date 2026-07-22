@@ -724,7 +724,7 @@ class SaleController extends Controller
             if ($amount === '' || !is_numeric($amount)) {
                 $amount = 0.00;
             }
-            for ($i=0; $i < 50; $i++) { 
+            //for ($i=0; $i < 50; $i++) { 
                 $salesave = Sale::find($saleId);
                 $salesave->totalamount = $amount;
             $salesave->typesale = 1; // finalizar venta como en RomaCopies
@@ -1146,7 +1146,7 @@ class SaleController extends Controller
                     'parent_sale_id' => $salesave->parent_sale_id
                 ]);
             }
-        }
+        //}
             $salesave->save();
             $exit = 1;
             DB::commit();
