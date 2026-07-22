@@ -272,24 +272,28 @@ Route::group(['prefix' => 'report', 'as' => 'report.'], function(){
         Route::get('fex', [ReportsController::class, 'fex'])->name('fex');
         Route::post('fexsearch', [ReportsController::class, 'fexsearch'])->name('fexsearch');
         Route::post('fex-excel', [ReportsController::class, 'fexExcel'])->name('fex.excel');
+        Route::post('fex-pdf', [ReportsController::class, 'fexPdf'])->name('fex.pdf');
         Route::post('fex-merge-pdf', [ReportsController::class, 'fexMergePdf'])->name('fex.merge-pdf');
 
         // Reporte FSE (Facturas de Sujeto Excluido - DTE 14)
         Route::get('fse', [ReportsController::class, 'fse'])->name('fse');
         Route::post('fsesearch', [ReportsController::class, 'fsesearch'])->name('fsesearch');
         Route::post('fse-excel', [ReportsController::class, 'fseExcel'])->name('fse.excel');
+        Route::post('fse-pdf', [ReportsController::class, 'fsePdf'])->name('fse.pdf');
         Route::post('fse-merge-pdf', [ReportsController::class, 'fseMergePdf'])->name('fse.merge-pdf');
 
         // Reporte NCR (Notas de Crédito - DTE 05)
         Route::get('ncr', [ReportsController::class, 'ncr'])->name('ncr');
         Route::post('ncrsearch', [ReportsController::class, 'ncrsearch'])->name('ncrsearch');
         Route::post('ncr-excel', [ReportsController::class, 'ncrExcel'])->name('ncr.excel');
+        Route::post('ncr-pdf', [ReportsController::class, 'ncrPdf'])->name('ncr.pdf');
         Route::post('ncr-merge-pdf', [ReportsController::class, 'ncrMergePdf'])->name('ncr.merge-pdf');
 
         // Reporte REC (Recibos / Recibos de Ingreso - DTE 15 / REC)
         Route::get('rec', [ReportsController::class, 'rec'])->name('rec');
         Route::post('recsearch', [ReportsController::class, 'recsearch'])->name('recsearch');
         Route::post('rec-excel', [ReportsController::class, 'recExcel'])->name('rec.excel');
+        Route::post('rec-pdf', [ReportsController::class, 'recPdf'])->name('rec.pdf');
         Route::post('rec-merge-pdf', [ReportsController::class, 'recMergePdf'])->name('rec.merge-pdf');
 
         Route::get('bookpurchases', [ReportsController::class, 'bookpurchases'])->name('bookpurchases');

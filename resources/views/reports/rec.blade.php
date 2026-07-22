@@ -6,32 +6,51 @@ $configData = Helper::appClasses();
 
 @section('vendor-style')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/jquery-timepicker/jquery-timepicker.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/pickr/pickr-themes.css') }}" />
 @endsection
 
 @section('vendor-script')
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/cleavejs/cleave.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/cleavejs/cleave-phone.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/bootstrap-daterangepicker/bootstrap-daterangepicker.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/jquery-timepicker/jquery-timepicker.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/pickr/pickr.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection
 
 @section('page-script')
 <script>
-$(document).ready(function() {
+$(function () {
     var iduser = $("#iduser").val();
-    var selectedCompany = "{{ isset($company_id) ? $company_id : '' }}";
-    
     $.ajax({
         url: "/company/getCompanybyuser/" + iduser,
         method: "GET",
         success: function (response) {
-            $("#company").empty();
             $.each(response, function (index, value) {
-                var isSelected = (selectedCompany && selectedCompany == value.id) ? 'selected' : '';
-                $("#company").append('<option value="' + value.id + '" ' + isSelected + '>' + value.name.toUpperCase() + '</option>');
+                var selected = (value.id == "{{ @$heading['id'] }}") ? 'selected' : '';
+                $("#company").append('<option value="' + value.id + '" ' + selected + '>' + value.name.toUpperCase() + "</option>");
             });
         }
+    });
+
+    $("#first-filter").click(function(){
+        $('#sendfilters').submit();
     });
 
     $('#btn-export-excel').on('click', function() {
@@ -40,11 +59,51 @@ $(document).ready(function() {
         var period = $('#period').val();
 
         if (!company) {
-            Swal.fire({ icon: 'warning', title: 'Atención', text: 'Por favor, selecciona una empresa.' });
+            Swal.fire({ icon: 'warning', title: 'Atención', text: 'Por favor, primero realiza una búsqueda para generar el reporte.' });
             return;
         }
 
         var form = $('<form>', { 'method': 'POST', 'action': '{{ route("report.rec.excel") }}' });
+        form.append($('<input>', { 'type': 'hidden', 'name': '_token', 'value': '{{ csrf_token() }}' }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'company', 'value': company }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'year', 'value': year }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'period', 'value': period }));
+        $('body').append(form);
+        form.submit();
+        form.remove();
+    });
+
+    $('#btn-export-pdf').on('click', function() {
+        var company = $('#company').val();
+        var year = $('#year').val();
+        var period = $('#period').val();
+
+        if (!company) {
+            Swal.fire({ icon: 'warning', title: 'Atención', text: 'Por favor, primero realiza una búsqueda para generar el reporte.' });
+            return;
+        }
+
+        var form = $('<form>', { 'method': 'POST', 'action': '{{ route("report.rec.pdf") }}' });
+        form.append($('<input>', { 'type': 'hidden', 'name': '_token', 'value': '{{ csrf_token() }}' }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'company', 'value': company }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'year', 'value': year }));
+        form.append($('<input>', { 'type': 'hidden', 'name': 'period', 'value': period }));
+        $('body').append(form);
+        form.submit();
+        form.remove();
+    });
+
+    $('#btn-merge-pdf').on('click', function() {
+        var company = $('#company').val();
+        var year = $('#year').val();
+        var period = $('#period').val();
+
+        if (!company) {
+            Swal.fire({ icon: 'warning', title: 'Atención', text: 'Por favor, primero realiza una búsqueda para generar el reporte.' });
+            return;
+        }
+
+        var form = $('<form>', { 'method': 'POST', 'action': '{{ route("report.rec.merge-pdf") }}' });
         form.append($('<input>', { 'type': 'hidden', 'name': '_token', 'value': '{{ csrf_token() }}' }));
         form.append($('<input>', { 'type': 'hidden', 'name': 'company', 'value': company }));
         form.append($('<input>', { 'type': 'hidden', 'name': 'year', 'value': year }));
@@ -72,101 +131,175 @@ function impFAC(nombreDiv) {
     <span class="text-muted fw-light">Reportes /</span> Recibos de Ingreso (REC / DTE 15)
 </h4>
 
-<div class="card mb-4">
+<!-- Advanced Search -->
+<div class="card">
     <form id="sendfilters" action="{{ route('report.recsearch') }}" method="post">
-        @csrf
+        @csrf @method('POST')
         <input type="hidden" name="iduser" id="iduser" value="{{ Auth::user()->id }}">
         <div class="card-header">
-            <div class="row align-items-end g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Empresa:</label>
-                    <select class="form-select" name="company" id="company">
-                    </select>
+            <div class="row">
+                <div class="col-4">
+                    <div class="row g-3">
+                        <select class="form-control" name="company" id="company">
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Año:</label>
-                    <select class="form-select" name="year" id="year">
-                        @for ($y = date('Y'); $y >= 2020; $y--)
-                            <option value="{{ $y }}" {{ (isset($yearB) && $yearB == $y) ? 'selected' : '' }}>{{ $y }}</option>
-                        @endfor
-                    </select>
+                <div class="col-1">
+                    <div class="row g-3">
+                        <select class="form-control" name="year" id="year">
+                            <?php
+                            $year = date("Y");
+                            for ($i=0; $i < 5 ; $i++) {
+                                $yearnew = $year-$i;
+                                $selected = (isset($yearB) && $yearnew == $yearB) ? "selected" : "";
+                                echo "<option value ='".$yearnew."' ".$selected.">".$yearnew."</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Período (Mes):</label>
-                    <select class="form-select" name="period" id="period">
-                        @php
-                            $meses = ['01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'];
-                        @endphp
-                        @foreach($meses as $key => $mes)
-                            <option value="{{ $key }}" {{ (isset($period) && $period == $key) ? 'selected' : '' }}>{{ $mes }}</option>
-                        @endforeach
-                    </select>
+                <div class="col-4">
+                    <div class="row g-3">
+                        <select class="form-control" name="period" id="period">
+                            <?php if(empty($period)){ $period = (date('n') == 1) ? '12' : sprintf('%02d', date('n') - 1); } ?>
+                            <option value="01" <?php echo (@$period == '01') ? "selected" : "" ?>>Enero</option>
+                            <option value="02" <?php echo (@$period == '02') ? "selected" : "" ?>>Febrero</option>
+                            <option value="03" <?php echo (@$period == '03') ? "selected" : "" ?>>Marzo</option>
+                            <option value="04" <?php echo (@$period == '04') ? "selected" : "" ?>>Abril</option>
+                            <option value="05" <?php echo (@$period == '05') ? "selected" : "" ?>>Mayo</option>
+                            <option value="06" <?php echo (@$period == '06') ? "selected" : "" ?>>Junio</option>
+                            <option value="07" <?php echo (@$period == '07') ? "selected" : "" ?>>Julio</option>
+                            <option value="08" <?php echo (@$period == '08') ? "selected" : "" ?>>Agosto</option>
+                            <option value="09" <?php echo (@$period == '09') ? "selected" : "" ?>>Septiembre</option>
+                            <option value="10" <?php echo (@$period == '10') ? "selected" : "" ?>>Octubre</option>
+                            <option value="11" <?php echo (@$period == '11') ? "selected" : "" ?>>Noviembre</option>
+                            <option value="12" <?php echo (@$period == '12') ? "selected" : "" ?>>Diciembre</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> Buscar</button>
-                    @if(isset($sales))
-                        <button type="button" id="btn-export-excel" class="btn btn-success" title="Exportar a Excel"><i class="fa-solid fa-file-excel"></i></button>
-                        <button type="button" class="btn btn-danger" title="Imprimir" onclick="impFAC('areaImprimir');"><i class="fa-solid fa-print"></i></button>
-                    @endif
+                <div class="col-3">
+                    <button type="button" id="first-filter" class="btn rounded-pill btn-primary waves-effect waves-light">Buscar</button>
                 </div>
             </div>
         </div>
     </form>
-</div>
 
-@if(isset($sales))
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-money-bill-transfer me-2 text-dark"></i>Recibos de Ingreso (REC) - {{ $heading->name ?? '' }} ({{ $period }}/{{ $yearB }})</h5>
-        <span class="badge bg-dark fs-6">{{ count($sales) }} registros</span>
+    @isset($heading)
+    <?php
+    $mesesDelAno = array("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
+    $mesesDelAnoMayuscula = array_map('strtoupper', $mesesDelAno);
+    ?>
+    <div class="row">
+        <div class="col-12">
+            <div class="box-header" style="text-align: right; margin-right: 6%;">
+                <button type="button" class='btn btn-primary' title='Exportar a Excel' id="btn-export-excel">
+                    <i class="fa-solid fa-file-excel"></i> &nbsp;&nbsp;Exportar a Excel
+                </button>
+                &nbsp;
+                <button type="button" class='btn btn-danger' title='Exportar a PDF' id="btn-export-pdf">
+                    <i class="fa-solid fa-file-pdf"></i> &nbsp;&nbsp;Exportar a PDF
+                </button>
+                &nbsp;
+                <button type="button" class='btn btn-warning' title='Concatenar PDFs de documentos' id="btn-merge-pdf">
+                    <i class="fa-solid fa-file-pdf"></i> &nbsp;&nbsp;Unir PDFs de documentos
+                </button>
+                &nbsp;
+                <a href="#!" class='btn btn-success' title='Imprimir' onclick="impFAC('areaImprimir');">
+                    <i class="fa-solid fa-print"> </i> &nbsp;&nbsp;Imprimir
+                </a>
+            </div>
+        </div>
     </div>
-    <div class="table-responsive text-nowrap p-3" id="areaImprimir">
-        <table class="table table-bordered table-striped table-hover align-middle">
-            <thead class="table-dark text-center">
+
+    <style>
+        .report-container {
+            max-height: 70vh;
+            overflow: auto;
+        }
+        .report-container table {
+            font-size: 11px;
+        }
+        .report-container thead td,
+        .report-container thead th {
+            font-size: 11px;
+        }
+        .report-container tbody td {
+            font-size: 10px;
+        }
+    </style>
+
+    <div id="areaImprimir" class="report-container">
+        <table class="table table-sm" style="min-width: 1500px;">
+            <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Fecha</th>
-                    <th>N° Control / Recibo</th>
-                    <th>Código Generación DTE</th>
-                    <th>Cliente / Donante / Pagador</th>
-                    <th>Concepto / Detalle</th>
-                    <th>Monto Recibido ($)</th>
+                    <th class="text-center" colspan="14">
+                        <b>REGISTRO DE RECIBOS DE INGRESO (REC / DTE 15)</b>
+                    </th>
+                </tr>
+                <tr>
+                    <td class="text-center" colspan="14">
+                        <b>Nombre del Contribuyente: </b> <?php echo $heading['name']; ?>
+                        <b>N.R.C.: </b> <?php echo $heading['ncr']; ?> <b>MES: </b><?php echo $mesesDelAnoMayuscula[(int)$period-1] ?>
+                        <b>Año: </b> <?php echo $yearB; ?><p>(Valores expresados en Dolares Estadounidenses)</p>
+                    </td>
                 </tr>
             </thead>
+
             <tbody>
-                @php
-                    $totRecibido = 0;
-                @endphp
-                @forelse($sales as $index => $sale)
-                    @php
-                        $monto = (float)($sale->totalamount ?? $sale->gravada ?? 0);
-                        $totRecibido += $monto;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td class="text-center">{{ $sale->dateF ?? $sale->date }}</td>
-                        <td class="text-center fw-bold">{{ $sale->numeroControl ?? $sale->nu_doc ?? $sale->correlativo }}</td>
-                        <td class="text-center"><small class="text-muted">{{ $sale->codigoGeneracion ?? 'N/A' }}</small></td>
-                        <td>{{ $sale->nombre_completo ?? $sale->firstname }}</td>
-                        <td>{{ $sale->concept ?? $sale->description ?? 'Pago recibido / Recibo de Ingreso' }}</td>
-                        <td class="text-end fw-bold text-success">$ {{ number_format($monto, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">No se encontraron recibos de ingreso (REC) para el período seleccionado.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-            @if(count($sales) > 0)
-            <tfoot class="table-secondary fw-bold text-end">
-                <tr>
-                    <td colspan="6" class="text-center">TOTAL GENERAL RECIBIDOS:</td>
-                    <td class="text-success">$ {{ number_format($totRecibido, 2) }}</td>
+                <tr class="text-center">
+                    <td style="width: 40px;">Corr.</td>
+                    <td style="width: 80px;">FECHA</td>
+                    <td style="width: 60px;">No. Recibo</td>
+                    <td style="text-align: left; width: 180px;">CLIENTE / PAGADOR</td>
+                    <td style="text-align: left; width: 220px;">CONCEPTO / DETALLE</td>
+                    <td style="text-align: right; width: 110px;">MONTO RECIBIDO TOTAL</td>
+                    <td style="text-align: center; min-width: 200px;">NÚMERO CONTROL DTE</td>
+                    <td style="text-align: center; min-width: 200px;">CÓDIGO GENERACIÓN</td>
+                    <td style="text-align: center; min-width: 200px;">SELLO RECEPCIÓN</td>
+                    <td style="text-align: center; min-width: 200px;">Nº CONTROL ANULACIÓN</td>
+                    <td style="text-align: center; min-width: 200px;">CÓD. GEN. ANULACIÓN</td>
+                    <td style="text-align: center; min-width: 200px;">SELLO ANULACIÓN</td>
                 </tr>
-            </tfoot>
-            @endif
+                <?php
+                $i = 1;
+                $tot_monto = 0.00;
+                ?>
+                @foreach ($sales as $sale)
+                <?php
+                $monto = (float)($sale['totalamount'] ?? $sale['gravada'] ?? 0);
+                ?>
+                <tr>
+                    <td style="text-align: center; padding: 2px 4px;"><?php echo $i; ?></td>
+                    <td style="text-align: center; padding: 2px 4px;"><?php echo $sale['dateF']; ?></td>
+                    <td style="text-align: center; padding: 2px 4px; font-size: 9px;"><?php echo $sale['correlativo'] ?? '-'; ?></td>
+                    <td class="text-uppercase" style="text-align: left; padding: 2px 4px;">
+                        @if($sale['typesale']=='0')
+                            <span style="color: #c00; font-weight: bold;">ANULADO</span>
+                        @else
+                            {{ $sale['nombre_completo'] ?? '' }}
+                        @endif
+                    </td>
+                    <td style="text-align: left; padding: 2px 4px;"><?php echo $sale['concept'] ?? $sale['description'] ?? 'Pago recibido / Recibo de Ingreso'; ?></td>
+                    <td style="text-align: right; padding: 2px 4px; font-weight: bold; color: green;">
+                        @if($sale['typesale']=='0') 0.00 @else {{ number_format($monto, 2) }} <?php $tot_monto += $monto; ?> @endif
+                    </td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['numeroControl'] ?? '' }}</td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['codigoGeneracion'] ?? '' }}</td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['selloRecibido'] ?? '' }}</td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['numeroControl_anulacion'] ?? '' }}</td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['codigoGeneracion_anulacion'] ?? '' }}</td>
+                    <td style="text-align: center; font-size: 9px; padding: 2px 4px;">{{ $sale['selloRecibido_anulacion'] ?? '' }}</td>
+                </tr>
+                <?php $i++; ?>
+                @endforeach
+                <tr style="font-weight: bold; background-color: rgba(0,0,0,0.05);">
+                    <td colspan="5" class="text-center">TOTAL GENERAL RECIBIDOS</td>
+                    <td style="text-align: right; color: green;">{{ number_format($tot_monto, 2) }}</td>
+                    <td colspan="6"></td>
+                </tr>
+            </tbody>
         </table>
     </div>
+    @endisset
 </div>
-@endif
 @endsection

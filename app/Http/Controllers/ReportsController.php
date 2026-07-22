@@ -3043,6 +3043,28 @@ class ReportsController extends Controller
         return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_FEX_'.$request['period'].'_'.$request['year'].'.xls"');
     }
 
+    public function fexPdf(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFexSalesQuery($request);
+        $meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        try {
+            $pdf = app('dompdf.wrapper');
+            $pdf->set_option('isHtml5ParserEnabled', true);
+            $pdf->set_option('isRemoteEnabled', true);
+            $pdf->setPaper('letter', 'landscape');
+            $pdf->loadView('reports.fex', [
+                'heading' => $Company,
+                'yearB' => $request['year'],
+                'period' => $request['period'],
+                'company_id' => $request['company'],
+                'sales' => $sales
+            ]);
+            return $pdf->download('Reporte_FEX_'.$request['period'].'_'.$request['year'].'.pdf');
+        } catch (\Exception $e) {
+            return $this->fexsearch($request);
+        }
+    }
+
     public function fexMergePdf(Request $request){
         return $this->fexsearch($request);
     }
@@ -3119,6 +3141,27 @@ class ReportsController extends Controller
         $html .= '</table></body></html>';
 
         return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_FSE_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function fsePdf(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFseSalesQuery($request);
+        try {
+            $pdf = app('dompdf.wrapper');
+            $pdf->set_option('isHtml5ParserEnabled', true);
+            $pdf->set_option('isRemoteEnabled', true);
+            $pdf->setPaper('letter', 'landscape');
+            $pdf->loadView('reports.fse', [
+                'heading' => $Company,
+                'yearB' => $request['year'],
+                'period' => $request['period'],
+                'company_id' => $request['company'],
+                'sales' => $sales
+            ]);
+            return $pdf->download('Reporte_FSE_'.$request['period'].'_'.$request['year'].'.pdf');
+        } catch (\Exception $e) {
+            return $this->fsesearch($request);
+        }
     }
 
     public function fseMergePdf(Request $request){
@@ -3199,6 +3242,27 @@ class ReportsController extends Controller
         return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_NCR_'.$request['period'].'_'.$request['year'].'.xls"');
     }
 
+    public function ncrPdf(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getNcrSalesQuery($request);
+        try {
+            $pdf = app('dompdf.wrapper');
+            $pdf->set_option('isHtml5ParserEnabled', true);
+            $pdf->set_option('isRemoteEnabled', true);
+            $pdf->setPaper('letter', 'landscape');
+            $pdf->loadView('reports.ncr', [
+                'heading' => $Company,
+                'yearB' => $request['year'],
+                'period' => $request['period'],
+                'company_id' => $request['company'],
+                'sales' => $sales
+            ]);
+            return $pdf->download('Reporte_NCR_'.$request['period'].'_'.$request['year'].'.pdf');
+        } catch (\Exception $e) {
+            return $this->ncrsearch($request);
+        }
+    }
+
     public function ncrMergePdf(Request $request){
         return $this->ncrsearch($request);
     }
@@ -3274,6 +3338,27 @@ class ReportsController extends Controller
         $html .= '</table></body></html>';
 
         return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_REC_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function recPdf(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getRecSalesQuery($request);
+        try {
+            $pdf = app('dompdf.wrapper');
+            $pdf->set_option('isHtml5ParserEnabled', true);
+            $pdf->set_option('isRemoteEnabled', true);
+            $pdf->setPaper('letter', 'landscape');
+            $pdf->loadView('reports.rec', [
+                'heading' => $Company,
+                'yearB' => $request['year'],
+                'period' => $request['period'],
+                'company_id' => $request['company'],
+                'sales' => $sales
+            ]);
+            return $pdf->download('Reporte_REC_'.$request['period'].'_'.$request['year'].'.pdf');
+        } catch (\Exception $e) {
+            return $this->recsearch($request);
+        }
     }
 
     public function recMergePdf(Request $request){
