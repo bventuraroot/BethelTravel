@@ -457,6 +457,15 @@ Route::middleware('auth')->group(function () {
         Route::get('destroy/{id}', [App\Http\Controllers\HotelController::class, 'destroy'])->name('destroy');
     });
 
+    // Gestión de Aeropuertos
+    Route::group(['prefix' => 'airport', 'as' => 'airport.'], function(){
+        Route::get('index', [App\Http\Controllers\AirportController::class, 'index'])->name('index');
+        Route::post('store', [App\Http\Controllers\AirportController::class, 'store'])->name('store');
+        Route::post('update', [App\Http\Controllers\AirportController::class, 'update'])->name('update');
+        Route::get('getairportid/{id}', [App\Http\Controllers\AirportController::class, 'getairportid'])->name('getairportid');
+        Route::get('destroy/{id}', [App\Http\Controllers\AirportController::class, 'destroy'])->name('destroy');
+    });
+
     // Gestión de Reservas y Prechequeo
     Route::group(['prefix' => 'precheckin', 'as' => 'precheckin.'], function(){
         Route::get('/', [App\Http\Controllers\PrecheckinController::class, 'index'])->name('index');

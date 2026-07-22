@@ -95,7 +95,7 @@ class PermissionController extends Controller
                 "name" => "Administracion",
                 "icon" => "menu-icon fa-solid fa-shield",
                 "slug" => "user.index",
-                "badge" => ["primary", "6"],
+                "badge" => ["primary", "7"],
                 "submenu" => [
                     [
                         "url" => "/user/index",
@@ -126,6 +126,11 @@ class PermissionController extends Controller
                         "url" => "/hotel/index",
                         "name" => "Hoteles",
                         "slug" => "hotel.index"
+                    ],
+                    [
+                        "url" => "/airport/index",
+                        "name" => "Aeropuertos",
+                        "slug" => "airport.index"
                     ]
                 ]
             ],
