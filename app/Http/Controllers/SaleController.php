@@ -1008,12 +1008,8 @@ class SaleController extends Controller
                                 'sale_id' => base64_decode($corr)
                             ]);
 
-                            // INCREMENTAR EL CORRELATIVO Y GUARDAR LA VENTA
-                            // Aunque la transmisión de DTE haya fallado, se generó un documento de error con este correlativo,
-                            // por lo que debemos incrementarlo para evitar colisiones y duplicidad de correlativos en el siguiente intento.
-                            $updateCorr = Correlativo::find($newCorr[0]->id);
-                            $updateCorr->actual = ($updateCorr->actual + 1);
-                            $updateCorr->save();
+                            // NO INCREMENTAR EL CORRELATIVO SI HACIENDA RETORNA UN ERROR
+                            // De esta manera el correlativo no se desperdicia y se puede reutilizar para corregir la venta y volver a intentar.
 
                             DB::commit();
 
