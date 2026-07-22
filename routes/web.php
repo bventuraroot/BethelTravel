@@ -250,6 +250,7 @@ Route::group(['prefix' => 'purchase', 'as' => 'purchase.'], function(){
     });
 
 Route::group(['prefix' => 'report', 'as' => 'report.'], function(){
+        Route::get('index', [ReportsController::class, 'index'])->name('index');
         Route::get('sales', [ReportsController::class, 'sales'])->name('sales');
         Route::get('purchases', [ReportsController::class, 'purchases'])->name('purchases');
         Route::get('reportsales/{company}/{year}/{period}', [ReportsController::class, 'reportsales'])->name('reportsales');
@@ -266,6 +267,31 @@ Route::group(['prefix' => 'report', 'as' => 'report.'], function(){
         Route::post('consumidor-excel', [ReportsController::class, 'consumidorExcel'])->name('consumidor.excel');
         Route::post('consumidor-pdf', [ReportsController::class, 'consumidorPdf'])->name('consumidor.pdf');
         Route::post('consumidor-merge-pdf', [ReportsController::class, 'consumidorMergePdf'])->name('consumidor.merge-pdf');
+        
+        // Reporte FEX (Facturas de Exportación - DTE 11)
+        Route::get('fex', [ReportsController::class, 'fex'])->name('fex');
+        Route::post('fexsearch', [ReportsController::class, 'fexsearch'])->name('fexsearch');
+        Route::post('fex-excel', [ReportsController::class, 'fexExcel'])->name('fex.excel');
+        Route::post('fex-merge-pdf', [ReportsController::class, 'fexMergePdf'])->name('fex.merge-pdf');
+
+        // Reporte FSE (Facturas de Sujeto Excluido - DTE 14)
+        Route::get('fse', [ReportsController::class, 'fse'])->name('fse');
+        Route::post('fsesearch', [ReportsController::class, 'fsesearch'])->name('fsesearch');
+        Route::post('fse-excel', [ReportsController::class, 'fseExcel'])->name('fse.excel');
+        Route::post('fse-merge-pdf', [ReportsController::class, 'fseMergePdf'])->name('fse.merge-pdf');
+
+        // Reporte NCR (Notas de Crédito - DTE 05)
+        Route::get('ncr', [ReportsController::class, 'ncr'])->name('ncr');
+        Route::post('ncrsearch', [ReportsController::class, 'ncrsearch'])->name('ncrsearch');
+        Route::post('ncr-excel', [ReportsController::class, 'ncrExcel'])->name('ncr.excel');
+        Route::post('ncr-merge-pdf', [ReportsController::class, 'ncrMergePdf'])->name('ncr.merge-pdf');
+
+        // Reporte REC (Recibos / Recibos de Ingreso - DTE 15 / REC)
+        Route::get('rec', [ReportsController::class, 'rec'])->name('rec');
+        Route::post('recsearch', [ReportsController::class, 'recsearch'])->name('recsearch');
+        Route::post('rec-excel', [ReportsController::class, 'recExcel'])->name('rec.excel');
+        Route::post('rec-merge-pdf', [ReportsController::class, 'recMergePdf'])->name('rec.merge-pdf');
+
         Route::get('bookpurchases', [ReportsController::class, 'bookpurchases'])->name('bookpurchases');
         Route::post('comprassearch', [ReportsController::class, 'comprassearch'])->name('comprassearch');
         Route::get('ivacontrol', [ReportsController::class, 'ivacontrol'])->name('ivacontrol');

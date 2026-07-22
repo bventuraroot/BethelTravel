@@ -20,7 +20,7 @@ class ReportsController extends Controller
      */
     public function index()
     {
-        //
+        return view('reports.hub');
     }
 
     public function sales(){
@@ -2997,4 +2997,314 @@ class ReportsController extends Controller
             ], 500);
         }
     }
+
+    // ==========================================
+    // REPORTE FEX - FACTURA DE EXPORTACIÓN (DTE 11)
+    // ==========================================
+    public function fex(){
+        return view('reports.fex');
+    }
+
+    public function fexsearch(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFexSalesQuery($request);
+        return view('reports.fex', [
+            'heading' => $Company,
+            'yearB' => $request['year'],
+            'period' => $request['period'],
+            'company_id' => $request['company'],
+            'sales' => $sales
+        ]);
+    }
+
+    public function fexExcel(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFexSalesQuery($request);
+        $meses = ["JAN","ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+        $mesNombre = $meses[(int)$request['period']] ?? '';
+
+        $html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+        $html .= '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Facturas Exportacion FEX</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+        $html .= '<table border="1"><tr><th colspan="9" style="text-align:center; font-weight:bold; font-size:16px;">REPORTES DE FACTURAS DE EXPORTACIÓN (FEX - DTE 11)</th></tr>';
+        $html .= '<tr><td colspan="9" style="text-align:center;"><b>Empresa:</b> '.$Company->name.' | <b>Período:</b> '.$mesNombre.' / '.$request['year'].'</td></tr>';
+        $html .= '<tr style="background-color:#1e293b; color:#ffffff;"><th>#</th><th>Fecha</th><th>N° Control DTE</th><th>Código Generación DTE</th><th>Cliente / Razón Social</th><th>NIT / Pasaporte</th><th>Exportación Gravada ($)</th><th>Exportación Exenta ($)</th><th>Monto Total ($)</th></tr>';
+
+        $totGravada = 0; $totExenta = 0; $totTotal = 0;
+        foreach($sales as $i => $s){
+            $g = (float)($s->gravada ?? 0);
+            $e = (float)($s->exenta ?? 0);
+            $t = (float)($s->totalamount ?? ($g + $e));
+            $totGravada += $g; $totExenta += $e; $totTotal += $t;
+            $html .= '<tr><td>'.($i+1).'</td><td>'.($s->dateF ?? $s->date).'</td><td>'.($s->numeroControl ?? $s->nu_doc ?? $s->correlativo).'</td><td>'.($s->codigoGeneracion ?? 'N/A').'</td><td>'.($s->nombre_completo ?? $s->firstname).'</td><td>'.($s->nit ?? $s->ncrC ?? 'N/A').'</td><td style="text-align:right;">'.number_format($g, 2).'</td><td style="text-align:right;">'.number_format($e, 2).'</td><td style="text-align:right; font-weight:bold;">'.number_format($t, 2).'</td></tr>';
+        }
+        $html .= '<tr style="font-weight:bold; background-color:#e2e8f0;"><td colspan="6" style="text-align:center;">TOTALES GENERALES FEX:</td><td style="text-align:right;">'.number_format($totGravada, 2).'</td><td style="text-align:right;">'.number_format($totExenta, 2).'</td><td style="text-align:right;">'.number_format($totTotal, 2).'</td></tr>';
+        $html .= '</table></body></html>';
+
+        return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_FEX_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function fexMergePdf(Request $request){
+        return $this->fexsearch($request);
+    }
+
+    private function getFexSalesQuery(Request $request){
+        $dteSub = DB::table('dte')
+            ->select('dte.sale_id', 'dte.id_doc', 'dte.codigoGeneracion', 'dte.selloRecibido', 'dte.fhRecibido')
+            ->whereIn('dte.codTransaction', ['01', '05', '06'])
+            ->whereRaw('dte.id = COALESCE((SELECT MAX(d3.id) FROM dte d3 WHERE d3.sale_id = dte.sale_id AND d3.codTransaction IN ("01","05","06") AND d3.codEstado = "02"), (SELECT MAX(d4.id) FROM dte d4 WHERE d4.sale_id = dte.sale_id AND d4.codTransaction IN ("01","05","06")))');
+
+        return Sale::leftjoin('clients', 'sales.client_id', '=', 'clients.id')
+            ->leftJoinSub($dteSub, 'dte_emis', 'dte_emis.sale_id', '=', 'sales.id')
+            ->select('sales.*', 'sales.id AS correlativo', 'clients.nit', 'clients.ncr AS ncrC',
+                'dte_emis.id_doc AS numeroControl', 'dte_emis.codigoGeneracion AS codigoGeneracion')
+            ->selectRaw("CASE WHEN dte_emis.fhRecibido IS NOT NULL THEN DATE_FORMAT(dte_emis.fhRecibido, '%d/%m/%Y') ELSE DATE_FORMAT(sales.date, '%d/%m/%Y') END AS dateF")
+            ->selectRaw("CASE WHEN clients.tpersona = 'J' THEN clients.comercial_name WHEN clients.tpersona = 'N' THEN CONCAT_WS(' ', clients.firstname, clients.secondname, clients.firstlastname, clients.secondlastname) ELSE clients.firstname END AS nombre_completo")
+            ->selectRaw("(SELECT COALESCE(SUM(sde.exempt), 0) FROM salesdetails AS sde WHERE sde.sale_id=sales.id) AS exenta")
+            ->selectRaw("(SELECT COALESCE(SUM(sdg.pricesale), 0) FROM salesdetails AS sdg WHERE sdg.sale_id=sales.id) AS gravada")
+            ->where(function($q) { $q->whereNull('sales.is_parent')->orWhere('sales.is_parent', 0); })
+            ->where(function($q) {
+                $q->where('sales.typedocument_id', 7)
+                  ->orWhereIn('sales.typedocument_id', function($sub) {
+                      $sub->select('id')->from('typedocuments')->where('type', 'FEX')->orWhere('codemh', 11);
+                  });
+            })
+            ->whereRaw('YEAR(sales.date)=?', [$request['year']])
+            ->whereRaw('MONTH(sales.date)=?', [$request['period']])
+            ->where('sales.company_id', '=', $request['company'])
+            ->orderBy('sales.id')
+            ->get();
+    }
+
+
+    // ==========================================
+    // REPORTE FSE - FACTURA SUJETO EXCLUIDO (DTE 14)
+    // ==========================================
+    public function fse(){
+        return view('reports.fse');
+    }
+
+    public function fsesearch(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFseSalesQuery($request);
+        return view('reports.fse', [
+            'heading' => $Company,
+            'yearB' => $request['year'],
+            'period' => $request['period'],
+            'company_id' => $request['company'],
+            'sales' => $sales
+        ]);
+    }
+
+    public function fseExcel(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getFseSalesQuery($request);
+        $meses = ["JAN","ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+        $mesNombre = $meses[(int)$request['period']] ?? '';
+
+        $html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+        $html .= '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sujeto Excluido FSE</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+        $html .= '<table border="1"><tr><th colspan="9" style="text-align:center; font-weight:bold; font-size:16px;">REPORTE FACTURAS DE SUJETO EXCLUIDO (FSE - DTE 14)</th></tr>';
+        $html .= '<tr><td colspan="9" style="text-align:center;"><b>Empresa:</b> '.$Company->name.' | <b>Período:</b> '.$mesNombre.' / '.$request['year'].'</td></tr>';
+        $html .= '<tr style="background-color:#d97706; color:#ffffff;"><th>#</th><th>Fecha</th><th>N° Control DTE</th><th>Código Generación DTE</th><th>Sujeto Excluido</th><th>DUI / NIT</th><th>Monto Bruto ($)</th><th>Retención Renta 10% ($)</th><th>Total Líquido ($)</th></tr>';
+
+        $totBruto = 0; $totRetencion = 0; $totLiquido = 0;
+        foreach($sales as $i => $s){
+            $b = (float)($s->gravada ?? $s->totalamount ?? 0);
+            $r = (float)($s->retencion_renta ?? ($b * 0.10));
+            $l = $b - $r;
+            $totBruto += $b; $totRetencion += $r; $totLiquido += $l;
+            $html .= '<tr><td>'.($i+1).'</td><td>'.($s->dateF ?? $s->date).'</td><td>'.($s->numeroControl ?? $s->nu_doc ?? $s->correlativo).'</td><td>'.($s->codigoGeneracion ?? 'N/A').'</td><td>'.($s->nombre_completo ?? $s->firstname).'</td><td>'.($s->nit ?? $s->ncrC ?? 'N/A').'</td><td style="text-align:right;">'.number_format($b, 2).'</td><td style="text-align:right; color:red;">'.number_format($r, 2).'</td><td style="text-align:right; font-weight:bold;">'.number_format($l, 2).'</td></tr>';
+        }
+        $html .= '<tr style="font-weight:bold; background-color:#fef3c7;"><td colspan="6" style="text-align:center;">TOTALES GENERALES FSE:</td><td style="text-align:right;">'.number_format($totBruto, 2).'</td><td style="text-align:right; color:red;">'.number_format($totRetencion, 2).'</td><td style="text-align:right;">'.number_format($totLiquido, 2).'</td></tr>';
+        $html .= '</table></body></html>';
+
+        return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_FSE_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function fseMergePdf(Request $request){
+        return $this->fsesearch($request);
+    }
+
+    private function getFseSalesQuery(Request $request){
+        $dteSub = DB::table('dte')
+            ->select('dte.sale_id', 'dte.id_doc', 'dte.codigoGeneracion', 'dte.selloRecibido', 'dte.fhRecibido')
+            ->whereIn('dte.codTransaction', ['01', '05', '06'])
+            ->whereRaw('dte.id = COALESCE((SELECT MAX(d3.id) FROM dte d3 WHERE d3.sale_id = dte.sale_id AND d3.codTransaction IN ("01","05","06") AND d3.codEstado = "02"), (SELECT MAX(d4.id) FROM dte d4 WHERE d4.sale_id = dte.sale_id AND d4.codTransaction IN ("01","05","06")))');
+
+        return Sale::leftjoin('clients', 'sales.client_id', '=', 'clients.id')
+            ->leftJoinSub($dteSub, 'dte_emis', 'dte_emis.sale_id', '=', 'sales.id')
+            ->select('sales.*', 'sales.id AS correlativo', 'clients.nit', 'clients.ncr AS ncrC',
+                'dte_emis.id_doc AS numeroControl', 'dte_emis.codigoGeneracion AS codigoGeneracion')
+            ->selectRaw("CASE WHEN dte_emis.fhRecibido IS NOT NULL THEN DATE_FORMAT(dte_emis.fhRecibido, '%d/%m/%Y') ELSE DATE_FORMAT(sales.date, '%d/%m/%Y') END AS dateF")
+            ->selectRaw("CASE WHEN clients.tpersona = 'J' THEN clients.comercial_name WHEN clients.tpersona = 'N' THEN CONCAT_WS(' ', clients.firstname, clients.secondname, clients.firstlastname, clients.secondlastname) ELSE clients.firstname END AS nombre_completo")
+            ->selectRaw("(SELECT COALESCE(SUM(sdg.pricesale), 0) FROM salesdetails AS sdg WHERE sdg.sale_id=sales.id) AS gravada")
+            ->selectRaw("(SELECT COALESCE(SUM(sdg.renta), 0) FROM salesdetails AS sdg WHERE sdg.sale_id=sales.id) AS retencion_renta")
+            ->where(function($q) { $q->whereNull('sales.is_parent')->orWhere('sales.is_parent', 0); })
+            ->where(function($q) {
+                $q->where('sales.typedocument_id', 8)
+                  ->orWhereIn('sales.typedocument_id', function($sub) {
+                      $sub->select('id')->from('typedocuments')->where('type', 'FSE')->orWhere('codemh', 14);
+                  });
+            })
+            ->whereRaw('YEAR(sales.date)=?', [$request['year']])
+            ->whereRaw('MONTH(sales.date)=?', [$request['period']])
+            ->where('sales.company_id', '=', $request['company'])
+            ->orderBy('sales.id')
+            ->get();
+    }
+
+
+    // ==========================================
+    // REPORTE NCR - NOTAS DE CRÉDITO (DTE 05)
+    // ==========================================
+    public function ncr(){
+        return view('reports.ncr');
+    }
+
+    public function ncrsearch(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getNcrSalesQuery($request);
+        return view('reports.ncr', [
+            'heading' => $Company,
+            'yearB' => $request['year'],
+            'period' => $request['period'],
+            'company_id' => $request['company'],
+            'sales' => $sales
+        ]);
+    }
+
+    public function ncrExcel(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getNcrSalesQuery($request);
+        $meses = ["JAN","ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+        $mesNombre = $meses[(int)$request['period']] ?? '';
+
+        $html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+        $html .= '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Notas de Credito NCR</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+        $html .= '<table border="1"><tr><th colspan="9" style="text-align:center; font-weight:bold; font-size:16px;">REPORTE DE NOTAS DE CRÉDITO (NCR - DTE 05)</th></tr>';
+        $html .= '<tr><td colspan="9" style="text-align:center;"><b>Empresa:</b> '.$Company->name.' | <b>Período:</b> '.$mesNombre.' / '.$request['year'].'</td></tr>';
+        $html .= '<tr style="background-color:#dc2626; color:#ffffff;"><th>#</th><th>Fecha</th><th>N° Control DTE</th><th>Código Generación DTE</th><th>Doc. Relacionado</th><th>Cliente</th><th>Subtotal Ajuste ($)</th><th>IVA Ajustado ($)</th><th>Total NCR ($)</th></tr>';
+
+        $totGravada = 0; $totIva = 0; $totTotal = 0;
+        foreach($sales as $i => $s){
+            $g = (float)($s->gravada ?? 0);
+            $iv = (float)($s->iva ?? 0);
+            $t = (float)($s->totalamount ?? ($g + $iv));
+            $totGravada += $g; $totIva += $iv; $totTotal += $t;
+            $html .= '<tr><td>'.($i+1).'</td><td>'.($s->dateF ?? $s->date).'</td><td>'.($s->numeroControl ?? $s->nu_doc ?? $s->correlativo).'</td><td>'.($s->codigoGeneracion ?? 'N/A').'</td><td>'.($s->doc_relacionado ?? 'N/A').'</td><td>'.($s->nombre_completo ?? $s->firstname).'</td><td style="text-align:right;">'.number_format($g, 2).'</td><td style="text-align:right; color:red;">'.number_format($iv, 2).'</td><td style="text-align:right; font-weight:bold; color:red;">'.number_format($t, 2).'</td></tr>';
+        }
+        $html .= '<tr style="font-weight:bold; background-color:#fee2e2;"><td colspan="6" style="text-align:center;">TOTALES GENERALES NCR:</td><td style="text-align:right;">'.number_format($totGravada, 2).'</td><td style="text-align:right; color:red;">'.number_format($totIva, 2).'</td><td style="text-align:right; color:red;">'.number_format($totTotal, 2).'</td></tr>';
+        $html .= '</table></body></html>';
+
+        return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_NCR_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function ncrMergePdf(Request $request){
+        return $this->ncrsearch($request);
+    }
+
+    private function getNcrSalesQuery(Request $request){
+        $dteSub = DB::table('dte')
+            ->select('dte.sale_id', 'dte.id_doc', 'dte.codigoGeneracion', 'dte.selloRecibido', 'dte.fhRecibido')
+            ->whereIn('dte.codTransaction', ['01', '05', '06'])
+            ->whereRaw('dte.id = COALESCE((SELECT MAX(d3.id) FROM dte d3 WHERE d3.sale_id = dte.sale_id AND d3.codTransaction IN ("01","05","06") AND d3.codEstado = "02"), (SELECT MAX(d4.id) FROM dte d4 WHERE d4.sale_id = dte.sale_id AND d4.codTransaction IN ("01","05","06")))');
+
+        return Sale::leftjoin('clients', 'sales.client_id', '=', 'clients.id')
+            ->leftJoinSub($dteSub, 'dte_emis', 'dte_emis.sale_id', '=', 'sales.id')
+            ->select('sales.*', 'sales.id AS correlativo', 'clients.nit', 'clients.ncr AS ncrC',
+                'dte_emis.id_doc AS numeroControl', 'dte_emis.codigoGeneracion AS codigoGeneracion')
+            ->selectRaw("(SELECT d2.id_doc FROM sales s_rel INNER JOIN dte d2 ON d2.sale_id = s_rel.id WHERE s_rel.id = sales.doc_related LIMIT 1) AS doc_relacionado")
+            ->selectRaw("CASE WHEN dte_emis.fhRecibido IS NOT NULL THEN DATE_FORMAT(dte_emis.fhRecibido, '%d/%m/%Y') ELSE DATE_FORMAT(sales.date, '%d/%m/%Y') END AS dateF")
+            ->selectRaw("CASE WHEN clients.tpersona = 'J' THEN clients.comercial_name WHEN clients.tpersona = 'N' THEN CONCAT_WS(' ', clients.firstname, clients.secondname, clients.firstlastname, clients.secondlastname) ELSE clients.firstname END AS nombre_completo")
+            ->selectRaw("(SELECT COALESCE(SUM(sdg.pricesale), 0) FROM salesdetails AS sdg WHERE sdg.sale_id=sales.id) AS gravada")
+            ->selectRaw("(SELECT COALESCE(SUM(sdi.detained13), 0) FROM salesdetails AS sdi WHERE sdi.sale_id=sales.id) AS iva")
+            ->where(function($q) { $q->whereNull('sales.is_parent')->orWhere('sales.is_parent', 0); })
+            ->where(function($q) {
+                $q->where('sales.typedocument_id', 9)
+                  ->orWhereIn('sales.typedocument_id', function($sub) {
+                      $sub->select('id')->from('typedocuments')->where('type', 'NCR')->orWhere('codemh', 5);
+                  });
+            })
+            ->whereRaw('YEAR(sales.date)=?', [$request['year']])
+            ->whereRaw('MONTH(sales.date)=?', [$request['period']])
+            ->where('sales.company_id', '=', $request['company'])
+            ->orderBy('sales.id')
+            ->get();
+    }
+
+
+    // ==========================================
+    // REPORTE REC - RECIBOS DE INGRESO (DTE 15 / REC)
+    // ==========================================
+    public function rec(){
+        return view('reports.rec');
+    }
+
+    public function recsearch(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getRecSalesQuery($request);
+        return view('reports.rec', [
+            'heading' => $Company,
+            'yearB' => $request['year'],
+            'period' => $request['period'],
+            'company_id' => $request['company'],
+            'sales' => $sales
+        ]);
+    }
+
+    public function recExcel(Request $request){
+        $Company = Company::find($request['company']);
+        $sales = $this->getRecSalesQuery($request);
+        $meses = ["JAN","ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+        $mesNombre = $meses[(int)$request['period']] ?? '';
+
+        $html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+        $html .= '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Recibos REC</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+        $html .= '<table border="1"><tr><th colspan="7" style="text-align:center; font-weight:bold; font-size:16px;">REPORTE DE RECIBOS DE INGRESO (REC / DTE 15)</th></tr>';
+        $html .= '<tr><td colspan="7" style="text-align:center;"><b>Empresa:</b> '.$Company->name.' | <b>Período:</b> '.$mesNombre.' / '.$request['year'].'</td></tr>';
+        $html .= '<tr style="background-color:#0f172a; color:#ffffff;"><th>#</th><th>Fecha</th><th>N° Control / Recibo</th><th>Código Generación DTE</th><th>Cliente / Pagador</th><th>Concepto / Detalle</th><th>Monto Recibido ($)</th></tr>';
+
+        $totRecibido = 0;
+        foreach($sales as $i => $s){
+            $m = (float)($s->totalamount ?? $s->gravada ?? 0);
+            $totRecibido += $m;
+            $html .= '<tr><td>'.($i+1).'</td><td>'.($s->dateF ?? $s->date).'</td><td>'.($s->numeroControl ?? $s->nu_doc ?? $s->correlativo).'</td><td>'.($s->codigoGeneracion ?? 'N/A').'</td><td>'.($s->nombre_completo ?? $s->firstname).'</td><td>'.($s->concept ?? $s->description ?? 'Pago recibido').'</td><td style="text-align:right; font-weight:bold; color:green;">'.number_format($m, 2).'</td></tr>';
+        }
+        $html .= '<tr style="font-weight:bold; background-color:#e2e8f0;"><td colspan="6" style="text-align:center;">TOTAL GENERAL RECIBIDOS:</td><td style="text-align:right; color:green;">'.number_format($totRecibido, 2).'</td></tr>';
+        $html .= '</table></body></html>';
+
+        return response($html)->header('Content-Type', 'application/vnd.ms-excel')->header('Content-Disposition', 'attachment; filename="Reporte_REC_'.$request['period'].'_'.$request['year'].'.xls"');
+    }
+
+    public function recMergePdf(Request $request){
+        return $this->recsearch($request);
+    }
+
+    private function getRecSalesQuery(Request $request){
+        $dteSub = DB::table('dte')
+            ->select('dte.sale_id', 'dte.id_doc', 'dte.codigoGeneracion', 'dte.selloRecibido', 'dte.fhRecibido')
+            ->whereIn('dte.codTransaction', ['01', '05', '06'])
+            ->whereRaw('dte.id = COALESCE((SELECT MAX(d3.id) FROM dte d3 WHERE d3.sale_id = dte.sale_id AND d3.codTransaction IN ("01","05","06") AND d3.codEstado = "02"), (SELECT MAX(d4.id) FROM dte d4 WHERE d4.sale_id = dte.sale_id AND d4.codTransaction IN ("01","05","06")))');
+
+        return Sale::leftjoin('clients', 'sales.client_id', '=', 'clients.id')
+            ->leftJoinSub($dteSub, 'dte_emis', 'dte_emis.sale_id', '=', 'sales.id')
+            ->select('sales.*', 'sales.id AS correlativo', 'clients.nit', 'clients.ncr AS ncrC',
+                'dte_emis.id_doc AS numeroControl', 'dte_emis.codigoGeneracion AS codigoGeneracion')
+            ->selectRaw("CASE WHEN dte_emis.fhRecibido IS NOT NULL THEN DATE_FORMAT(dte_emis.fhRecibido, '%d/%m/%Y') ELSE DATE_FORMAT(sales.date, '%d/%m/%Y') END AS dateF")
+            ->selectRaw("CASE WHEN clients.tpersona = 'J' THEN clients.comercial_name WHEN clients.tpersona = 'N' THEN CONCAT_WS(' ', clients.firstname, clients.secondname, clients.firstlastname, clients.secondlastname) ELSE clients.firstname END AS nombre_completo")
+            ->selectRaw("(SELECT COALESCE(SUM(sdg.pricesale), 0) FROM salesdetails AS sdg WHERE sdg.sale_id=sales.id) AS gravada")
+            ->where(function($q) { $q->whereNull('sales.is_parent')->orWhere('sales.is_parent', 0); })
+            ->where(function($q) {
+                $q->where('sales.typedocument_id', 12)
+                  ->orWhereIn('sales.typedocument_id', function($sub) {
+                      $sub->select('id')->from('typedocuments')->whereIn('type', ['REC', 'CDN'])->orWhereIn('codemh', [0, 15, '00']);
+                  });
+            })
+            ->whereRaw('YEAR(sales.date)=?', [$request['year']])
+            ->whereRaw('MONTH(sales.date)=?', [$request['period']])
+            ->where('sales.company_id', '=', $request['company'])
+            ->orderBy('sales.id')
+            ->get();
+    }
 }
+

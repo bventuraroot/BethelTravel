@@ -200,11 +200,16 @@ class PermissionController extends Controller
                 "name" => "Reportes",
                 "icon" => "menu-icon fa-solid fa-line-chart",
                 "slug" => "report.index",
-                "badge" => ["primary", "13"],
+                "badge" => ["primary", "18"],
                 "submenu" => [
                     [
+                        "url" => "/report/index",
+                        "name" => "Centro de Reportes 📊",
+                        "slug" => "report.index"
+                    ],
+                    [
                         "url" => "/report/sales",
-                        "name" => "Ventas",
+                        "name" => "Ventas Generales",
                         "slug" => "report.sales"
                     ],
                     [
@@ -213,23 +218,38 @@ class PermissionController extends Controller
                         "slug" => "report.sales"
                     ],
                     [
-                        "url" => "/report/contribuyentes",
-                        "name" => "Ventas Contribuyentes",
-                        "slug" => "report.contribuyentes"
-                    ],
-                    [
                         "url" => "/report/consumidor",
-                        "name" => "Ventas Consumidor",
+                        "name" => "Ventas Consumidor (FAC)",
                         "slug" => "report.consumidor"
                     ],
                     [
-                        "url" => "/report/liquidacion",
-                        "name" => "Comprobantes de Liquidación",
-                        "slug" => "report.liquidacion"
+                        "url" => "/report/contribuyentes",
+                        "name" => "Ventas Contribuyentes (CCF)",
+                        "slug" => "report.contribuyentes"
+                    ],
+                    [
+                        "url" => "/report/fex",
+                        "name" => "Ventas Exportación (FEX)",
+                        "slug" => "report.fex"
+                    ],
+                    [
+                        "url" => "/report/fse",
+                        "name" => "Sujeto Excluido (FSE)",
+                        "slug" => "report.fse"
+                    ],
+                    [
+                        "url" => "/report/ncr",
+                        "name" => "Notas de Crédito (NCR)",
+                        "slug" => "report.ncr"
+                    ],
+                    [
+                        "url" => "/report/rec",
+                        "name" => "Recibos de Ingreso (REC)",
+                        "slug" => "report.rec"
                     ],
                     [
                         "url" => "/report/purchases",
-                        "name" => "Compras",
+                        "name" => "Compras Generales",
                         "slug" => "report.purchases"
                     ],
                     [
@@ -238,14 +258,9 @@ class PermissionController extends Controller
                         "slug" => "report.bookpurchases"
                     ],
                     [
-                        "url" => "/report/reportyear",
-                        "name" => "Ventas y compras por año",
-                        "slug" => "report.reportyear"
-                    ],
-                    [
-                        "url" => "/report/ivacontrol",
-                        "name" => "Control de IVA y Pago a Cuenta",
-                        "slug" => "report.ivacontrol"
+                        "url" => "/report/liquidacion",
+                        "name" => "Liquidaciones (CLQ)",
+                        "slug" => "report.liquidacion"
                     ],
                     [
                         "url" => "/report/ventas-terceros",
@@ -263,9 +278,19 @@ class PermissionController extends Controller
                         "slug" => "report.facturasTerceros"
                     ],
                     [
+                        "url" => "/report/ivacontrol",
+                        "name" => "Control de IVA y Pago a Cuenta",
+                        "slug" => "report.ivacontrol"
+                    ],
+                    [
                         "url" => "/report/hacienda-anexos",
                         "name" => "Anexos de Hacienda (F-07)",
                         "slug" => "report.hacienda-anexos"
+                    ],
+                    [
+                        "url" => "/report/reportyear",
+                        "name" => "Resumen Anual",
+                        "slug" => "report.reportyear"
                     ]
                 ]
             ],
