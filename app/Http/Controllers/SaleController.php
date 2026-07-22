@@ -1078,7 +1078,7 @@ class SaleController extends Controller
                     // Verificar si es hijo: si parent_sale_id es null, NO es hijo
                     if (!$saleParaCorreo || is_null($saleParaCorreo->parent_sale_id)) {
                         try {
-                            $this->enviarCorreoAutomaticoVenta($saleIdCorreo, $dtecreate);
+                            //$this->enviarCorreoAutomaticoVenta($saleIdCorreo, $dtecreate);
                             Log::info('Correo automático enviado tras confirmación exitosa de Hacienda', [
                                 'dte_id' => $dtecreate->id,
                                 'sale_id' => $dtecreate->sale_id,
