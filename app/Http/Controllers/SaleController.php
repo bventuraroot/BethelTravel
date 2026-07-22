@@ -926,7 +926,8 @@ class SaleController extends Controller
         0 siempre_retiene_renta,
         a.extranjero,
         a.pasaporte,
-        a.tpersona
+        a.tpersona,
+        a.contribuyente
     FROM clients a
     INNER JOIN economicactivities b ON a.economicactivity_id=b.id
     INNER JOIN addresses c ON a.address_id=c.id
@@ -946,6 +947,14 @@ class SaleController extends Controller
             }
             if ($salesave->client_id === null) {
                 $erroresValidacion[] = 'Factura sin cliente asociado';
+            }
+            // Validar restricción para Factura de Exportación (FEX = "11")
+            if (!empty($cliente) && !empty($documento) && $documento[0]->tipodocumento === '11') {
+                $esExtranjero = ($cliente[0]->extranjero == 1 || $cliente[0]->tpersona === 'E');
+                $esContribuyente = ($cliente[0]->contribuyente == 1);
+                if (!$esExtranjero && !$esContribuyente) {
+                    $erroresValidacion[] = 'Las Facturas de Exportación (FEX) solo pueden generarse para clientes extranjeros o contribuyentes de IVA.';
+                }
             }
             if (empty($detalle)) {
                 $erroresValidacion[] = 'Factura sin detalle de productos';
