@@ -1574,7 +1574,7 @@ if (!function_exists('fex')) {
         $comprobante["resumen"]                  = $resumen;
         //$comprobante["extension"]                = $extension;
         $comprobante["apendice"]                 = $apendice;
-        dd($comprobante);
+        //dd($comprobante);
         return ($comprobante);
     }
 }
