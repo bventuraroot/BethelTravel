@@ -717,6 +717,7 @@ class SaleController extends Controller
         // Flujo normal para venta simple O venta hija
         DB::beginTransaction();
         try {
+             for ($i=0; $i < 50; $i++) { 
             $amount = substr($amount, 1);
             $salesave = Sale::find($saleId);
             $salesave->totalamount = $amount;
@@ -1139,7 +1140,7 @@ class SaleController extends Controller
                     'parent_sale_id' => $salesave->parent_sale_id
                 ]);
             }
-
+        }
             $salesave->save();
             $exit = 1;
             DB::commit();
