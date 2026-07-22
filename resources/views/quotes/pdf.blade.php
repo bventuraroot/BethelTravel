@@ -5,39 +5,39 @@
     <title>Cotización - {{ $quote->title }}</title>
     <style type="text/css">
         @page {
-            margin: 40px;
+            margin: 30px;
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333333;
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 12.5px;
+            line-height: 1.45;
             margin: 0;
             padding: 0;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .logo-td {
             width: 50%;
             vertical-align: middle;
         }
         .logo-img {
-            max-height: 55px;
-            max-width: 250px;
+            max-height: 50px;
+            max-width: 230px;
         }
         .agency-info-td {
             width: 50%;
             text-align: right;
-            font-size: 11px;
+            font-size: 10.5px;
             color: #555555;
             vertical-align: middle;
         }
         .agency-name {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12.5px;
             color: #1e3a8a;
             margin-bottom: 2px;
         }
@@ -45,7 +45,7 @@
         .banner-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .banner-td {
             width: 33.33%;
@@ -53,26 +53,26 @@
         }
         .banner-img {
             width: 100%;
-            height: 120px;
+            height: 95px;
             border-radius: 6px;
             object-fit: cover;
         }
         /* Title Block */
         .title-block {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         .dest-title {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 900;
             color: #f59e0b; /* Orange/Gold accent */
             letter-spacing: 4px;
             text-transform: uppercase;
-            margin: 0 0 5px 0;
+            margin: 0 0 4px 0;
             font-family: 'Arial Black', Gadget, sans-serif;
         }
         .dates-subtitle {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             color: #e11d48; /* Red/Crimson accent */
             margin: 0;
@@ -81,40 +81,43 @@
         }
         /* Package Includes */
         .section-title {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: bold;
             color: #333333;
-            margin: 15px 0 8px 0;
+            margin: 12px 0 6px 0;
             border-bottom: 1px solid #e5e7eb;
             padding-bottom: 3px;
+            page-break-after: avoid;
         }
         .includes-list {
             margin: 0;
             padding: 0;
             list-style: none;
+            page-break-inside: avoid;
         }
         .includes-item {
             position: relative;
             padding-left: 20px;
-            margin-bottom: 6px;
-            font-size: 12.5px;
+            margin-bottom: 5px;
+            font-size: 12px;
         }
         .includes-icon {
             position: absolute;
             left: 0;
             top: 2px;
             color: #10b981; /* Green color for airplane/checkmark */
-            font-size: 11px;
+            font-size: 10px;
         }
         /* Pricing Table */
         .price-section-title {
             text-align: center;
             font-weight: bold;
             color: #e11d48; /* Red */
-            font-size: 13px;
+            font-size: 12.5px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 20px 0 8px 0;
+            margin: 15px 0 6px 0;
+            page-break-after: avoid;
         }
         .price-table {
             width: 100%;
@@ -122,14 +125,15 @@
             margin-bottom: 5px;
             border-radius: 6px;
             overflow: hidden;
+            page-break-inside: avoid;
         }
         .price-table th {
             background-color: #1e3a8a; /* Deep Navy Blue */
             color: #ffffff;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 11px;
-            padding: 8px 10px;
+            font-size: 10.5px;
+            padding: 7px 9px;
             border: 1px solid #1e3a8a;
             text-align: center;
         }
@@ -137,9 +141,9 @@
             text-align: left;
         }
         .price-table td {
-            padding: 8px 10px;
+            padding: 7px 9px;
             border: 1px solid #e5e7eb;
-            font-size: 12px;
+            font-size: 11.5px;
         }
         .price-table td.hotel-name {
             font-weight: bold;
@@ -150,30 +154,34 @@
             font-weight: bold;
             color: #1f2937;
         }
+        .price-table tr {
+            page-break-inside: avoid;
+        }
         .price-table tr:nth-child(even) {
             background-color: #f9fafb;
         }
         .price-footer-note {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: bold;
             color: #1d4ed8; /* Blue accent */
             text-align: center;
-            margin-top: 5px;
-            margin-bottom: 20px;
+            margin-top: 4px;
+            margin-bottom: 15px;
             text-transform: uppercase;
         }
         /* Flight Itinerary */
         .flight-container {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            margin-top: 8px;
+            margin-bottom: 12px;
         }
         .flight-card {
             border: 1px solid #e5e7eb;
             border-radius: 6px;
-            padding: 10px;
+            padding: 8px;
             background-color: #fafafa;
+            page-break-inside: avoid;
         }
         .flight-card-table {
             width: 100%;
@@ -230,6 +238,7 @@
             margin: 0;
             padding: 0;
             list-style: none;
+            page-break-inside: avoid;
         }
         .notes-item {
             font-size: 11px;
