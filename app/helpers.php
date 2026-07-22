@@ -651,7 +651,7 @@ if (!function_exists('crf')) {
         $comprobante["extension"]                = $extension;
         $comprobante["apendice"]                 = $apendice;
         //echo '<br>'. var_dump($comprobante) . '<br>';
-        //dd($comprobante);
+        dd($comprobante);
         return ($comprobante);
     }
 }
@@ -955,7 +955,7 @@ if (!function_exists('fac')) {
         $comprobante["extension"]                = $extension;
         $comprobante["apendice"]                 = null;
         //$comprobante2 = [];
-        dd($comprobante);
+        //dd($comprobante);
         return ($comprobante);
     }
 }
