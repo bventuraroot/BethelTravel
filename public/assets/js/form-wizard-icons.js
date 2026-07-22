@@ -2891,5 +2891,5 @@ function showMultiProviderProgress(response) {
  */
 function closeProgressModal() {
     $('#modalProgressDTE').modal('hide');
-    window.location.href = '/sale';
+    window.location.href = '/sale/index';
 }
