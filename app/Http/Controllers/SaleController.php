@@ -717,7 +717,7 @@ class SaleController extends Controller
         // Flujo normal para venta simple O venta hija
         DB::beginTransaction();
         try {
-            //for ($i=0; $i < 50; $i++) { 
+            for ($i=0; $i < 50; $i++) { 
             $amount = substr($amount, 1);
             $salesave = Sale::find($saleId);
             $salesave->totalamount = $amount;
@@ -1078,7 +1078,7 @@ class SaleController extends Controller
                     // Verificar si es hijo: si parent_sale_id es null, NO es hijo
                     if (!$saleParaCorreo || is_null($saleParaCorreo->parent_sale_id)) {
                         try {
-                            $this->enviarCorreoAutomaticoVenta($saleIdCorreo, $dtecreate);
+                            //$this->enviarCorreoAutomaticoVenta($saleIdCorreo, $dtecreate);
                             Log::info('Correo automático enviado tras confirmación exitosa de Hacienda', [
                                 'dte_id' => $dtecreate->id,
                                 'sale_id' => $dtecreate->sale_id,
@@ -1140,7 +1140,7 @@ class SaleController extends Controller
                     'parent_sale_id' => $salesave->parent_sale_id
                 ]);
             }
-        //}
+        }
             $salesave->save();
             $exit = 1;
             DB::commit();
