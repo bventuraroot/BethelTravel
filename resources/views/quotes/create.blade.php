@@ -55,7 +55,20 @@
                     }
                     selectEl.trigger('change.select2');
                 });
+
+                // Re-generate defaults automatically
+                regenerateDefaults(false);
             });
+
+            // Listen to flight airline & date changes to update defaults dynamically
+            $(document).on('change', 'select[name^="flights["][name$="[airline_code]"], input[name^="flights["][name$="[departure_date]"]', function() {
+                regenerateDefaults(false);
+            });
+
+            // Initial call on page load to set default values if fields are empty
+            setTimeout(function() {
+                regenerateDefaults(false);
+            }, 500);
 
             // Flatpickr initialization
             $('.datepicker').flatpickr({
@@ -170,6 +183,98 @@
                 </div>
             `;
             $('#notes-container').append(html);
+        }
+
+        function regenerateDefaults(force = false) {
+            const destRaw = $('#title').val() || '';
+            const dest = destRaw.trim().toUpperCase();
+            
+            // Get airline name from the first flight segment
+            let airlineName = 'Avianca';
+            const firstAirlineSelect = $('select[name^="flights["][name$="[airline_code]"]').first();
+            if (firstAirlineSelect.length && firstAirlineSelect.val()) {
+                airlineName = firstAirlineSelect.find('option:selected').text().split('(')[0].trim();
+            }
+            
+            // Get nights based on flight dates
+            let nights = 5;
+            const depDates = $('input[name^="flights["][name$="[departure_date]"]');
+            if (depDates.length >= 2) {
+                const firstDateVal = $(depDates[0]).val();
+                const lastDateVal = $(depDates[depDates.length - 1]).val();
+                if (firstDateVal && lastDateVal) {
+                    const d1 = new Date(firstDateVal);
+                    const d2 = new Date(lastDateVal);
+                    const diffTime = Math.abs(d2 - d1);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > 0 && diffDays < 30) {
+                        nights = diffDays;
+                    }
+                }
+            }
+            
+            const nightsStr = String(nights).padStart(2, '0');
+            
+            // Build Inclusions List
+            const inclusions = [];
+            inclusions.push(`Boleto aéreo vía ${airlineName}, con maleta de mano`);
+            if (dest) {
+                inclusions.push(`Traslados Aeropuerto / Hotel / Aeropuerto en ${dest}`);
+                inclusions.push(`${nightsStr} noches de alojamiento en ${dest}`);
+            } else {
+                inclusions.push(`Traslados Aeropuerto / Hotel / Aeropuerto`);
+                inclusions.push(`${nightsStr} noches de alojamiento`);
+            }
+            inclusions.push('Desayunos');
+            
+            // Destination specific excursion
+            if (dest.includes('MEDELLIN') || dest.includes('MEDELLÍN')) {
+                inclusions.push('Excursión a Guatapé y el Alto del Chocho + Paseo en barco (Punto de salida: PARQUE DEL POBLADO)');
+            } else if (dest.includes('SAN ANDRES') || dest.includes('SAN ANDRÉS')) {
+                inclusions.push('Vuelta a la isla en chiva + Visita a Johnny Cay y el Acuario');
+            } else if (dest.includes('SANTA MARTA')) {
+                inclusions.push('Excursión a Playa Blanca con almuerzo típico incluido');
+            } else if (dest.includes('CANCUN') || dest.includes('CANCÚN')) {
+                inclusions.push('Excursión a Chichén Itzá, Cenote Sagrado y Valladolid con almuerzo buffet');
+            } else if (dest.includes('MADRID')) {
+                inclusions.push('City tour por los principales puntos históricos de Madrid con guía local');
+            } else if (dest) {
+                inclusions.push(`City tour o excursión principal en ${dest}`);
+            }
+            
+            const includesContainer = $('#includes-container');
+            const currentInputs = includesContainer.find('input[name="includes[]"]');
+            let isEmpty = true;
+            currentInputs.each(function() {
+                if ($(this).val().trim() !== '') {
+                    isEmpty = false;
+                }
+            });
+            
+            if (force || isEmpty) {
+                includesContainer.html('');
+                inclusions.forEach(inc => addInclusion(inc));
+            }
+            
+            // Build Notes List
+            const notesContainer = $('#notes-container');
+            const currentNotes = notesContainer.find('input[name="notes[]"]');
+            let notesIsEmpty = true;
+            currentNotes.each(function() {
+                if ($(this).val().trim() !== '') {
+                    notesIsEmpty = false;
+                }
+            });
+            
+            const defaultNotes = [
+                'Precios sujetos a cambio sin previo aviso',
+                'Reservaciones sujetas a disponibilidad al momento de reservar en firme'
+            ];
+            
+            if (force || notesIsEmpty) {
+                notesContainer.html('');
+                defaultNotes.forEach(note => addNote(note));
+            }
         }
 
         // Generic Element remover
@@ -634,9 +739,14 @@
                 <div class="card mb-4" id="inclusions-card-container">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">El Paquete Incluye</h5>
-                        <button type="button" class="btn btn-sm btn-icon btn-outline-primary" onclick="addInclusion()" title="Añadir viñeta">
-                            <i class="ti ti-plus"></i>
-                        </button>
+                        <div>
+                            <button type="button" class="btn btn-xs btn-outline-success me-2" onclick="regenerateDefaults(true)" title="Auto-generar textos basados en los datos ingresados">
+                                <i class="ti ti-wand me-1"></i>Sugerir
+                            </button>
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-primary" onclick="addInclusion()" title="Añadir viñeta">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body" id="includes-container">
                         <!-- Inclusions items -->
@@ -647,9 +757,14 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Importante / Condiciones</h5>
-                        <button type="button" class="btn btn-sm btn-icon btn-outline-primary" onclick="addNote()" title="Añadir condición">
-                            <i class="ti ti-plus"></i>
-                        </button>
+                        <div>
+                            <button type="button" class="btn btn-xs btn-outline-success me-2" onclick="regenerateDefaults(true)" title="Auto-generar notas por defecto">
+                                <i class="ti ti-wand me-1"></i>Sugerir
+                            </button>
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-primary" onclick="addNote()" title="Añadir condición">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body" id="notes-container">
                         <!-- Conditions items -->
