@@ -1223,9 +1223,22 @@
                                                 <i class="ti ti-folder"></i> {{ $sale->children_count }}
                                             </span>
                                         @endif
-                                    </div>
                                     @if($esAnulado && !empty($sale->codigoGeneracion))
                                         <div class="mt-1 small text-danger" style="font-size: 0.6rem;">CG: {{ $sale->codigoGeneracion }}</div>
+                                    @endif
+                                    @if(!empty($sale->notas_credito))
+                                        <div class="mt-1">
+                                            <span class="badge bg-label-danger" style="font-size: 0.65rem;" title="Notas de Crédito asociadas: {{ $sale->notas_credito }}">
+                                                <i class="ti ti-file-minus me-1"></i>NC: {{ $sale->notas_credito }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($sale->notas_debito))
+                                        <div class="mt-1">
+                                            <span class="badge bg-label-info" style="font-size: 0.65rem;" title="Notas de Débito asociadas: {{ $sale->notas_debito }}">
+                                                <i class="ti ti-file-plus me-1"></i>ND: {{ $sale->notas_debito }}
+                                            </span>
+                                        </div>
                                     @endif
                                 </td>
 
