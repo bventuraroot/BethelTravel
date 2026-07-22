@@ -1263,7 +1263,7 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
-            for ($i=0; $i < 100; $i++) { 
+            //for ($i=0; $i < 100; $i++) { 
          
             $request = request();
 
@@ -1772,7 +1772,7 @@ class SaleController extends Controller
             $nfactura->save();
 
             // El correlativo ya fue actualizado arriba
-            }
+            //}
             DB::commit();
             if (request()->ajax()) {
                 return response('1');
