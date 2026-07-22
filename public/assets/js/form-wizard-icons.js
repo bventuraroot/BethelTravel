@@ -2158,8 +2158,8 @@ function enviarDocumentoSinConfirmar() {
     });
 
     var corr = $('#valcorr').val();
-    var totalamount = $('#ventatotallhidden').val();
-    totalamount = 0 + totalamount;
+    var totalamount = $('#ventatotallhidden').val() || '0';
+    totalamount = '0' + totalamount;
 
     $.ajax({
         url: "createdocument/" + btoa(corr) + '/' + totalamount,

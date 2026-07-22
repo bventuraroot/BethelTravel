@@ -717,10 +717,16 @@ class SaleController extends Controller
         // Flujo normal para venta simple O venta hija
         DB::beginTransaction();
         try {
+            // Quitar el '0' de relleno si existe y asegurar valor numérico
+            if (strpos($amount, '0') === 0) {
+                $amount = substr($amount, 1);
+            }
+            if ($amount === '' || !is_numeric($amount)) {
+                $amount = 0.00;
+            }
             for ($i=0; $i < 50; $i++) { 
-            $amount = substr($amount, 1);
-            $salesave = Sale::find($saleId);
-            $salesave->totalamount = $amount;
+                $salesave = Sale::find($saleId);
+                $salesave->totalamount = $amount;
             $salesave->typesale = 1; // finalizar venta como en RomaCopies
             //buscar el correlativo actual
             $newCorr = Correlativo::join('typedocuments as tdoc', 'tdoc.type', '=', 'docs.id_tipo_doc')
