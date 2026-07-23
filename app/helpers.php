@@ -43,7 +43,7 @@ if (!function_exists('CerosIzquierda')) {
 if (!function_exists('codigoQR')) {
     function codigoQR($ambiente, $codigo, $fecha)
     {
-        $url = 'https://webapp.dtes.mh.gob.sv/consultaPublica?ambiente=' . $ambiente . '&codGen=' . $codigo . '&fechaEmi=' . date('Y-m-d', strtotime($fecha));
+        $url = 'https://admin.factura.gob.sv/consultaPublica?ambiente=' . $ambiente . '&codGen=' . $codigo . '&fechaEmi=' . date('Y-m-d', strtotime($fecha));
         return (string)QrCode::size(100)->format('png')->generate($url);
 
     }
@@ -52,7 +52,7 @@ if (!function_exists('codigoQR')) {
 if (!function_exists('urlCodigoQR')) {
     function urlCodigoQR($ambiente, $codigo, $fecha)
     {
-        return 'https://webapp.dtes.mh.gob.sv/consultaPublica?ambiente=' . $ambiente . '&codGen=' . $codigo . '&fechaEmi=' . date('Y-m-d', strtotime($fecha));
+        return 'https://admin.factura.gob.sv/consultaPublica?ambiente=' . $ambiente . '&codGen=' . $codigo . '&fechaEmi=' . date('Y-m-d', strtotime($fecha));
     }
 }
 
