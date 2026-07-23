@@ -1036,7 +1036,7 @@ if (!function_exists('fan')) {
 
        $motivo = [
             "tipoAnulacion"         => intval("2"),
-            "motivoAnulacion"       => "Rescindir de la operacion realizada.",
+            "motivoAnulacion"       => "Prescindir de la operación realizada.",
             "nombreResponsable"     => $encabezado["nombre"],
             "tipDocResponsable"    => "13",
             "numDocResponsable"     => "05095294-8", ///$encabezado["docuEntrega"],
