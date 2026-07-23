@@ -734,12 +734,18 @@ if (!function_exists('fac')) {
             {$codeActivity = '0' . $cliente[0]->codActividad;}
             else{ $codeActivity = $cliente[0]->codActividad; }
         }
+        $docInfo = getClienteDocumentoConTipo($cliente[0]);
         if($cliente[0]->extranjero == 1){
             $tipoDocumento = "03";
         }else{
-            $tipoDocumento = ($cliente[0]->ncr == '' or is_null($cliente[0]->ncr) or $cliente[0]->ncr == 'N/A') ? $cliente[0]->tipoDocumento : "36";
+            if($docInfo['documento'] == NULL){
+                $tipoDocumento = NULL;
+            }else{
+                $tipoDocumento = ($cliente[0]->ncr == '' or is_null($cliente[0]->ncr) or $cliente[0]->ncr == 'N/A') ? $cliente[0]->tipoDocumento : "36";
+            }
+            
         }
-        $docInfo = getClienteDocumentoConTipo($cliente[0]);
+        
         $receptor = [
             //"tipoDocumento"         => $docInfo['tipoDocumento'],
             //"tipoDocumento"         => "36",
@@ -1412,7 +1418,12 @@ if (!function_exists('fex')) {
         if($cliente[0]->extranjero == 1){
             $tipoDocumento = "03";
         }else{
-            $tipoDocumento = ($cliente[0]->ncr == '' or is_null($cliente[0]->ncr) or $cliente[0]->ncr == 'N/A') ? $cliente[0]->tipoDocumento : "36";
+            if($documentoInfo['documento'] == NULL){
+                $tipoDocumento = NULL;
+            }else{
+                $tipoDocumento = ($cliente[0]->ncr == '' or is_null($cliente[0]->ncr) or $cliente[0]->ncr == 'N/A') ? $cliente[0]->tipoDocumento : "36";
+            }
+            
         }
         if($cliente[0]->tpersona == 'N'){
             $tipoPersona = 2;
