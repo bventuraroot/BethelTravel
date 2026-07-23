@@ -3098,10 +3098,6 @@ class SaleController extends Controller
                     'clients.comercial_name as client_comercial_name',
                     'clients.name_contribuyente as client_name_contribuyente',
                     'clients.email as client_email',
-                    'clients.email2 as client_email2',
-                    'clients.email3 as client_email3',
-                    'clients.email4 as client_email4',
-                    'clients.email5 as client_email5',
                     'clients.tpersona'
                 )
                 ->where('sales.id', $saleId)
@@ -3112,7 +3108,7 @@ class SaleController extends Controller
                 return false;
             }
 
-            // Prioridad de correo: customEmail -> selected_email -> mailClient -> emails del cliente en BD
+            // Prioridad de correo: customEmail -> selected_email -> mailClient -> client_email en BD
             $emailCliente = null;
             if ($customEmail && filter_var($customEmail, FILTER_VALIDATE_EMAIL)) {
                 $emailCliente = trim($customEmail);
@@ -3120,20 +3116,8 @@ class SaleController extends Controller
                 $emailCliente = trim($venta->selected_email);
             } else if (!empty($venta->mailClient) && filter_var($venta->mailClient, FILTER_VALIDATE_EMAIL)) {
                 $emailCliente = trim($venta->mailClient);
-            } else {
-                $emailsDisponibles = collect([
-                    $venta->client_email,
-                    $venta->client_email2,
-                    $venta->client_email3,
-                    $venta->client_email4,
-                    $venta->client_email5,
-                ])->filter(function ($email) {
-                    return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
-                })->values()->all();
-
-                if (!empty($emailsDisponibles)) {
-                    $emailCliente = $emailsDisponibles[0];
-                }
+            } else if (!empty($venta->client_email) && filter_var($venta->client_email, FILTER_VALIDATE_EMAIL)) {
+                $emailCliente = trim($venta->client_email);
             }
 
             if (!$emailCliente) {
