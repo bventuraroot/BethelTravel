@@ -872,22 +872,26 @@
                                 <input type="hidden" id="client_tpersona" value="">
                                 <input type="hidden" id="client_extranjero" value="0">
                                 <input type="hidden" id="client_contribuyente" value="0">
-                                <!-- Información del cliente (replicado de RomaCopies) -->
+                                <!-- Información detallada del cliente y validaciones DTE -->
                                 <div id="client-info" class="mt-2" style="display: none;">
-                                    <div class="alert alert-info">
-                                        <div class="row">
+                                    <div class="alert alert-info border border-info shadow-sm mb-2">
+                                        <div class="row g-2">
                                             <div class="col-md-6">
-                                                <strong>Nombre:</strong> <span id="client-name">-</span><br>
-                                                <strong>Tipo:</strong> <span id="client-type">-</span><br>
-                                                <strong>Contribuyente:</strong> <span id="client-contribuyente">-</span>
+                                                <strong><i class="ti ti-user me-1"></i>Nombre:</strong> <span id="client-name">-</span><br>
+                                                <strong><i class="ti ti-id-badge me-1"></i>Tipo:</strong> <span id="client-type">-</span><br>
+                                                <strong><i class="ti ti-building me-1"></i>Contribuyente:</strong> <span id="client-contribuyente">-</span><br>
+                                                <strong><i class="ti ti-mail me-1"></i>Correo Electrónico:</strong> <span id="client-email">-</span>
                                             </div>
                                             <div class="col-md-6">
-                                                <strong>NIT/DUI:</strong> <span id="client-nit">-</span><br>
-                                                <strong>Dirección:</strong> <span id="client-address">-</span><br>
-                                                <strong>Teléfono:</strong> <span id="client-phone">-</span>
+                                                <strong><i class="ti ti-file-certificate me-1"></i>NIT/DUI:</strong> <span id="client-nit">-</span><br>
+                                                <strong><i class="ti ti-receipt-tax me-1"></i>NRC:</strong> <span id="client-ncr">-</span><br>
+                                                <strong><i class="ti ti-briefcase me-1"></i>Giro / Actividad:</strong> <span id="client-giro">-</span><br>
+                                                <strong><i class="ti ti-phone me-1"></i>Teléfono:</strong> <span id="client-phone">-</span><br>
+                                                <strong><i class="ti ti-map-pin me-1"></i>Dirección:</strong> <span id="client-address">-</span>
                                             </div>
                                         </div>
                                     </div>
+                                    <div id="client-validation-warnings" style="display: none;"></div>
                                 </div>
 
                                 <!-- Campos específicos para Factura de Exportación -->

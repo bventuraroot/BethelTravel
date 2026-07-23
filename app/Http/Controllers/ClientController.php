@@ -114,7 +114,31 @@ class ClientController extends Controller
 
     public function gettypecontri($client)
     {
-        $contribuyente = Client::find(base64_decode($client));
+        $id = base64_decode($client);
+        $contribuyente = Client::leftJoin('addresses', 'clients.address_id', '=', 'addresses.id')
+            ->leftJoin('countries', 'addresses.country_id', '=', 'countries.id')
+            ->leftJoin('departments', 'addresses.department_id', '=', 'departments.id')
+            ->leftJoin('municipalities', 'addresses.municipality_id', '=', 'municipalities.id')
+            ->leftJoin('economicactivities', 'clients.economicactivity_id', '=', 'economicactivities.id')
+            ->leftJoin('phones', 'clients.phone_id', '=', 'phones.id')
+            ->select(
+                'clients.*',
+                'countries.name as pais_name',
+                'departments.name as departamento_name',
+                'municipalities.name as municipio_name',
+                'economicactivities.name as econo_name',
+                'economicactivities.code as econo_code',
+                'addresses.reference as address_ref',
+                'phones.phone as phone_mobile',
+                'phones.phone_fijo as phone_fijo'
+            )
+            ->where('clients.id', $id)
+            ->first();
+
+        if (!$contribuyente) {
+            $contribuyente = Client::find($id);
+        }
+
         return response()->json($contribuyente);
     }
 

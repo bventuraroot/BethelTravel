@@ -1753,15 +1753,102 @@ function valtrypecontri(idcliente) {
                         .join(' ')
                         .trim();
                 }
-                var clientType = (response.tpersona === 'J') ? 'Persona Jurídica' : 'Persona Natural';
+                var clientType = (response.tpersona === 'J') ? 'Persona Jurídica' : (response.extranjero === '1' || response.tpersona === 'E' ? 'Persona Natural (Extranjera)' : 'Persona Natural');
                 var isContrib = (response.tpersona === 'J') ? 'Sí (Jurídico)' : (response.contribuyente === '1' ? 'Sí (Natural Contribuyente)' : 'No (Natural No Contribuyente)');
+
+                // Armar dirección completa
+                var addressParts = [];
+                if (response.address_ref && response.address_ref !== 'N/A') addressParts.push(response.address_ref);
+                if (response.municipio_name) addressParts.push(response.municipio_name);
+                if (response.departamento_name) addressParts.push(response.departamento_name);
+                if (response.pais_name && response.pais_name !== 'El Salvador') addressParts.push(response.pais_name);
+                var fullAddress = addressParts.length ? addressParts.join(', ') : (response.address && response.address !== 'N/A' ? response.address : 'N/A');
+
+                // Armar teléfonos
+                var phoneParts = [];
+                if (response.phone_mobile) phoneParts.push(response.phone_mobile);
+                if (response.phone_fijo) phoneParts.push(response.phone_fijo);
+                var fullPhone = phoneParts.length ? phoneParts.join(' / ') : (response.phone && response.phone !== 'N/A' ? response.phone : 'N/A');
+
+                // Armar correo
+                var clientEmail = (response.email && response.email !== 'N/A') ? response.email : '';
+
+                // Armar NIT / DUI / Pasaporte
+                var clientDoc = response.nit || response.pasaporte || response.dui || 'N/A';
+
+                // Armar NCR
+                var clientNcr = (response.ncr && response.ncr !== 'N/A' && response.ncr !== '0') ? response.ncr : 'N/A';
+
+                // Armar Giro / Actividad Económica
+                var clientGiro = response.econo_name ? (response.econo_code ? response.econo_code + ' - ' + response.econo_name : response.econo_name) : (response.giro && response.giro !== 'N/A' ? response.giro : 'N/A');
 
                 $("#client-name").text(clientName || 'N/A');
                 $("#client-type").text(clientType);
                 $("#client-contribuyente").text(isContrib);
-                $("#client-nit").text(response.nit || response.dui || 'N/A');
-                $("#client-address").text(response.address || 'N/A');
-                $("#client-phone").text(response.phone || 'N/A');
+                $("#client-nit").text(clientDoc);
+                $("#client-ncr").text(clientNcr);
+                $("#client-giro").text(clientGiro);
+                $("#client-address").text(fullAddress);
+                $("#client-phone").text(fullPhone);
+
+                if ($("#client-email").length) {
+                    if (clientEmail) {
+                        $("#client-email").html('<span class="text-success fw-bold"><i class="ti ti-mail me-1"></i>' + clientEmail + '</span>');
+                    } else {
+                        $("#client-email").html('<span class="badge bg-label-warning text-wrap text-start"><i class="ti ti-alert-circle me-1"></i>Sin correo (no se enviará DTE automático)</span>');
+                    }
+                }
+
+                // VALIDACIÓN DE CAMPOS PENDIENTES O REQUERIDOS SEGÚN EL TIPO DE DOCUMENTO
+                var typedocument = $("#typedocument").val();
+                var warnings = [];
+
+                if (typedocument === '3') { // Crédito Fiscal (CCF)
+                    if (clientNcr === 'N/A') {
+                        warnings.push('<strong>NCR:</strong> El cliente no tiene Número de Registro de Contribuyente (NCR) configurado.');
+                    }
+                    if (clientGiro === 'N/A') {
+                        warnings.push('<strong>Giro / Actividad Económica:</strong> Requerido por Hacienda para Crédito Fiscal.');
+                    }
+                    if (fullAddress === 'N/A') {
+                        warnings.push('<strong>Dirección:</strong> Se requiere dirección completa (Departamento, Municipio, Referencia) para CCF.');
+                    }
+                    if (clientDoc === 'N/A') {
+                        warnings.push('<strong>NIT / DUI:</strong> Requerido para identificar al receptor del Crédito Fiscal.');
+                    }
+                } else if (typedocument === '7') { // Factura de Exportación (FEX)
+                    if (response.extranjero !== '1' && response.tpersona !== 'E' && clientType !== 'Persona Natural (Extranjera)') {
+                        warnings.push('<strong>Cliente Extranjero:</strong> Se requiere cliente extranjero registrado con Pasaporte.');
+                    }
+                    if (fullAddress === 'N/A') {
+                        warnings.push('<strong>Dirección / País Destino:</strong> Se requiere dirección completa del país destino.');
+                    }
+                } else if (typedocument === '14') { // Sujeto Excluido (FSE)
+                    if (clientDoc === 'N/A') {
+                        warnings.push('<strong>DUI / NIT:</strong> Requerido para el Sujeto Excluido.');
+                    }
+                    if (fullAddress === 'N/A') {
+                        warnings.push('<strong>Dirección:</strong> Requerida para el Sujeto Excluido.');
+                    }
+                }
+
+                var $warningsContainer = $("#client-validation-warnings");
+                if ($warningsContainer.length) {
+                    if (warnings.length > 0) {
+                        var htmlWarnings = '<div class="alert alert-warning border-start border-warning border-4 p-2 shadow-sm mb-0">' +
+                            '<div class="d-flex align-items-center mb-1"><i class="ti ti-alert-triangle me-2 fs-4 text-warning"></i><strong class="text-dark">Campos recomendados/requeridos faltantes para este documento:</strong></div>' +
+                            '<ul class="mb-1 ps-3 text-dark small">';
+                        warnings.forEach(function (w) {
+                            htmlWarnings += '<li>' + w + '</li>';
+                        });
+                        htmlWarnings += '</ul>' +
+                            '<div class="text-end mt-1"><a href="/client?company=' + btoa(response.company_id || '') + '" target="_blank" class="btn btn-xs btn-outline-warning"><i class="ti ti-edit me-1"></i>Editar datos del cliente en módulo Clientes</a></div>' +
+                            '</div>';
+                        $warningsContainer.html(htmlWarnings).show();
+                    } else {
+                        $warningsContainer.empty().hide();
+                    }
+                }
 
                 $("#client-info").show();
             }
