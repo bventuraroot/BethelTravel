@@ -2871,14 +2871,16 @@ class SaleController extends Controller
 
                 ];
                 $comprobante_electronico["selloRecibido"] = $objEnviado->selloRecibido;
-                if ($codTransaccion == '01' || $codTransaccion == '05') {
-                    if ($tipo_documento == '14') {
-                        $respuesta["receptor"] = $comprobante_electronico["sujetoExcluido"];
+                if ($codTransaccion == '01' || $codTransaccion == '05' || $codTransaccion == '06' || $codTransaccion == '02') {
+                    if ($codTransaccion == '02') {
+                        $respuesta["receptor"] = $comprobante_electronico["documento"] ?? null;
+                    } elseif ($tipo_documento == '14') {
+                        $respuesta["receptor"] = $comprobante_electronico["sujetoExcluido"] ?? null;
                     } else {
-                        $respuesta["receptor"] = $comprobante_electronico["receptor"];
+                        $respuesta["receptor"] = $comprobante_electronico["receptor"] ?? null;
                     }
 
-                    $respuesta["identificacion"]    = $comprobante_electronico["identificacion"];
+                    $respuesta["identificacion"]    = $comprobante_electronico["identificacion"] ?? null;
                     $respuesta["json_enviado"]      = $comprobante_electronico;
                 }
 
@@ -3156,7 +3158,7 @@ class SaleController extends Controller
 
             // Preparar JSON de la invalidación enviado a MH
             $json_root = json_decode($dteInvalidado->json);
-            $json_enviado = $json_root->json->json_enviado ?? null;
+            $json_enviado = $json_root->json->json_enviado ?? $json_root->json_enviado ?? $json_root ?? null;
             if (!$json_enviado) {
                 throw new \Exception('JSON de Invalidad no disponible para adjuntar');
             }
