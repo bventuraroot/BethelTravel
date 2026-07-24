@@ -252,48 +252,41 @@ function showFormErrors(errors) {
  * Inicializar validaciones cuando el documento esté listo
  */
 $(document).ready(function() {
-    // Validación para DUI/NIT/Pasaporte
-    $(document).on('input', 'input[name="nit"], input[name="nitedit"]', function() {
-        const tpersona = $('input[name="tpersona"]:checked, input[name="tpersonaedit"]:checked').val();
-        const companyId = $('input[name="companyselected"], input[name="companyselectededit"]').val();
-        const clientId = $('input[name="idedit"]').val();
+    function getValidationContext(isEdit) {
+        let tpersona = isEdit
+            ? ($('#tpersonaedit').val() || $('input[name="tpersonaedit"]:checked').val())
+            : ($('#tpersona').val() || $('input[name="tpersona"]:checked').val());
+        let companyId = isEdit
+            ? ($('#companyselectededit').val() || $('#selectcompany').val())
+            : ($('#companyselected').val() || $('#selectcompany').val());
+        let clientId = isEdit ? ($('#idedit').val() || null) : null;
 
-        if (tpersona && companyId) {
-            validateClientKey($(this), tpersona, companyId, clientId);
-        }
+        return { tpersona: tpersona || 'N', companyId: companyId || '0', clientId: clientId };
+    }
+
+    // Validación para DUI/NIT/Pasaporte
+    $(document).on('input blur change', 'input[name="nit"], input[name="nitedit"]', function() {
+        const isEdit = $(this).attr('name') === 'nitedit';
+        const ctx = getValidationContext(isEdit);
+        validateClientKey(this, ctx.tpersona, ctx.companyId, ctx.clientId);
     });
 
     // Validación para NCR
-    $(document).on('input', 'input[name="ncr"], input[name="ncredit"]', function() {
-        const tpersona = $('input[name="tpersona"]:checked, input[name="tpersonaedit"]:checked').val();
-        const companyId = $('input[name="companyselected"], input[name="companyselectededit"]').val();
-        const clientId = $('input[name="idedit"]').val();
-
-        if (tpersona === 'J' && companyId) {
-            validateNcr($(this), companyId, clientId);
-        }
+    $(document).on('input blur change', 'input[name="ncr"], input[name="ncredit"]', function() {
+        const isEdit = $(this).attr('name') === 'ncredit';
+        const ctx = getValidationContext(isEdit);
+        validateNcr(this, ctx.companyId, ctx.clientId);
     });
 
     // Validación para pasaporte
-    $(document).on('input', 'input[name="pasaporte"]', function() {
-        const tpersona = $('input[name="tpersona"]:checked').val();
-        const companyId = $('input[name="companyselected"]').val();
-
-        if (tpersona === 'E' && companyId) {
-            validateClientKey($(this), tpersona, companyId);
-        }
-    });
-
-    // Validación antes del envío del formulario
-    $('form').on('submit', function(e) {
-        if (!validateFormBeforeSubmit($(this))) {
-            e.preventDefault();
-            return false;
-        }
+    $(document).on('input blur change', 'input[name="pasaporte"], input[name="pasaporteedit"]', function() {
+        const isEdit = $(this).attr('name') === 'pasaporteedit';
+        const ctx = getValidationContext(isEdit);
+        validateClientKey(this, 'E', ctx.companyId, ctx.clientId);
     });
 
     // Limpiar validaciones cuando cambie el tipo de persona
-    $('input[name="tpersona"]').on('change', function() {
+    $('#tpersona, #tpersonaedit, input[name="tpersona"], input[name="tpersonaedit"]').on('change', function() {
         $('.validation-feedback').hide();
         $('.is-valid, .is-invalid').removeClass('is-valid is-invalid');
     });

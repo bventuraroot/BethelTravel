@@ -4,7 +4,7 @@
 
 // Global helper functions for client filters
 window.indexclient = function(company) {
-  let scope = $('#selectScopeFilter').val() || 'my';
+  let scope = $('#selectScopeFilter').val() || 'all';
   window.location.href = "/client/index/" + btoa(company) + "?scope=" + scope;
 };
 

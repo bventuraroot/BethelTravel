@@ -25,7 +25,7 @@ class ClientController extends Controller
     public function index(Request $request, $company = "0")
     {
         $id_user = auth()->user()->id;
-        $scope = $request->get('scope', 'my'); // 'my' o 'all'
+        $scope = $request->get('scope', 'all'); // Por defecto 'all' (Todos los Clientes) o 'my'
 
         // Obtener la empresa a la que pertenece el usuario
         $company_user = Company::join('permission_company', 'companies.id', '=', 'permission_company.company_id')
@@ -154,45 +154,53 @@ class ClientController extends Controller
 
     public function keyclient(Request $request)
     {
-        $num = $request->input('num');
-        $tpersona = $request->input('tpersona');
+        $num = trim((string) $request->input('num'));
+        $tpersona = $request->input('tpersona') ?: 'N';
         $companyId = $request->input('company_id');
         $clientId = $request->input('client_id'); // Para edición
 
+        // Si la empresa es 0 o no válida, obtener la empresa por defecto del usuario
+        if (empty($companyId) || $companyId === '0' || $companyId === 'selectcompany') {
+            $companyId = Company::join('permission_company', 'companies.id', '=', 'permission_company.company_id')
+                ->where('permission_company.user_id', '=', auth()->id())
+                ->pluck('companies.id')
+                ->first() ?: Company::value('id');
+        }
+
+        $cleanNum = preg_replace('/[^a-zA-Z0-9]/', '', $num);
         $cliente = null;
         $message = '';
 
-        if ($tpersona == "E") {
+        if ($tpersona === "E") {
             // Extranjero - validar pasaporte
-            $query = Client::where('pasaporte', $num)
-                ->where('tpersona', 'E')
-                ->where('company_id', $companyId);
+            $query = Client::where(function ($q) use ($num, $cleanNum) {
+                    $q->where('pasaporte', $num)
+                      ->orWhere('pasaporte', $cleanNum)
+                      ->orWhereRaw("REPLACE(REPLACE(COALESCE(pasaporte, ''), '-', ''), ' ', '') = ?", [$cleanNum]);
+                });
+
+            if ($companyId) {
+                $query->where('company_id', $companyId);
+            }
 
             if ($clientId) {
                 $query->where('id', '!=', $clientId);
             }
 
             $cliente = $query->first();
-            $message = $cliente ? 'El pasaporte ya está registrado para otro extranjero en esta empresa.' : 'El pasaporte está disponible.';
+            $message = $cliente ? 'El pasaporte ya está registrado para otro cliente en esta empresa.' : 'El pasaporte está disponible.';
 
-        } elseif ($tpersona == "N") {
-            // Persona natural - validar DUI (nit)
-            $query = Client::where('nit', $num)
-                ->where('tpersona', 'N')
-                ->where('company_id', $companyId);
-
-            if ($clientId) {
-                $query->where('id', '!=', $clientId);
-            }
-
-            $cliente = $query->first();
-            $message = $cliente ? 'El DUI ya está registrado para otra persona natural en esta empresa.' : 'El DUI está disponible.';
-
-        } elseif ($tpersona == "J") {
+        } elseif ($tpersona === "J") {
             // Persona jurídica - validar NIT
-            $query = Client::where('nit', $num)
-                ->where('tpersona', 'J')
-                ->where('company_id', $companyId);
+            $query = Client::where(function ($q) use ($num, $cleanNum) {
+                    $q->where('nit', $num)
+                      ->orWhere('nit', $cleanNum)
+                      ->orWhereRaw("REPLACE(REPLACE(COALESCE(nit, ''), '-', ''), ' ', '') = ?", [$cleanNum]);
+                });
+
+            if ($companyId) {
+                $query->where('company_id', $companyId);
+            }
 
             if ($clientId) {
                 $query->where('id', '!=', $clientId);
@@ -200,6 +208,25 @@ class ClientController extends Controller
 
             $cliente = $query->first();
             $message = $cliente ? 'El NIT ya está registrado para otra persona jurídica en esta empresa.' : 'El NIT está disponible.';
+
+        } else {
+            // Persona natural / Por defecto - validar DUI (nit)
+            $query = Client::where(function ($q) use ($num, $cleanNum) {
+                    $q->where('nit', $num)
+                      ->orWhere('nit', $cleanNum)
+                      ->orWhereRaw("REPLACE(REPLACE(COALESCE(nit, ''), '-', ''), ' ', '') = ?", [$cleanNum]);
+                });
+
+            if ($companyId) {
+                $query->where('company_id', $companyId);
+            }
+
+            if ($clientId) {
+                $query->where('id', '!=', $clientId);
+            }
+
+            $cliente = $query->first();
+            $message = $cliente ? 'El DUI ya está registrado para otra persona en esta empresa.' : 'El DUI está disponible.';
         }
 
         return response()->json([
@@ -214,7 +241,7 @@ class ClientController extends Controller
      */
     public function validateNcr(Request $request)
     {
-        $ncr = $request->input('ncr');
+        $ncr = trim((string) $request->input('ncr'));
         $companyId = $request->input('company_id');
         $clientId = $request->input('client_id'); // Para edición
 
@@ -226,9 +253,24 @@ class ClientController extends Controller
             ]);
         }
 
-        $query = Client::where('ncr', $ncr)
-            ->where('tpersona', 'J')
-            ->where('company_id', $companyId);
+        if (empty($companyId) || $companyId === '0' || $companyId === 'selectcompany') {
+            $companyId = Company::join('permission_company', 'companies.id', '=', 'permission_company.company_id')
+                ->where('permission_company.user_id', '=', auth()->id())
+                ->pluck('companies.id')
+                ->first() ?: Company::value('id');
+        }
+
+        $cleanNcr = preg_replace('/[^a-zA-Z0-9]/', '', $ncr);
+
+        $query = Client::where(function ($q) use ($ncr, $cleanNcr) {
+                $q->where('ncr', $ncr)
+                  ->orWhere('ncr', $cleanNcr)
+                  ->orWhereRaw("REPLACE(REPLACE(COALESCE(ncr, ''), '-', ''), ' ', '') = ?", [$cleanNcr]);
+            });
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
 
         if ($clientId) {
             $query->where('id', '!=', $clientId);

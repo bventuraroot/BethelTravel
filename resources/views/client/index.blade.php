@@ -75,8 +75,8 @@ $configData = Helper::appClasses();
             <div class="col-md-4">
                 <label class="form-label fw-semibold" for="selectScopeFilter">Mostrar Clientes</label>
                 <select id="selectScopeFilter" class="form-select">
+                    <option value="all" {{ (!isset($scope) || $scope == 'all') ? 'selected' : '' }}>👥 Todos los Clientes</option>
                     <option value="my" {{ (isset($scope) && $scope == 'my') ? 'selected' : '' }}>👤 Solo Mis Clientes</option>
-                    <option value="all" {{ (isset($scope) && $scope == 'all') ? 'selected' : '' }}>👥 Todos los Clientes</option>
                 </select>
             </div>
         </div>
