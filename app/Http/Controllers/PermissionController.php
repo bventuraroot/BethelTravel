@@ -361,26 +361,25 @@ class PermissionController extends Controller
                 continue;
             }
 
-            // Verifica si el usuario tiene acceso a la sección principal (slug) o si es Manuales (acceso universal)
-            if ($menuItem['slug'] === 'manuals.index' || in_array($menuItem['slug'], array_column($result, 'Permiso'))) {
-                // Clona el menú principal
-                $filteredItem = $menuItem;
-
-                // Filtra el submenu si existe
-                if (isset($menuItem['submenu'])) {
-                    $filteredSubmenu = [];
-                    foreach ($menuItem['submenu'] as $submenuItem) {
-                        // Verifica el permiso para cada subelemento del menú
-                        if (in_array($submenuItem['slug'], array_column($result, 'Permiso'))) {
-                            $filteredSubmenu[] = $submenuItem;
-                        }
-                    }
-                    // Solo añade el submenu si hay permisos
-                    if (!empty($filteredSubmenu)) {
-                        $filteredItem['submenu'] = $filteredSubmenu;
+            // Filtrar submenu si existe
+            $filteredSubmenu = [];
+            if (isset($menuItem['submenu'])) {
+                foreach ($menuItem['submenu'] as $submenuItem) {
+                    if (in_array($submenuItem['slug'], array_column($result, 'Permiso'))) {
+                        $filteredSubmenu[] = $submenuItem;
                     }
                 }
+            }
 
+            $hasMainPermission = in_array($menuItem['slug'], array_column($result, 'Permiso'));
+            $hasSubmenuPermission = !empty($filteredSubmenu);
+
+            // Se muestra si es manuals.index, o si tiene permiso principal, o si tiene al menos un subítem permitido
+            if ($menuItem['slug'] === 'manuals.index' || $hasMainPermission || $hasSubmenuPermission) {
+                $filteredItem = $menuItem;
+                if (isset($menuItem['submenu'])) {
+                    $filteredItem['submenu'] = $filteredSubmenu;
+                }
                 $filteredMenu[] = $filteredItem;
             }
         }
