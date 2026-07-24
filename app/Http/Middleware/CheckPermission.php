@@ -57,27 +57,31 @@ class CheckPermission
             return $next($request);
         }
 
-        // 1. Verificación exacta de nombre de permiso (ej. 'client.index', 'client.destroy', 'backups.download')
+        // 1. Verificación exacta de nombre de permiso
         if (in_array($requestedRouteName, $assignedPermissions)) {
             return $next($request);
         }
 
-        // 2. Extrae el prefijo del módulo (ej. 'client' de 'client.index' o 'client.getclientbycompany')
-        $permissionPrefix = explode('.', $requestedRouteName)[0];
+        // 2. Extrae el prefijo del módulo y la acción solicitada
+        $routeParts = explode('.', $requestedRouteName);
+        $permissionPrefix = $routeParts[0];
+        $action = end($routeParts);
 
+        // Comprobar si el usuario tiene permisos sobre el módulo (ej. 'company.index' o 'company.store')
         $userHasModulePermissions = false;
         foreach ($assignedPermissions as $per) {
-            if (explode('.', $per)[0] === $permissionPrefix) {
+            $assignedPrefix = explode('.', $per)[0];
+            if ($assignedPrefix === $permissionPrefix || ($permissionPrefix === 'user' && $assignedPrefix === 'users') || ($permissionPrefix === 'users' && $assignedPrefix === 'user')) {
                 $userHasModulePermissions = true;
                 break;
             }
         }
 
-        // Si la ruta solicitada es una sub-ruta auxiliar que no está registrada como permiso individual en la BD,
-        // pero el usuario tiene al menos un permiso en el módulo, permitimos el acceso.
-        $exactPermissionExistsInDb = \Spatie\Permission\Models\Permission::where('name', $requestedRouteName)->exists();
+        // Lista de acciones que requieren restricción estricta por acción
+        $restrictedActions = ['destroy', 'delete', 'store', 'create', 'update', 'edit', 'clean', 'download'];
 
-        if (!$exactPermissionExistsInDb && $userHasModulePermissions) {
+        // Si el usuario tiene acceso al módulo y la ruta solicitada es de consulta/lectura o auxiliar (ej. 'getCompany', 'getusers', 'index', 'view')
+        if ($userHasModulePermissions && !in_array($action, $restrictedActions)) {
             return $next($request);
         }
 

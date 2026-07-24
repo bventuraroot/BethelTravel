@@ -33,6 +33,10 @@ class ClientController extends Controller
             ->pluck('companies.id')
             ->first();
 
+        if (!$company_user) {
+            $company_user = Company::value('id') ?? 1;
+        }
+
         $company_selected = ($company != "0") ? base64_decode($company) : $company_user;
 
         // Consultar el rol del usuario (admin=1 y contabilidad=2 como en RomaCopies)
