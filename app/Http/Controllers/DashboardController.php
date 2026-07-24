@@ -84,13 +84,18 @@ class DashboardController extends Controller
     /**
      * Base: detalle + venta en rango, no anulada, con DTE relacionado.
      */
-    private function querySalesdetailsBase(Carbon $startDate, Carbon $endDate): Builder
+    private function querySalesdetailsBase(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Builder
     {
         $q = DB::table('salesdetails as sd')
             ->join('sales as s', 's.id', '=', 'sd.sale_id')
             ->leftJoin('products as p', 'p.id', '=', 'sd.product_id')
             ->whereBetween('s.date', [$startDate, $endDate])
             ->where('s.state', '<>', 0);
+
+        if ($sellerId !== null) {
+            $q->where('s.user_id', $sellerId);
+        }
+
         $this->aplicarFiltroVentaConDteRelacionado($q, 's');
 
         return $q;
@@ -105,7 +110,7 @@ class DashboardController extends Controller
      *   comisiones_iva: float
      * }
      */
-    private function totalesVentasYFeeEnRango(Carbon $startDate, Carbon $endDate): array
+    private function totalesVentasYFeeEnRango(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): array
     {
         $grav  = $this->sqlLineaGravada('sd');
         $soloF = $this->sqlEsSoloProductoFee('p');
@@ -113,7 +118,7 @@ class DashboardController extends Controller
         $vTer  = $this->sqlEsVentaATercerosLinea('p');
         $sub   = $this->sqlSubtotalLinea('sd');
 
-        $row = $this->querySalesdetailsBase($startDate, $endDate)->selectRaw('
+        $row = $this->querySalesdetailsBase($startDate, $endDate, $sellerId)->selectRaw('
                 COALESCE(SUM(CASE WHEN ' . $vTer . ' THEN ' . $sub . ' ELSE 0 END), 0) as ventas_operativas,
                 COALESCE(SUM(CASE WHEN ' . $soloF . ' THEN ' . $sub . ' ELSE 0 END), 0)
                 + COALESCE(SUM(CASE WHEN ' . $grav . ' AND ' . $soloF . ' THEN sd.fee ELSE 0 END), 0) as fee_monto,
@@ -140,14 +145,14 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{mes: string, total: float}>
      */
-    private function ventasOperativasPorMesUltimos12(Carbon $now): Collection
+    private function ventasOperativasPorMesUltimos12(Carbon $now, ?int $sellerId = null): Collection
     {
         $vTer  = $this->sqlEsVentaATercerosLinea('p');
         $sub   = $this->sqlSubtotalLinea('sd');
         $start = $now->copy()->subMonths(11)->startOfMonth();
         $end   = $now->copy()->endOfDay();
 
-        $rows = $this->querySalesdetailsBase($start, $end)
+        $rows = $this->querySalesdetailsBase($start, $end, $sellerId)
             ->selectRaw("DATE_FORMAT(s.date, '%Y-%m') as ym, SUM(CASE WHEN {$vTer} THEN {$sub} ELSE 0 END) as total")
             ->groupBy(DB::raw("DATE_FORMAT(s.date, '%Y-%m')"))
             ->get();
@@ -171,12 +176,12 @@ class DashboardController extends Controller
      *
      * @return array<string, float>
      */
-    private function ventasOperativasPorDiaEnRango(Carbon $startDate, Carbon $endDate): array
+    private function ventasOperativasPorDiaEnRango(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): array
     {
         $vTer = $this->sqlEsVentaATercerosLinea('p');
         $sub  = $this->sqlSubtotalLinea('sd');
 
-        $rows = $this->querySalesdetailsBase($startDate, $endDate)
+        $rows = $this->querySalesdetailsBase($startDate, $endDate, $sellerId)
             ->selectRaw('DATE(s.date) as dia, SUM(CASE WHEN ' . $vTer . ' THEN ' . $sub . ' ELSE 0 END) as total')
             ->groupBy(DB::raw('DATE(s.date)'))
             ->get();
@@ -193,7 +198,34 @@ class DashboardController extends Controller
     public function home(Request $request)
     {
         $user = auth()->user();
+        $id_user = $user->id;
         $now = Carbon::now();
+
+        // Consultar rol del usuario (admin=1 y contabilidad=2)
+        $rolQuery = "SELECT a.role_id FROM model_has_roles a WHERE a.model_id = ?";
+        $rolResult = DB::select($rolQuery, [$id_user]);
+        $isAdmin = !empty($rolResult) && ($rolResult[0]->role_id == 1 || $rolResult[0]->role_id == 2);
+
+        // Definir el alcance del dashboard: 'my' (mis ventas), 'all' (general) o 'seller' (vendedor específico)
+        $salesScope = $request->input('sales_scope');
+        if (!$salesScope) {
+            $salesScope = $isAdmin ? 'all' : 'my';
+        }
+
+        $sellerIdInput = $request->input('seller_id');
+        if ($salesScope === 'my') {
+            $sellerId = (int) $id_user;
+        } elseif ($salesScope === 'seller' && !empty($sellerIdInput)) {
+            $sellerId = (int) $sellerIdInput;
+        } else {
+            $sellerId = null; // 'all' -> general
+        }
+
+        // Lista de vendedores disponibles para el filtro (para administradores / supervisores)
+        $vendedores = DB::table('users')
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
 
         // Procesar filtros de fecha (por defecto: mes en curso)
         $filterType = $request->input('filter_type', 'month'); // all, day, month, year, custom
@@ -252,7 +284,6 @@ class DashboardController extends Controller
                     $startDate = Carbon::parse($dateFrom)->startOfDay();
                     $endDate = Carbon::parse($dateTo)->endOfDay();
                 } else {
-                    // Si no hay fechas personalizadas, usar el último año
                     $startDate = $now->copy()->subYear()->startOfDay();
                     $endDate = $now->copy()->endOfDay();
                 }
@@ -263,24 +294,33 @@ class DashboardController extends Controller
                 break;
         }
 
-        // Contadores generales (sin filtro)
-        $tclientes = Client::count();
+        // Contadores generales filtrados por vendedor
+        $tclientesQuery = Client::query();
+        if ($sellerId !== null) {
+            $tclientesQuery->where('user_id', $sellerId);
+        }
+        $tclientes = $tclientesQuery->count();
+
         $tproviders = Provider::count();
         $tproducts = Product::count();
-        $tsales = Sale::query()
+
+        $tsalesQuery = Sale::query()
             ->where('state', '<>', 0)
             ->whereExists(function ($sub) {
                 $sub->selectRaw('1')
                     ->from('dte')
                     ->whereColumn('dte.sale_id', 'sales.id');
-            })
-            ->count();
+            });
+        if ($sellerId !== null) {
+            $tsalesQuery->where('sales.user_id', $sellerId);
+        }
+        $tsales = $tsalesQuery->count();
 
         $startOfMonth = $now->copy()->startOfMonth();
         $startOfWeek = $now->copy()->startOfWeek();
 
-        // Ventas a terceros | FEE (admin+CXS) | Comisiones (cualquier producto con «comision» en nombre)
-        $totalesPeriodo = $this->totalesVentasYFeeEnRango($startDate, $endDate);
+        // Ventas a terceros | FEE | Comisiones filtradas por vendedor
+        $totalesPeriodo = $this->totalesVentasYFeeEnRango($startDate, $endDate, $sellerId);
         $totalVentas        = $totalesPeriodo['ventas_operativas'];
         $totalFees          = $totalesPeriodo['fee_monto'];
         $totalFeesIva       = $totalesPeriodo['fee_iva'];
@@ -288,25 +328,27 @@ class DashboardController extends Controller
         $totalComisionesIva = $totalesPeriodo['comisiones_iva'];
 
         $inicioMes = $startDate->greaterThan($startOfMonth) ? $startDate : $startOfMonth;
-        $totalVentasMes = $this->totalesVentasYFeeEnRango($inicioMes, $endDate)['ventas_operativas'];
+        $totalVentasMes = $this->totalesVentasYFeeEnRango($inicioMes, $endDate, $sellerId)['ventas_operativas'];
 
         $inicioSemana = $startDate->greaterThan($startOfWeek) ? $startDate : $startOfWeek;
-        $totalVentasSemana = $this->totalesVentasYFeeEnRango($inicioSemana, $endDate)['ventas_operativas'];
+        $totalVentasSemana = $this->totalesVentasYFeeEnRango($inicioSemana, $endDate, $sellerId)['ventas_operativas'];
 
         $ventasMismoRangoAnioAnterior = $this->totalesVentasYFeeEnRango(
             $startDate->copy()->subYear(),
-            $endDate->copy()->subYear()
+            $endDate->copy()->subYear(),
+            $sellerId
         )['ventas_operativas'];
         $crecimientoVentas = 0.0;
         if ($ventasMismoRangoAnioAnterior > 0) {
             $crecimientoVentas = round((($totalVentas - $ventasMismoRangoAnioAnterior) / $ventasMismoRangoAnioAnterior) * 100, 2);
         }
 
-        // Series por mes / día: una consulta agrupada cada una (antes: 12 + 30 + 7 llamadas a totales)
-        $ventasPorMes = $this->ventasOperativasPorMesUltimos12($now);
+        // Series por mes / día
+        $ventasPorMes = $this->ventasOperativasPorMesUltimos12($now, $sellerId);
         $mapDia30 = $this->ventasOperativasPorDiaEnRango(
             $now->copy()->subDays(29)->startOfDay(),
-            $now->copy()->endOfDay()
+            $now->copy()->endOfDay(),
+            $sellerId
         );
         $ventasPorDia30 = collect(range(0, 29))
             ->map(function ($i) use ($now, $mapDia30) {
@@ -327,9 +369,9 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top productos más vendidos (solo ventas a terceros: sin FEE ni ingreso empresa)
+        // Top productos más vendidos
         $vTerProd = $this->sqlEsVentaATercerosLinea('products');
-        $productosMasVendidos = Salesdetail::query()
+        $prodQuery = Salesdetail::query()
             ->select('products.id', 'products.name', DB::raw('SUM(salesdetails.amountp) as cantidad_vendida'))
             ->join('sales', 'sales.id', '=', 'salesdetails.sale_id')
             ->join('products', 'products.id', '=', 'salesdetails.product_id')
@@ -340,13 +382,17 @@ class DashboardController extends Controller
                 $sub->selectRaw('1')
                     ->from('dte')
                     ->whereColumn('dte.sale_id', 'sales.id');
-            })
+            });
+        if ($sellerId !== null) {
+            $prodQuery->where('sales.user_id', $sellerId);
+        }
+        $productosMasVendidos = $prodQuery
             ->groupBy('products.id', 'products.name')
             ->orderByDesc(DB::raw('SUM(salesdetails.amountp)'))
             ->limit(5)
             ->get();
 
-        // Ventas por proveedor (línea del detalle)
+        // Ventas por proveedor
         $ventasPorProveedor = $this->ventasAgrupadasPorDetalle(
             $startDate,
             $endDate,
@@ -359,13 +405,14 @@ class DashboardController extends Controller
                 $p = Provider::find($pid);
 
                 return $p ? Str::limit($p->razonsocial, 42) : 'Proveedor #' . $pid;
-            }
+            },
+            $sellerId
         );
 
-        // Ventas por destino (id → tabla aeropuertos)
-        $ventasPorDestino = $this->ventasPorDestinoConAeropuerto($startDate, $endDate);
+        // Ventas por destino
+        $ventasPorDestino = $this->ventasPorDestinoConAeropuerto($startDate, $endDate, $sellerId);
 
-        // Ventas por ruta (trayecto / códigos; útil cuando se registran segmentos o aeropuertos en ruta)
+        // Ventas por ruta
         $ventasPorRuta = $this->ventasAgrupadasPorDetalle(
             $startDate,
             $endDate,
@@ -374,19 +421,20 @@ class DashboardController extends Controller
                 $s = is_string($raw) ? trim($raw) : '';
 
                 return $s !== '' ? Str::limit($s, 48) : 'Sin ruta';
-            }
+            },
+            $sellerId
         );
 
-        // Ventas por aerolínea (id → tabla aerolineas)
-        $ventasPorAerolinea = $this->ventasPorAerolineaConCatalogo($startDate, $endDate);
+        // Ventas por aerolínea
+        $ventasPorAerolinea = $this->ventasPorAerolineaConCatalogo($startDate, $endDate, $sellerId);
 
-        // FEE + Comisiones: desglose por destino / aerolínea
-        $feePorDestino          = $this->feePorDestinoConAeropuerto($startDate, $endDate);
-        $feePorAerolinea        = $this->feePorAerolineaConCatalogo($startDate, $endDate);
-        $comisionesPorDestino   = $this->comisionesPorDestinoConAeropuerto($startDate, $endDate);
-        $comisionesPorAerolinea = $this->comisionesPorAerolineaConCatalogo($startDate, $endDate);
+        // FEE + Comisiones por destino / aerolínea
+        $feePorDestino          = $this->feePorDestinoConAeropuerto($startDate, $endDate, $sellerId);
+        $feePorAerolinea        = $this->feePorAerolineaConCatalogo($startDate, $endDate, $sellerId);
+        $comisionesPorDestino   = $this->comisionesPorDestinoConAeropuerto($startDate, $endDate, $sellerId);
+        $comisionesPorAerolinea = $this->comisionesPorAerolineaConCatalogo($startDate, $endDate, $sellerId);
 
-        // Ventas por canal (si se usa en el detalle)
+        // Ventas por canal
         $ventasPorCanal = $this->ventasAgrupadasPorDetalle(
             $startDate,
             $endDate,
@@ -395,7 +443,8 @@ class DashboardController extends Controller
                 $s = is_string($raw) ? trim($raw) : '';
 
                 return $s !== '' ? Str::limit($s, 36) : 'Sin canal';
-            }
+            },
+            $sellerId
         );
 
         // Top clientes por ventas a terceros
@@ -407,6 +456,9 @@ class DashboardController extends Controller
             ->whereBetween('s.date', [$startDate, $endDate])
             ->where('s.state', '<>', 0)
             ->whereNotNull('s.client_id');
+        if ($sellerId !== null) {
+            $qCli->where('s.user_id', $sellerId);
+        }
         $this->aplicarFiltroVentaConDteRelacionado($qCli, 's');
 
         $ventasPorCliente = $qCli
@@ -443,12 +495,9 @@ class DashboardController extends Controller
             ];
         })->values();
 
-        // Estructuras esperadas por la vista/JS
-        $ventasUltimoAno = $ventasPorMes; // alias esperado por JS
-        $ventasUltimoMes = $ventasPorDia30; // alias esperado por JS
-        $ventasUltimaSemana = $ventasPorDia7; // alias esperado por JS
-
-        // También se hace alias a ventasPorMes y ventasPorDia por compatibilidad
+        $ventasUltimoAno = $ventasPorMes;
+        $ventasUltimoMes = $ventasPorDia30;
+        $ventasUltimaSemana = $ventasPorDia7;
         $ventasPorDia = $ventasPorDia7;
 
         return view('reports.dashboard')
@@ -490,7 +539,11 @@ class DashboardController extends Controller
             ->with('dateFrom', $dateFrom)
             ->with('dateTo', $dateTo)
             ->with('startDate', $startDate->format('d/m/Y'))
-            ->with('endDate', $endDate->format('d/m/Y'));
+            ->with('endDate', $endDate->format('d/m/Y'))
+            ->with('salesScope', $salesScope)
+            ->with('sellerId', $sellerId)
+            ->with('vendedores', $vendedores)
+            ->with('isAdmin', $isAdmin);
     }
 
     /**
@@ -498,7 +551,12 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function ventasPorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate): Collection
+    /**
+     * Ventas agrupadas por destino: salesdetails.destino = aeropuertos.id_aeropuerto.
+     *
+     * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
+     */
+    private function ventasPorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $destinoExpr = 'NULLIF(NULLIF(TRIM(sd.destino), ""), "0")';
 
@@ -516,7 +574,8 @@ class DashboardController extends Controller
             ['iata' => 'ap_iata', 'ciudad' => 'ap_ciudad', 'pais' => 'ap_pais'],
             $lineAmountExpr,
             'Aeropuerto',
-            'Destino'
+            'Destino',
+            $sellerId
         );
     }
 
@@ -549,7 +608,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function feePorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate): Collection
+    private function feePorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $destinoExpr    = 'NULLIF(NULLIF(TRIM(sd.destino), ""), "0")';
         $lineAmountExpr = $this->sqlMontoSoloFeePorLinea();
@@ -564,7 +623,8 @@ class DashboardController extends Controller
             ['iata' => 'ap_iata', 'ciudad' => 'ap_ciudad', 'pais' => 'ap_pais'],
             $lineAmountExpr,
             'Aeropuerto',
-            'Destino'
+            'Destino',
+            $sellerId
         );
     }
 
@@ -573,7 +633,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function comisionesPorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate): Collection
+    private function comisionesPorDestinoConAeropuerto(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $destinoExpr    = 'NULLIF(NULLIF(TRIM(sd.destino), ""), "0")';
         $lineAmountExpr = $this->sqlMontoComisionesPorLinea();
@@ -588,7 +648,8 @@ class DashboardController extends Controller
             ['iata' => 'ap_iata', 'ciudad' => 'ap_ciudad', 'pais' => 'ap_pais'],
             $lineAmountExpr,
             'Aeropuerto',
-            'Destino'
+            'Destino',
+            $sellerId
         );
     }
 
@@ -606,13 +667,19 @@ class DashboardController extends Controller
         array $joinSelectMap,
         string $lineAmountExpr,
         string $entityLabelWhenResolved,
-        string $fallbackPrefix
+        string $fallbackPrefix,
+        ?int $sellerId = null
     ): Collection {
         $porLinea = DB::table('salesdetails as sd')
             ->join('sales as s', 's.id', '=', 'sd.sale_id')
             ->leftJoin('products as p', 'p.id', '=', 'sd.product_id')
             ->whereBetween('s.date', [$startDate, $endDate])
             ->where('s.state', '<>', 0);
+
+        if ($sellerId !== null) {
+            $porLinea->where('s.user_id', $sellerId);
+        }
+
         $this->aplicarFiltroVentaConDteRelacionado($porLinea, 's');
 
         $porLinea->selectRaw($keyExpr . ' as ' . $keyAlias)
@@ -673,7 +740,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function ventasPorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate): Collection
+    private function ventasPorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $lineaExpr = 'NULLIF(NULLIF(TRIM(sd.linea), ""), "0")';
         $vTer = $this->sqlEsVentaATercerosLinea('p');
@@ -690,7 +757,8 @@ class DashboardController extends Controller
             ['iata' => 'al_iata', 'nombre' => 'al_nombre'],
             $lineAmountExpr,
             'Aerolínea',
-            'Aerolínea'
+            'Aerolínea',
+            $sellerId
         );
     }
 
@@ -699,7 +767,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function comisionesPorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate): Collection
+    private function comisionesPorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $lineaExpr      = 'NULLIF(NULLIF(TRIM(sd.linea), ""), "0")';
         $lineAmountExpr = $this->sqlMontoComisionesPorLinea();
@@ -714,7 +782,8 @@ class DashboardController extends Controller
             ['iata' => 'al_iata', 'nombre' => 'al_nombre'],
             $lineAmountExpr,
             'Aerolínea',
-            'Aerolínea'
+            'Aerolínea',
+            $sellerId
         );
     }
 
@@ -723,7 +792,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Support\Collection<int, array{label: string, total: float}>
      */
-    private function feePorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate): Collection
+    private function feePorAerolineaConCatalogo(Carbon $startDate, Carbon $endDate, ?int $sellerId = null): Collection
     {
         $lineaExpr      = 'NULLIF(NULLIF(TRIM(sd.linea), ""), "0")';
         $lineAmountExpr = $this->sqlMontoSoloFeePorLinea();
@@ -738,7 +807,8 @@ class DashboardController extends Controller
             ['iata' => 'al_iata', 'nombre' => 'al_nombre'],
             $lineAmountExpr,
             'Aerolínea',
-            'Aerolínea'
+            'Aerolínea',
+            $sellerId
         );
     }
 
@@ -752,7 +822,8 @@ class DashboardController extends Controller
         Carbon $startDate,
         Carbon $endDate,
         string $groupColumn,
-        callable $labelResolver
+        callable $labelResolver,
+        ?int $sellerId = null
     ): Collection {
         $vTer = $this->sqlEsVentaATercerosLinea('p');
         $sub = '(salesdetails.pricesale + salesdetails.nosujeta + salesdetails.exempt)';
@@ -762,6 +833,11 @@ class DashboardController extends Controller
             ->leftJoin('products as p', 'p.id', '=', 'salesdetails.product_id')
             ->whereBetween('sales.date', [$startDate, $endDate])
             ->where('sales.state', '<>', 0);
+
+        if ($sellerId !== null) {
+            $qDet->where('sales.user_id', $sellerId);
+        }
+
         $this->aplicarFiltroVentaConDteRelacionado($qDet, 'sales');
 
         $rows = $qDet

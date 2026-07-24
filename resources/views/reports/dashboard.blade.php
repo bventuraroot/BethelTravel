@@ -33,6 +33,13 @@
 </script>
 <script src="{{asset('assets/js/dashboards-crm.js')}}"></script>
 <script>
+  function toggleSellerSelect(val) {
+    const el = document.getElementById('seller_container');
+    if (el) {
+      el.style.display = (val === 'seller') ? 'block' : 'none';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     const sel = document.getElementById('filter_type');
     if (!sel) return;
@@ -192,6 +199,22 @@
               <i class="ti ti-calendar-event"></i>
               {{ $startDate }} → {{ $endDate }}
             </span>
+            @if(isset($salesScope) && $salesScope == 'my')
+              <span class="db-badge" style="background:rgba(105,108,255,.3);color:#fff;">
+                <i class="ti ti-user"></i> Mis Ventas ({{ auth()->user()->name }})
+              </span>
+            @elseif(isset($salesScope) && $salesScope == 'seller')
+              @php
+                $vendObj = isset($vendedores) ? $vendedores->firstWhere('id', $sellerId) : null;
+              @endphp
+              <span class="db-badge" style="background:rgba(0,207,232,.3);color:#fff;">
+                <i class="ti ti-user-check"></i> Vendedor: {{ $vendObj->name ?? 'ID #'.$sellerId }}
+              </span>
+            @else
+              <span class="db-badge" style="background:rgba(255,255,255,.15);color:#fff;">
+                <i class="ti ti-users"></i> Ventas Generales (Todas)
+              </span>
+            @endif
             @if($filterType != 'all')
             <span class="db-badge" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);">
               <i class="ti ti-filter"></i> Filtro activo
@@ -283,6 +306,29 @@
     <div class="card db-filter mb-0">
       <div class="card-body py-2 px-3">
         <form method="GET" action="{{ url('/dashboard') }}" class="row g-2 align-items-end">
+          <div class="col-auto">
+            <label class="form-label mb-1 db-label">Alcance Ventas</label>
+            <select name="sales_scope" id="sales_scope" class="form-select form-select-sm" style="min-width:165px;" onchange="toggleSellerSelect(this.value)">
+              <option value="my" {{ (isset($salesScope) && $salesScope == 'my') ? 'selected' : '' }}>👤 Mis Ventas</option>
+              <option value="all" {{ (isset($salesScope) && $salesScope == 'all') ? 'selected' : '' }}>👥 Ventas Generales</option>
+              @if(isset($isAdmin) && $isAdmin)
+                <option value="seller" {{ (isset($salesScope) && $salesScope == 'seller') ? 'selected' : '' }}>👤 Vendedor Específico</option>
+              @endif
+            </select>
+          </div>
+          @if(isset($isAdmin) && $isAdmin)
+          <div class="col-auto" id="seller_container" style="display:{{ (isset($salesScope) && $salesScope == 'seller') ? 'block' : 'none' }};">
+            <label class="form-label mb-1 db-label">Vendedor</label>
+            <select name="seller_id" id="seller_id" class="form-select form-select-sm" style="min-width:170px;">
+              <option value="">Seleccionar Vendedor</option>
+              @foreach($vendedores as $v)
+                <option value="{{ $v->id }}" {{ (isset($sellerId) && $sellerId == $v->id) ? 'selected' : '' }}>
+                  {{ $v->name }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+          @endif
           <div class="col-auto">
             <label class="form-label mb-1 db-label">Período</label>
             <select name="filter_type" id="filter_type" class="form-select form-select-sm" style="min-width:130px;">
