@@ -57,30 +57,44 @@ class CheckPermission
             return $next($request);
         }
 
-        // 1. Verificación exacta de nombre de permiso
+        // 1. Verificación exacta de nombre de permiso asignado al rol
         if (in_array($requestedRouteName, $assignedPermissions)) {
             return $next($request);
         }
 
-        // 2. Extrae el prefijo del módulo y la acción solicitada
+        // 2. Permitir rutas auxiliares y endpoints de consulta/lectura de datos (selects, combos, APIs de catálogos)
         $routeParts = explode('.', $requestedRouteName);
-        $permissionPrefix = $routeParts[0];
         $action = end($routeParts);
 
-        // Comprobar si el usuario tiene permisos sobre el módulo (ej. 'company.index' o 'company.store')
+        if (
+            str_starts_with(strtolower($requestedRouteName), 'get') ||
+            str_starts_with(strtolower($action), 'get') ||
+            str_starts_with(strtolower($action), 'val') ||
+            str_starts_with(strtolower($action), 'search') ||
+            str_starts_with(strtolower($requestedRouteName), 'api.')
+        ) {
+            return $next($request);
+        }
+
+        // 3. Comprobar si el usuario tiene permisos sobre el módulo principal (ej. 'company.index')
+        $permissionPrefix = $routeParts[0];
         $userHasModulePermissions = false;
         foreach ($assignedPermissions as $per) {
             $assignedPrefix = explode('.', $per)[0];
-            if ($assignedPrefix === $permissionPrefix || ($permissionPrefix === 'user' && $assignedPrefix === 'users') || ($permissionPrefix === 'users' && $assignedPrefix === 'user')) {
+            if (
+                $assignedPrefix === $permissionPrefix ||
+                ($permissionPrefix === 'user' && $assignedPrefix === 'users') ||
+                ($permissionPrefix === 'users' && $assignedPrefix === 'user')
+            ) {
                 $userHasModulePermissions = true;
                 break;
             }
         }
 
-        // Lista de acciones que requieren restricción estricta por acción
+        // Acciones que requieren restricción estricta individual
         $restrictedActions = ['destroy', 'delete', 'store', 'create', 'update', 'edit', 'clean', 'download'];
 
-        // Si el usuario tiene acceso al módulo y la ruta solicitada es de consulta/lectura o auxiliar (ej. 'getCompany', 'getusers', 'index', 'view')
+        // Si el usuario tiene permiso en el módulo y no es una acción restringida
         if ($userHasModulePermissions && !in_array($action, $restrictedActions)) {
             return $next($request);
         }
