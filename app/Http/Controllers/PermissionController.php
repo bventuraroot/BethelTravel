@@ -361,8 +361,8 @@ class PermissionController extends Controller
                 continue;
             }
 
-            // Verifica si el usuario tiene acceso a la sección principal (slug)
-            if (in_array($menuItem['slug'], array_column($result, 'Permiso'))) {
+            // Verifica si el usuario tiene acceso a la sección principal (slug) o si es Manuales (acceso universal)
+            if ($menuItem['slug'] === 'manuals.index' || in_array($menuItem['slug'], array_column($result, 'Permiso'))) {
                 // Clona el menú principal
                 $filteredItem = $menuItem;
 
