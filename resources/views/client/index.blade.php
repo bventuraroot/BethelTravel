@@ -637,3 +637,15 @@ $configData = Helper::appClasses();
 @include('client.client-details-modal')
 
 @endsection
+
+@section('page-script')
+<script>
+function changeClientScope(scopeValue) {
+    var selectCompany = document.getElementById('selectcompany');
+    var companySelected = document.getElementById('companyselected');
+    var company = (selectCompany && selectCompany.value) ? selectCompany.value : (companySelected ? companySelected.value : '0');
+    var companyParam = (company && company !== '0' && company !== 'selectcompany') ? btoa(company) : '0';
+    window.location.href = "/client/index/" + companyParam + "?scope=" + scopeValue;
+}
+</script>
+@endsection

@@ -2,7 +2,17 @@
  * Page User List
  */
 
-'use strict';
+// Global helper functions for client filters
+window.indexclient = function(company) {
+  let scope = $('#selectScopeFilter').val() || 'my';
+  window.location.href = "/client/index/" + btoa(company) + "?scope=" + scope;
+};
+
+window.changeClientScope = function(scopeValue) {
+  let company = $('#selectcompany').val() || $('#companyselected').val() || '0';
+  let companyParam = (company && company !== '0' && company !== 'selectcompany') ? btoa(company) : '0';
+  window.location.href = "/client/index/" + companyParam + "?scope=" + scopeValue;
+};
 
 // Datatable (jquery)
 $(function () {
