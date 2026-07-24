@@ -48,6 +48,23 @@ $configData = Helper::appClasses();
 @section('title', 'Clientes')
 
 @section('content')
+<script>
+  function handleClientScopeChange(scopeValue) {
+    var selectCompany = document.getElementById('selectcompany');
+    var companySelected = document.getElementById('companyselected');
+    var company = (selectCompany && selectCompany.value) ? selectCompany.value : (companySelected ? companySelected.value : '0');
+    var companyParam = (company && company !== '0' && company !== 'selectcompany') ? btoa(company) : '0';
+    window.location.href = "/client/index/" + companyParam + "?scope=" + scopeValue;
+  }
+
+  window.changeClientScope = handleClientScopeChange;
+
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'selectScopeFilter') {
+      handleClientScopeChange(e.target.value);
+    }
+  });
+</script>
 <div class="card">
     <div class="card-header border-bottom">
         <div class="gap-3 pb-2 d-flex justify-content-between align-items-center row gap-md-0">
@@ -57,7 +74,7 @@ $configData = Helper::appClasses();
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-semibold" for="selectScopeFilter">Mostrar Clientes</label>
-                <select id="selectScopeFilter" class="form-select" onchange="changeClientScope(this.value)">
+                <select id="selectScopeFilter" class="form-select">
                     <option value="my" {{ (isset($scope) && $scope == 'my') ? 'selected' : '' }}>👤 Solo Mis Clientes</option>
                     <option value="all" {{ (isset($scope) && $scope == 'all') ? 'selected' : '' }}>👥 Todos los Clientes</option>
                 </select>
