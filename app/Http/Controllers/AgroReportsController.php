@@ -24,8 +24,13 @@ class AgroReportsController extends Controller
 
     public function salesByClientSearch(Request $request)
     {
-        $Company   = Company::find($request['company']);
         $companies = Company::select('id', 'name')->orderBy('name')->get();
+        $companyId = $request->input('company');
+        if (!$companyId && $companies->isNotEmpty()) {
+            $companyId = $companies->first()->id;
+        }
+
+        $Company = Company::find($companyId);
 
         // ── Consulta principal: agrupada solo por cliente ────────────────────────
         $salesByClient = Sale::join('clients', 'sales.client_id', '=', 'clients.id')
@@ -49,7 +54,7 @@ class AgroReportsController extends Controller
             ->selectRaw('AVG(CASE WHEN sales.state = 1 THEN sales.totalamount ELSE NULL END) as average_amount')
             ->selectRaw('MIN(CASE WHEN sales.state = 1 THEN sales.date ELSE NULL END) as first_sale_date')
             ->selectRaw('MAX(CASE WHEN sales.state = 1 THEN sales.date ELSE NULL END) as last_sale_date')
-            ->where('sales.company_id', $request['company'])
+            ->where('sales.company_id', $companyId)
             ->when($request->filled('date_range'), function ($query) use ($request) {
                 $dateRange = explode(' to ', $request['date_range']);
                 if (count($dateRange) === 2) {

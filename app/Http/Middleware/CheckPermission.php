@@ -62,29 +62,37 @@ class CheckPermission
             return $next($request);
         }
 
-        // 2. Permitir rutas auxiliares y endpoints de consulta/lectura de datos (selects, combos, APIs de catálogos)
+        // 2. Permitir rutas auxiliares, consultas, búsquedas, reportes y endpoints de datos (search, report, filter, get, etc.)
+        $reqLower = strtolower($requestedRouteName);
         $routeParts = explode('.', $requestedRouteName);
-        $action = end($routeParts);
+        $actionLower = strtolower(end($routeParts));
 
         if (
-            str_starts_with(strtolower($requestedRouteName), 'get') ||
-            str_starts_with(strtolower($action), 'get') ||
-            str_starts_with(strtolower($action), 'val') ||
-            str_starts_with(strtolower($action), 'search') ||
-            str_starts_with(strtolower($requestedRouteName), 'api.')
+            str_contains($reqLower, 'search') ||
+            str_contains($reqLower, 'report') ||
+            str_contains($reqLower, 'filter') ||
+            str_contains($reqLower, 'export') ||
+            str_contains($reqLower, 'print') ||
+            str_contains($reqLower, 'get') ||
+            str_contains($reqLower, 'val') ||
+            str_contains($reqLower, 'list') ||
+            str_contains($reqLower, 'combo') ||
+            str_contains($reqLower, 'select') ||
+            str_starts_with($reqLower, 'api.')
         ) {
             return $next($request);
         }
 
-        // 3. Comprobar si el usuario tiene permisos sobre el módulo principal (ej. 'client.index')
-        $permissionPrefix = strtolower($routeParts[0]);
-        $normRequestedPrefix = rtrim($permissionPrefix, 's');
+        // 3. Comprobar si el usuario tiene permisos sobre el módulo principal (ej. 'client.index', 'sales.index', 'agro-report')
+        $requestedTokens = array_filter(preg_split('/[.-]/', $reqLower));
+        $firstRequestedToken = rtrim(reset($requestedTokens), 's');
 
         foreach ($assignedPermissions as $per) {
-            $assignedPrefix = strtolower(explode('.', $per)[0]);
-            $normAssignedPrefix = rtrim($assignedPrefix, 's');
+            $perLower = strtolower($per);
+            $assignedTokens = array_filter(preg_split('/[.-]/', $perLower));
+            $firstAssignedToken = rtrim(reset($assignedTokens), 's');
 
-            if ($assignedPrefix === $permissionPrefix || $normAssignedPrefix === $normRequestedPrefix) {
+            if ($firstAssignedToken === $firstRequestedToken || in_array($firstAssignedToken, $requestedTokens)) {
                 return $next($request);
             }
         }

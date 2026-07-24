@@ -462,7 +462,7 @@ Route::middleware('auth')->group(function () {
     // Rutas del Reporte de Clientes (migrado de RomaCopies)
     Route::group(['prefix' => 'agro-report', 'as' => 'agro-report.'], function(){
         Route::get('sales-by-client', [App\Http\Controllers\AgroReportsController::class, 'salesByClient'])->name('sales-by-client');
-        Route::post('sales-by-client-search', [App\Http\Controllers\AgroReportsController::class, 'salesByClientSearch'])->name('sales-by-client-search');
+        Route::match(['get', 'post'], 'sales-by-client-search', [App\Http\Controllers\AgroReportsController::class, 'salesByClientSearch'])->name('sales-by-client-search');
         Route::get('sales-by-client-pdf', [App\Http\Controllers\AgroReportsController::class, 'salesByClientPdf'])->name('sales-by-client-pdf');
         Route::get('sales-by-client-details-pdf', [App\Http\Controllers\AgroReportsController::class, 'salesByClientDetailsPdf'])->name('sales-by-client-details-pdf');
     });
