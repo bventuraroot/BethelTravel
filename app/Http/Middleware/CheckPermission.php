@@ -68,6 +68,7 @@ class CheckPermission
         $actionLower = strtolower(end($routeParts));
 
         if (
+            str_contains($reqLower, 'manual') ||
             str_contains($reqLower, 'search') ||
             str_contains($reqLower, 'report') ||
             str_contains($reqLower, 'filter') ||
