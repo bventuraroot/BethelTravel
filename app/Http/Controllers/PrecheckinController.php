@@ -50,6 +50,28 @@ class PrecheckinController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
+        $id_user = auth()->id();
+        $rolQuery = "SELECT a.role_id, b.name AS role_name FROM model_has_roles a INNER JOIN roles b ON a.role_id = b.id WHERE a.model_id = ?";
+        $rolResult = DB::select($rolQuery, [$id_user]);
+
+        $canViewAll = false;
+        if (!empty($rolResult)) {
+            foreach ($rolResult as $r) {
+                $roleId = (int)$r->role_id;
+                $roleName = strtolower($r->role_name);
+                if (
+                    $roleId === 1 || $roleId === 2 ||
+                    str_contains($roleName, 'admin') ||
+                    str_contains($roleName, 'contabil') ||
+                    str_contains($roleName, 'venta') ||
+                    str_contains($roleName, 'vended')
+                ) {
+                    $canViewAll = true;
+                    break;
+                }
+            }
+        }
+
         $query = DB::table('salesdetails as sd')
             ->join('sales as s', 's.id', '=', 'sd.sale_id')
             ->join('clients as c', 'c.id', '=', 's.client_id')
@@ -58,8 +80,13 @@ class PrecheckinController extends Controller
             ->where('s.company_id', $companyId)
             ->where('s.state', '<>', 0) // No anuladas
             ->whereNotNull('sd.reserva')
-            ->where('sd.reserva', '!=', '')
-            ->select(
+            ->where('sd.reserva', '!=', '');
+
+        if (!$canViewAll) {
+            $query->where('s.user_id', $id_user);
+        }
+
+        $query->select(
                 'sd.id',
                 'sd.reserva',
                 'sd.ruta',
