@@ -50,9 +50,18 @@ $configData = Helper::appClasses();
 @section('content')
 <div class="card">
     <div class="card-header border-bottom">
-        <h5 class="mb-3 card-title">Empresa</h5>
         <div class="gap-3 pb-2 d-flex justify-content-between align-items-center row gap-md-0">
-            <div class="col-md-4 companies"></div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Empresa</label>
+                <div class="companies"></div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" for="selectScopeFilter">Mostrar Clientes</label>
+                <select id="selectScopeFilter" class="form-select" onchange="changeClientScope(this.value)">
+                    <option value="my" {{ (isset($scope) && $scope == 'my') ? 'selected' : '' }}>👤 Solo Mis Clientes</option>
+                    <option value="all" {{ (isset($scope) && $scope == 'all') ? 'selected' : '' }}>👥 Todos los Clientes</option>
+                </select>
+            </div>
         </div>
     </div>
     <div class="card-datatable table-responsive">
@@ -61,6 +70,7 @@ $configData = Helper::appClasses();
                 <tr>
                     <th>Acciones</th>
                     <th>Nombre</th>
+                    <th>Creado Por</th>
                     <th>Tipo</th>
                     <th>Contribuyente</th>
                     <th>Extranjero</th>
@@ -113,6 +123,13 @@ $configData = Helper::appClasses();
                     @break
                     @default
                     @endswitch
+                    <td>
+                        @if(!empty($client->creador_nombre))
+                            <span class="badge bg-label-info"><i class="ti ti-user ti-xs me-1"></i>{{ $client->creador_nombre }}</span>
+                        @else
+                            <span class="badge bg-label-secondary">Sistema</span>
+                        @endif
+                    </td>
                     <td>
                         @switch( Str::lower($client->tpersona) )
                         @case('j')

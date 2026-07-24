@@ -22,59 +22,65 @@ class ClientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($company = "0")
-{
-    $id_user = auth()->user()->id;
+    public function index(Request $request, $company = "0")
+    {
+        $id_user = auth()->user()->id;
+        $scope = $request->get('scope', 'my'); // 'my' o 'all'
 
-    // Obtener la empresa a la que pertenece el usuario
-    $company_user = Company::join('permission_company', 'companies.id', '=', 'permission_company.company_id')
-        ->where('permission_company.user_id', '=', $id_user)
-        ->pluck('companies.id')
-        ->first();
+        // Obtener la empresa a la que pertenece el usuario
+        $company_user = Company::join('permission_company', 'companies.id', '=', 'permission_company.company_id')
+            ->where('permission_company.user_id', '=', $id_user)
+            ->pluck('companies.id')
+            ->first();
 
-    $company_selected = ($company != "0") ? base64_decode($company) : $company_user;
+        $company_selected = ($company != "0") ? base64_decode($company) : $company_user;
 
-    // Consultar el rol del usuario (admin=1 y contabilidad=2 como en RomaCopies)
-    $rolQuery = "SELECT a.role_id FROM model_has_roles a WHERE a.model_id = ?";
-    $rolResult = DB::select($rolQuery, [$id_user]);
-    $isAdmin = !empty($rolResult) && ($rolResult[0]->role_id == 1 || $rolResult[0]->role_id == 2);
+        // Consultar el rol del usuario (admin=1 y contabilidad=2 como en RomaCopies)
+        $rolQuery = "SELECT a.role_id FROM model_has_roles a WHERE a.model_id = ?";
+        $rolResult = DB::select($rolQuery, [$id_user]);
+        $isAdmin = !empty($rolResult) && ($rolResult[0]->role_id == 1 || $rolResult[0]->role_id == 2);
 
-    // Construcción de la consulta
-    $clientsQuery = Client::join('addresses', 'clients.address_id', '=', 'addresses.id')
-        ->join('countries', 'addresses.country_id', '=', 'countries.id')
-        ->leftJoin('departments', 'addresses.department_id', '=', 'departments.id')
-        ->leftJoin('municipalities', 'addresses.municipality_id', '=', 'municipalities.id')
-        ->leftJoin('economicactivities', 'clients.economicactivity_id', '=', 'economicactivities.id')
-        ->join('phones', 'clients.phone_id', '=', 'phones.id')
-        ->select(
-            'clients.*',
-            'countries.name as pais',
-            'departments.name as departamento',
-            'municipalities.name as municipioname',
-            'economicactivities.name as econo',
-            'addresses.reference as address',
-            'phones.phone',
-            'phones.phone_fijo',
-            'addresses.country_id as country',
-            'addresses.department_id as departament',
-            'addresses.municipality_id as municipio',
-            'clients.economicactivity_id as acteconomica'
-        )
-        ->where('clients.company_id', $company_selected);
+        // Construcción de la consulta
+        $clientsQuery = Client::join('addresses', 'clients.address_id', '=', 'addresses.id')
+            ->join('countries', 'addresses.country_id', '=', 'countries.id')
+            ->leftJoin('departments', 'addresses.department_id', '=', 'departments.id')
+            ->leftJoin('municipalities', 'addresses.municipality_id', '=', 'municipalities.id')
+            ->leftJoin('economicactivities', 'clients.economicactivity_id', '=', 'economicactivities.id')
+            ->join('phones', 'clients.phone_id', '=', 'phones.id')
+            ->leftJoin('users', 'clients.user_id', '=', 'users.id')
+            ->select(
+                'clients.*',
+                'countries.name as pais',
+                'departments.name as departamento',
+                'municipalities.name as municipioname',
+                'economicactivities.name as econo',
+                'addresses.reference as address',
+                'phones.phone',
+                'phones.phone_fijo',
+                'addresses.country_id as country',
+                'addresses.department_id as departament',
+                'addresses.municipality_id as municipio',
+                'clients.economicactivity_id as acteconomica',
+                'users.name as creador_nombre'
+            )
+            ->where('clients.company_id', $company_selected);
 
-    // Si no es admin, solo muestra los clientes ingresados por él
-    if (!$isAdmin) {
-        $clientsQuery->where('clients.user_id', $id_user);
+        // Si el filtro está en 'my' y el usuario no es admin, se muestran solo los suyos.
+        // Si el filtro está en 'all' o es admin, muestra todos los clientes de la empresa.
+        if ($scope === 'my' && !$isAdmin) {
+            $clientsQuery->where('clients.user_id', $id_user);
+        }
+
+        // Obtener los clientes filtrados
+        $clients = $clientsQuery->get();
+
+        return view('client.index', [
+            "clients" => $clients,
+            "companyselected" => $company_selected,
+            "scope" => $scope,
+            "isAdmin" => $isAdmin
+        ]);
     }
-
-    // Obtener los clientes filtrados
-    $clients = $clientsQuery->get();
-
-    return view('client.index', [
-        "clients" => $clients,
-        "companyselected" => $company_selected
-    ]);
-}
 
 
 

@@ -165,7 +165,7 @@ $(function () {
               text: '<i class="ti ti-printer me-2" ></i>Print',
               className: 'dropdown-item',
               exportOptions: {
-                columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
                 // prevent avatar to be print
                 format: {
                   body: function (inner, coldex, rowdex) {
@@ -387,8 +387,15 @@ $(function () {
     $('.dataTables_filter .form-control').removeClass('form-control-sm');
     $('.dataTables_length .form-select').removeClass('form-select-sm');
   }, 300);
-    //onchange company
-function indexclient(company){
-    window.location.href = "/client/index/"+btoa(company);
-    }
+  //onchange company
+  window.indexclient = function(company) {
+    let scope = $('#selectScopeFilter').val() || 'my';
+    window.location.href = "/client/index/" + btoa(company) + "?scope=" + scope;
+  };
+
+  window.changeClientScope = function(scopeValue) {
+    let company = $('#selectcompany').val() || $('#companyselected').val() || '0';
+    let companyParam = (company && company !== '0' && company !== 'selectcompany') ? btoa(company) : '0';
+    window.location.href = "/client/index/" + companyParam + "?scope=" + scopeValue;
+  };
 });
