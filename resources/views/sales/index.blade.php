@@ -973,6 +973,23 @@
         background-color: #2d3650 !important;
     }
 </style>
+<script>
+  function handleSaleScopeChange(scopeValue) {
+    var selectCompany = document.getElementById('selectcompany');
+    var companySelected = document.getElementById('companyselected');
+    var company = (selectCompany && selectCompany.value) ? selectCompany.value : (companySelected ? companySelected.value : '0');
+    var companyParam = (company && company !== '0' && company !== 'selectcompany') ? btoa(company) : '0';
+    window.location.href = "/sale/index/" + companyParam + "?scope=" + scopeValue;
+  }
+
+  window.changeSaleScope = handleSaleScopeChange;
+
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'selectSalesScopeFilter') {
+      handleSaleScopeChange(e.target.value);
+    }
+  });
+</script>
     <div class="card">
         <div class="card-header border-bottom">
             <h5 class="mb-3 card-title">
@@ -981,7 +998,14 @@
             </h5>
             <div class="gap-3 pb-2 d-flex justify-content-between align-items-center row gap-md-0">
                 <div class="col-md-4 companies"></div>
-                <div class="col-md-8 text-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="selectSalesScopeFilter">Mostrar Ventas</label>
+                    <select id="selectSalesScopeFilter" class="form-select">
+                        <option value="all" {{ (!isset($scope) || $scope == 'all') ? 'selected' : '' }}>👥 Todas las Ventas</option>
+                        <option value="my" {{ (isset($scope) && $scope == 'my') ? 'selected' : '' }}>👤 Solo Mis Ventas</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-end">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#selectDocumentModal">
                         <i class="ti ti-plus me-1"></i>
                         Nueva Venta

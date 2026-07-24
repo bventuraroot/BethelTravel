@@ -156,7 +156,7 @@ Route::group(['prefix' => 'product', 'as' => 'product.'], function(){
     });
 
 Route::group(['prefix' => 'sale', 'as' => 'sale.'], function(){
-        Route::get('index', [SaleController::class, 'index'])->name('index');
+        Route::get('index/{company?}', [SaleController::class, 'index'])->name('index');
         Route::get('create', [SaleController::class, 'create'])->name('create');
         Route::get('getproductid/{id}', [SaleController::class, 'getproductid'])->name('getproductid');
         Route::get('getproductbyid/{id}', [SaleController::class, 'getproductbyid'])->name('getproductbyid');

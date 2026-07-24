@@ -34,9 +34,11 @@ class SaleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request, $company = "0")
     {
         $id_user = auth()->user()->id;
+        $scope = $request->get('scope', 'all'); // 'all' (Todas las ventas) o 'my' (Solo mis ventas)
+
         // Consultar roles del usuario (Admin, Contabilidad, Ventas/Vendedores)
         $rolQuery = "SELECT a.role_id, b.name AS role_name FROM model_has_roles a INNER JOIN roles b ON a.role_id = b.id WHERE a.model_id = ?";
         $rolResult = DB::select($rolQuery, [$id_user]);
@@ -113,14 +115,12 @@ class SaleController extends Controller
                 END AS calculated_total'),
                 DB::raw('(SELECT COUNT(*) FROM sales children WHERE children.parent_sale_id = sales.id) AS children_count'));
 
-        // Si el usuario no pertenece a Ventas, Contabilidad ni Admin, solo ve sus ventas ingresadas
-        if (!$canViewAllSales) {
+        // Si el usuario elige "Solo Mis Ventas" O no tiene permisos para ver todas las ventas
+        if ($scope === 'my' || !$canViewAllSales) {
             $sales->where('sales.user_id', $id_user);
         }
 
-        // Aplicar filtros de fecha: fhRecibido del DTE cuando existe, sales.date como respaldo (todos los tipos de documento)
-        // Si se busca por correlativo y no se especifican fechas manualmente, se omite el filtro de fecha
-        // para que la búsqueda encuentre el registro sin importar cuándo fue creado.
+        // Aplicar filtros de fecha
         $busquedaPorCorrelativo = $request->filled('correlativo') && trim($request->correlativo) != '';
         $fechasEspecificadasManualmente = $request->filled('fecha_desde') || $request->filled('fecha_hasta');
 
@@ -129,7 +129,7 @@ class SaleController extends Controller
         if ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
             $fechaDesde = $request->fecha_desde;
             $fechaHasta = $request->fecha_hasta;
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta) && $fechaDesde <= $fechaHasta) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) {
                 $fechaFiltroDesde = $fechaDesde;
                 $fechaFiltroHasta = $fechaHasta;
             }
@@ -140,7 +140,6 @@ class SaleController extends Controller
             $fechaFiltroDesde = date('Y-m-d', strtotime($request->fecha_hasta . ' -7 days'));
             $fechaFiltroHasta = $request->fecha_hasta;
         } elseif (!$busquedaPorCorrelativo) {
-            // Solo aplica el rango por defecto (últimos 7 días) si NO se está buscando por correlativo
             $fechaFiltroHasta = date('Y-m-d');
             $fechaFiltroDesde = date('Y-m-d', strtotime('-7 days'));
         }
@@ -155,19 +154,16 @@ class SaleController extends Controller
         if ($request->filled('correlativo') && trim($request->correlativo) != '') {
             $correlativo = trim($request->correlativo);
             $sales->where(function($query) use ($correlativo) {
-                // --- Búsqueda en el PADRE ---
                 $query->where('sales.id', 'LIKE', "%{$correlativo}%")
                       ->orWhere('dte_emis.id_doc', 'LIKE', "%{$correlativo}%")
                       ->orWhere('dte_emis.codigoGeneracion', 'LIKE', "%{$correlativo}%")
                       ->orWhere('dte_emis.selloRecibido', 'LIKE', "%{$correlativo}%")
-                      // --- Búsqueda en los HIJOS: por ID de sale hijo ---
                       ->orWhereExists(function($sub) use ($correlativo) {
                           $sub->select(DB::raw(1))
                               ->from('sales as children_corr')
                               ->whereColumn('children_corr.parent_sale_id', 'sales.id')
                               ->where('children_corr.id', 'LIKE', "%{$correlativo}%");
                       })
-                      // --- Búsqueda en los HIJOS: por número de control, código de generación o sello de recepción del DTE hijo ---
                       ->orWhereExists(function($sub) use ($correlativo) {
                           $sub->select(DB::raw(1))
                               ->from('sales as children_corr')
@@ -187,7 +183,6 @@ class SaleController extends Controller
             $sales->where('sales.client_id', $request->cliente_id);
         }
 
-        // Obtener los datos para los filtros
         $tiposDocumento = DB::table('typedocuments')
             ->select('id', 'description')
             ->orderBy('description')
@@ -198,18 +193,16 @@ class SaleController extends Controller
             ->orderBy('name_contribuyente')
             ->get();
 
-        // Obtener la primera empresa (la que siempre se usa)
         $empresaPrincipal = DB::table('companies')
             ->select('id', 'name')
             ->orderBy('id')
             ->first();
 
-        // Ordenar por fecha: fhRecibido cuando existe DTE, updated_at como respaldo (todos los documentos)
         $sales = $sales->orderByRaw('COALESCE(dte_emis.fhRecibido, sales.updated_at) DESC')
                        ->orderBy('sales.created_at', 'desc')
                        ->get();
 
-        return view('sales.index', compact('sales', 'tiposDocumento', 'clientes', 'empresaPrincipal'));
+        return view('sales.index', compact('sales', 'tiposDocumento', 'clientes', 'empresaPrincipal', 'scope'));
     }
 
     public function impdoc($corr)
