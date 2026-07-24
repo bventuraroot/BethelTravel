@@ -76,30 +76,20 @@ class CheckPermission
             return $next($request);
         }
 
-        // 3. Comprobar si el usuario tiene permisos sobre el módulo principal (ej. 'company.index')
-        $permissionPrefix = $routeParts[0];
-        $userHasModulePermissions = false;
+        // 3. Comprobar si el usuario tiene permisos sobre el módulo principal (ej. 'client.index')
+        $permissionPrefix = strtolower($routeParts[0]);
+        $normRequestedPrefix = rtrim($permissionPrefix, 's');
+
         foreach ($assignedPermissions as $per) {
-            $assignedPrefix = explode('.', $per)[0];
-            if (
-                $assignedPrefix === $permissionPrefix ||
-                ($permissionPrefix === 'user' && $assignedPrefix === 'users') ||
-                ($permissionPrefix === 'users' && $assignedPrefix === 'user')
-            ) {
-                $userHasModulePermissions = true;
-                break;
+            $assignedPrefix = strtolower(explode('.', $per)[0]);
+            $normAssignedPrefix = rtrim($assignedPrefix, 's');
+
+            if ($assignedPrefix === $permissionPrefix || $normAssignedPrefix === $normRequestedPrefix) {
+                return $next($request);
             }
         }
 
-        // Acciones que requieren restricción estricta individual
-        $restrictedActions = ['destroy', 'delete', 'store', 'create', 'update', 'edit', 'clean', 'download'];
-
-        // Si el usuario tiene permiso en el módulo y no es una acción restringida
-        if ($userHasModulePermissions && !in_array($action, $restrictedActions)) {
-            return $next($request);
-        }
-
-        // Si no tiene permiso, aborta con error 403
+        // Si no tiene permiso sobre el módulo ni la ruta, aborta con error 403
         abort(403, 'No tienes permiso para acceder a esta ruta.');
     }
 
