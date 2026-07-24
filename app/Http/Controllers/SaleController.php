@@ -37,10 +37,27 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $id_user = auth()->user()->id;
-        // Consultar el rol del usuario (asumiendo que el rol de admin tiene role_id = 1 y contabilidad role_id = 2)
-        $rolQuery = "SELECT a.role_id FROM model_has_roles a WHERE a.model_id = ?";
+        // Consultar roles del usuario (Admin, Contabilidad, Ventas/Vendedores)
+        $rolQuery = "SELECT a.role_id, b.name AS role_name FROM model_has_roles a INNER JOIN roles b ON a.role_id = b.id WHERE a.model_id = ?";
         $rolResult = DB::select($rolQuery, [$id_user]);
-        $isAdmin = !empty($rolResult) && ($rolResult[0]->role_id == 1 || $rolResult[0]->role_id == 2);
+
+        $canViewAllSales = false;
+        if (!empty($rolResult)) {
+            foreach ($rolResult as $r) {
+                $roleId = (int)$r->role_id;
+                $roleName = strtolower($r->role_name);
+                if (
+                    $roleId === 1 || $roleId === 2 ||
+                    str_contains($roleName, 'admin') ||
+                    str_contains($roleName, 'contabil') ||
+                    str_contains($roleName, 'venta') ||
+                    str_contains($roleName, 'vended')
+                ) {
+                    $canViewAllSales = true;
+                    break;
+                }
+            }
+        }
 
         // Subconsulta: último DTE de emisión (no invalidación) por venta
         $dteEmisionSub = DB::table('dte')
@@ -96,8 +113,8 @@ class SaleController extends Controller
                 END AS calculated_total'),
                 DB::raw('(SELECT COUNT(*) FROM sales children WHERE children.parent_sale_id = sales.id) AS children_count'));
 
-        // Si no es admin, solo muestra los clientes ingresados por él
-        if (!$isAdmin) {
+        // Si el usuario no pertenece a Ventas, Contabilidad ni Admin, solo ve sus ventas ingresadas
+        if (!$canViewAllSales) {
             $sales->where('sales.user_id', $id_user);
         }
 
