@@ -208,30 +208,14 @@ $configData = Helper::appClasses();
                         @default
                         @endswitch
                     </td>
-                    @foreach ($clients as $client)
-                        <tr>
-                            <td>
-                                <a href="javascript:void(0);" onclick="editClient({{ $client->id }})" class="btn btn-sm btn-icon me-2"><i class="ti ti-edit"></i></a>
-                                <a href="javascript:void(0);" onclick="deleteClient({{ $client->id }})" class="btn btn-sm btn-icon"><i class="ti ti-trash"></i></a>
-                            </td>
-                            <td>{{ $client->firstname }} {{ $client->firstlastname }}</td>
-                            <td>
-                                <span class="badge bg-label-info"><i class="ti ti-user ti-xs me-1"></i>{{ $client->creador_nombre ?? 'N/A' }}</span>
-                            </td>
-                            <td>{{ $client->tpersona }}</td>
-                            <td>{{ $client->contribuyente ? 'Sí' : 'No' }}</td>
-                            <td>{{ $client->extranjero ? 'Sí' : 'No' }}</td>
-                            <td>{{ $client->tipocontribuyente }}</td>
-                            <td>{{ $client->legal }}</td>
-                            <td>{{ $client->nit }}</td>
-                            <td>{{ $client->ncr }}</td>
-                            <td>{{ $client->pasaporte }}</td>
-                            <td>{{ $client->phone }}</td>
-                            <td>{{ $client->email }}</td>
-                            <td>{{ $client->address }}</td>
-                            <td><span class="badge bg-label-success">Activo</span></td>
-                        </tr>
-                    @endforeach
+                    <td>-</td>
+                    <td>Cel: {{ $client->phone }} <br> Fijo: {{ $client->phone_fijo }}</td>
+                    <td>{{ $client->email }}</td>
+                    <td>{{ Str::upper($client->pais . ', ' . $client->departamento . ', ' . $client->municipioname . ', ' . $client->address)}}</td>
+                    <td>{{ $client->birthday }}</td>
+                </tr>
+                @empty
+                @endforelse
                 @endisset
             </tbody>
         </table>
