@@ -17,48 +17,73 @@ class CheckPermission
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
 
-     public function handle(Request $request, Closure $next)
-     {
-         $user = Auth::user();
+    public function handle(Request $request, Closure $next)
+    {
+        $user = Auth::user();
 
-         // Verifica que el usuario esté autenticado
-         if (!$user) {
-             abort(403, 'No tienes permiso para acceder a esta ruta.');
-         }
+        // Verifica que el usuario esté autenticado
+        if (!$user) {
+            abort(403, 'No tienes permiso para acceder a esta ruta.');
+        }
 
-         // Llama a PermissionController para obtener el JSON de permisos
-         $permissionController = new PermissionController();
-         $verticalMenuJson = $permissionController->getpermissionjson();
+        // Llama a PermissionController para obtener el JSON de permisos
+        $permissionController = new PermissionController();
+        $verticalMenuJson = $permissionController->getpermissionjson();
 
-         // Inicializa un array para almacenar permisos y roles
-         $permissions = [];
-         $roles = [];
+        // Inicializa arrays para almacenar permisos asignados y roles
+        $assignedPermissions = [];
+        $roles = [];
 
-         // Itera sobre los permisos obtenidos desde la base de datos
-         foreach ($verticalMenuJson->original as $permiso) {
-             $permissions[] = explode('.', $permiso->Permiso)[0]; // Almacena todos los permisos
-             $roles[] = $permiso->Rolid; // Almacena todos los roles
-         }
+        if (isset($verticalMenuJson->original) && is_iterable($verticalMenuJson->original)) {
+            foreach ($verticalMenuJson->original as $permiso) {
+                if (!empty($permiso->Permiso)) {
+                    $assignedPermissions[] = $permiso->Permiso;
+                }
+                if (!empty($permiso->Rolid)) {
+                    $roles[] = (int) $permiso->Rolid;
+                }
+            }
+        }
 
-         // Extrae el permiso relacionado con la ruta actual
-         $requestedPermission = $request->route()->getName();
+        // Si el usuario es un administrador (role_id 1), se le permite el acceso a todas las rutas
+        if (in_array(1, $roles)) {
+            return $next($request);
+        }
 
-         // Divide la ruta solicitada en segmentos usando el punto como delimitador
-         $permissionPrefix = explode('.', $requestedPermission)[0];
+        // Extrae el nombre de la ruta actual
+        $requestedRouteName = $request->route() ? $request->route()->getName() : null;
 
-         // Verifica si el permiso solicitado está en la lista de permisos
-         if (in_array($permissionPrefix, $permissions)) {
-             return $next($request);
-         }
+        if (!$requestedRouteName) {
+            return $next($request);
+        }
 
-         // Si el usuario es un administrador (role_id 1), se le permite el acceso a todas las rutas
-         if (in_array(1, $roles)) {
-             return $next($request);
-         }
+        // 1. Verificación exacta de nombre de permiso (ej. 'client.index', 'client.destroy', 'backups.download')
+        if (in_array($requestedRouteName, $assignedPermissions)) {
+            return $next($request);
+        }
 
-         // Si no tiene permiso, aborta con error 403
-         abort(403, 'No tienes permiso para acceder a esta ruta.');
-     }
+        // 2. Extrae el prefijo del módulo (ej. 'client' de 'client.index' o 'client.getclientbycompany')
+        $permissionPrefix = explode('.', $requestedRouteName)[0];
+
+        $userHasModulePermissions = false;
+        foreach ($assignedPermissions as $per) {
+            if (explode('.', $per)[0] === $permissionPrefix) {
+                $userHasModulePermissions = true;
+                break;
+            }
+        }
+
+        // Si la ruta solicitada es una sub-ruta auxiliar que no está registrada como permiso individual en la BD,
+        // pero el usuario tiene al menos un permiso en el módulo, permitimos el acceso.
+        $exactPermissionExistsInDb = \Spatie\Permission\Models\Permission::where('name', $requestedRouteName)->exists();
+
+        if (!$exactPermissionExistsInDb && $userHasModulePermissions) {
+            return $next($request);
+        }
+
+        // Si no tiene permiso, aborta con error 403
+        abort(403, 'No tienes permiso para acceder a esta ruta.');
+    }
 
 
 
