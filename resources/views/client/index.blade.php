@@ -208,15 +208,30 @@ $configData = Helper::appClasses();
                         @default
                         @endswitch
                     </td>
-                    <td>-</td>
-                    <td>Cel: {{ $client->phone }} <br> Fijo: {{ $client->phone_fijo }}</td>
-                    <td>{{ $client->email }}</td>
-                    <td>{{ Str::upper($client->pais . ', ' . $client->departamento . ', ' . $client->municipioname . ',
-                        ' . $client->address)}}</td>
-                    <td>{{ $client->birthday }}</td>
-                </tr>
-                @empty
-                @endforelse
+                    @foreach ($clients as $client)
+                        <tr>
+                            <td>
+                                <a href="javascript:void(0);" onclick="editClient({{ $client->id }})" class="btn btn-sm btn-icon me-2"><i class="ti ti-edit"></i></a>
+                                <a href="javascript:void(0);" onclick="deleteClient({{ $client->id }})" class="btn btn-sm btn-icon"><i class="ti ti-trash"></i></a>
+                            </td>
+                            <td>{{ $client->firstname }} {{ $client->firstlastname }}</td>
+                            <td>
+                                <span class="badge bg-label-info"><i class="ti ti-user ti-xs me-1"></i>{{ $client->creador_nombre ?? 'N/A' }}</span>
+                            </td>
+                            <td>{{ $client->tpersona }}</td>
+                            <td>{{ $client->contribuyente ? 'Sí' : 'No' }}</td>
+                            <td>{{ $client->extranjero ? 'Sí' : 'No' }}</td>
+                            <td>{{ $client->tipocontribuyente }}</td>
+                            <td>{{ $client->legal }}</td>
+                            <td>{{ $client->nit }}</td>
+                            <td>{{ $client->ncr }}</td>
+                            <td>{{ $client->pasaporte }}</td>
+                            <td>{{ $client->phone }}</td>
+                            <td>{{ $client->email }}</td>
+                            <td>{{ $client->address }}</td>
+                            <td><span class="badge bg-label-success">Activo</span></td>
+                        </tr>
+                    @endforeach
                 @endisset
             </tbody>
         </table>
@@ -232,7 +247,7 @@ $configData = Helper::appClasses();
                 <input type="hidden" id="companyselected" name="companyselected"
                     value="{{ isset($companyselected) ? $companyselected : 0 }}">
                 <div class="mb-3">
-                    <label for="tpersona" class="form-label">Tipo de cliente</label>
+                    <label for="tpersona" class="form-label">Tipo de cliente <span class="text-danger">*</span></label>
                     <select class="select2typeperson form-select" id="tpersona" name="tpersona"
                         aria-label="Seleccionar opcion" onchange="typeperson(this.value)">
                         <option value="0" selected>Seleccione</option>
@@ -242,7 +257,7 @@ $configData = Helper::appClasses();
                 </div>
                 <div id="fields_natural" style="display: none;">
                     <div class="mb-3">
-                        <label class="form-label" for="firstname">Primer Nombre</label>
+                        <label class="form-label" for="firstname">Primer Nombre <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="firstname" placeholder="Primer Nombre"
                             name="firstname" aria-label="Primer Nombre" />
                     </div>
@@ -252,7 +267,7 @@ $configData = Helper::appClasses();
                             name="secondname" aria-label="Segundo Nombre" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="firstlastname">Primer Apellido</label>
+                        <label class="form-label" for="firstlastname">Primer Apellido <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="firstlastname" placeholder="Primer Apellido"
                             name="firstlastname" aria-label="Primer Apellido" />
                     </div>
@@ -264,12 +279,12 @@ $configData = Helper::appClasses();
                 </div>
                 <div id="fields_juridico" style="display: none">
                     <div class="mb-3">
-                        <label class="form-label" for="comercial_name">Nombre Comercial</label>
+                        <label class="form-label" for="comercial_name">Nombre Comercial <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="comercial_name" placeholder="Nombre Comercial"
                             name="comercial_name" aria-label="Nombre Comercial" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="name_contribuyente">Nombre Contribuyente</label>
+                        <label class="form-label" for="name_contribuyente">Nombre Contribuyente <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name_contribuyente"
                             placeholder="Nombre Contribuyente" name="name_contribuyente"
                             aria-label="Nombre Contribuyente" />
@@ -277,7 +292,7 @@ $configData = Helper::appClasses();
                 </div>
                 <div id="fields_with_option" style="display: none">
                 <div class="mb-3">
-                    <label class="form-label" for="tel1">Teléfono</label>
+                    <label class="form-label" for="tel1">Teléfono <span class="text-danger">*</span></label>
                     <input type="text" id="tel1" class="form-control" placeholder="7488-8811" aria-label="7488-8811"
                         name="tel1" />
                 </div>
@@ -287,33 +302,33 @@ $configData = Helper::appClasses();
                         name="tel2" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label" for="email">Correo</label>
+                    <label class="form-label" for="email">Correo <span class="text-danger">*</span></label>
                     <input type="email" id="email" class="form-control" placeholder="john.doe@example.com"
                         aria-label="john.doe@example.com" name="email" />
                 </div>
                 <div class="mb-3">
-                    <label for="country" class="form-label">País</label>
+                    <label for="country" class="form-label">País <span class="text-danger">*</span></label>
                     <select class="select2country form-select" id="country" name="country"
                         aria-label="Seleccionar opcion" onchange="getdepartamentos(this.value,'','','')">
                         <option>Seleccione</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="departament" class="form-label">Departamento</label>
+                    <label for="departament" class="form-label">Departamento <span class="text-danger">*</span></label>
                     <select class="select2dep form-select" id="departament" name="departament"
                         aria-label="Seleccionar opcion" onchange="getmunicipio(this.value,'','')">
                         <option value="0" selected>No aplica</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="municipio" class="form-label">Municipio</label>
+                    <label for="municipio" class="form-label">Municipio <span class="text-danger">*</span></label>
                     <select class="select2muni form-select" id="municipio" name="municipio"
                         aria-label="Seleccionar opcion">
                         <option value="0" selected>No aplica</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label" for="address">Dirección</label>
+                    <label class="form-label" for="address">Dirección <span class="text-danger">*</span></label>
                     <input type="text" id="address" class="form-control" placeholder="Av. 5 Norte "
                         aria-label="Direccion" name="address" />
                 </div>
@@ -334,14 +349,14 @@ $configData = Helper::appClasses();
                     </label>
                 </div>
                 <div class="mb-3" id="siextranjeroduinit">
-                    <label class="form-label" for="nit">DUI/NIT</label>
+                    <label class="form-label" for="nit">DUI/NIT <span class="text-danger">*</span></label>
                     <input type="text" id="nit" class="form-control" placeholder="xxxxxxxx-x"
                         onkeyup="nitDuiMask(this);" maxlength="20" aria-label="nit" name="nit"
                         onblur="validateClientKey(this, document.getElementById('tpersona').value, document.getElementById('companyselected').value);" />
                 </div>
                 <div id="siextranjero" style="display: none;">
                     <div class="mb-3">
-                        <label class="form-label" for="pasaporte">Pasaporte</label>
+                        <label class="form-label" for="pasaporte">Pasaporte <span class="text-danger">*</span></label>
                         <input type="text" id="pasaporte" class="form-control" placeholder="Número de Pasaporte"
                             maxlength="20" aria-label="pasaporte" name="pasaporte"
                             onblur="validateClientKey(this, 'E', document.getElementById('companyselected').value);" />
@@ -445,14 +460,14 @@ $configData = Helper::appClasses();
                 value="{{ isset($companyselected) ? $companyselected : 0 }}">
             <input type="hidden" name="idedit" id="idedit">
             <div class="mb-3">
-                <label for="tpersonaedit" class="form-label">Tipo de cliente</label>
+                <label for="tpersonaedit" class="form-label">Tipo de cliente <span class="text-danger">*</span></label>
                 <select class="select2typepersonedit form-select" id="tpersonaedit" name="tpersonaedit"
                     aria-label="Seleccionar opcion" onchange="typepersonedit(this.value)">
                 </select>
             </div>
             <div id="fields_natural_edit">
                 <div class="mb-3">
-                    <label class="form-label" for="firstnameedit">Primer Nombre</label>
+                    <label class="form-label" for="firstnameedit">Primer Nombre <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="firstnameedit" placeholder="Primer Nombre"
                         name="firstnameedit" aria-label="Primer Nombre" />
                 </div>
@@ -462,7 +477,7 @@ $configData = Helper::appClasses();
                         name="secondnameedit" aria-label="Segundo Nombre" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label" for="firstlastnameedit">Primer Apellido</label>
+                    <label class="form-label" for="firstlastnameedit">Primer Apellido <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="firstlastnameedit" placeholder="Primer Apellido"
                         name="firstlastnameedit" aria-label="Primer Apellido" />
                 </div>
@@ -474,19 +489,19 @@ $configData = Helper::appClasses();
             </div>
             <div id="fields_juridico_edit">
                 <div class="mb-3">
-                    <label class="form-label" for="comercial_nameedit">Nombre Comercial</label>
+                    <label class="form-label" for="comercial_nameedit">Nombre Comercial <span class="text-danger">*</span></label>
                     <input type="text" id="comercial_nameedit" class="form-control" placeholder="Nombre Comercial"
                         aria-label="empresa" name="comercial_nameedit" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label" for="name_contribuyenteedit">Nombre Contribuyente</label>
+                    <label class="form-label" for="name_contribuyenteedit">Nombre Contribuyente <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="name_contribuyenteedit"
                         placeholder="Nombre Contribuyente" name="name_contribuyenteedit"
                         aria-label="Nombre Contribuyente" />
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="tel1edit">Teléfono</label>
+                <label class="form-label" for="tel1edit">Teléfono <span class="text-danger">*</span></label>
                 <input type="text" id="tel1edit" class="form-control" placeholder="7488-8811" aria-label="7488-8811"
                     name="tel1edit" />
             </div>
@@ -497,33 +512,33 @@ $configData = Helper::appClasses();
                 <input type="hidden" name="phoneeditid" id="phoneeditid">
             </div>
             <div class="mb-3">
-                <label class="form-label" for="emailedit">Correo</label>
+                <label class="form-label" for="emailedit">Correo <span class="text-danger">*</span></label>
                 <input type="text" id="emailedit" class="form-control" placeholder="john.doe@example.com"
                     aria-label="john.doe@example.com" name="emailedit" />
             </div>
             <div class="mb-3">
-                <label for="countryedit" class="form-label">País</label>
+                <label for="countryedit" class="form-label">País <span class="text-danger">*</span></label>
                 <select class="select2countryedit form-select" id="countryedit" name="countryedit"
                     aria-label="Seleccionar opcion" onchange="getdepartamentos(this.value,'','','')">
                     <option>Seleccione</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label for="departamentedit" class="form-label">Departamento</label>
+                <label for="departamentedit" class="form-label">Departamento <span class="text-danger">*</span></label>
                 <select class="select2depedit form-select" id="departamentedit" name="departamentedit"
                     aria-label="Seleccionar opcion" onchange="getmunicipio(this.value,'','')">
                     <option value="0" selected>No aplica</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label for="municipioedit" class="form-label">Municipio</label>
+                <label for="municipioedit" class="form-label">Municipio <span class="text-danger">*</span></label>
                 <select class="select2muniedit form-select" id="municipioedit" name="municipioedit"
                     aria-label="Seleccionar opcion">
                     <option value="0" selected>No aplica</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="addressedit">Dirección</label>
+                <label class="form-label" for="addressedit">Dirección <span class="text-danger">*</span></label>
                 <input type="text" id="addressedit" class="form-control" placeholder="john.doe@example.com"
                     aria-label="Direccion" name="addressedit" />
                 <input type="hidden" name="addresseditid" id="addresseditid">
@@ -578,12 +593,12 @@ $configData = Helper::appClasses();
                 <input type="hidden" id="extranjeroedit_hidden" name="extranjeroedit_hidden" value="0">
             </div>
             <div class="mb-3" id="dui_fields">
-                <label class="form-label" for="nitedit">DUI/NIT</label>
+                <label class="form-label" for="nitedit">DUI/NIT <span class="text-danger">*</span></label>
                 <input type="text" id="nitedit" class="form-control" placeholder="xxxxxxxx-x"
                     onkeyup="nitDuiMask(this);" maxlength="20" aria-label="nit" name="nitedit" />
             </div>
             <div class="mb-3" id="pasaporte_fields_edit" style="display: none;">
-                <label class="form-label" for="pasaporteedit">Pasaporte</label>
+                <label class="form-label" for="pasaporteedit">Pasaporte <span class="text-danger">*</span></label>
                 <input type="text" id="pasaporteedit" class="form-control" placeholder="Número de Pasaporte"
                     onkeyup="pasaporteMask(this);" maxlength="15" aria-label="pasaporte" name="pasaporteedit" />
             </div>

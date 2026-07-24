@@ -151,25 +151,25 @@
                     enctype="multipart/form-data" method="POST">
                     @csrf @method('POST')
                     <div class="mb-3">
-                        <label class="form-label" for="name">Nombre Completo</label>
+                        <label class="form-label" for="name">Nombre Completo <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" placeholder="John Doe" name="name"
                             aria-label="John Doe" required/>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="email">Email</label>
+                        <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
                         <input type="text" id="email" class="form-control" placeholder="john.doe@example.com"
                             aria-label="john.doe@example.com" name="email" onchange="valemail(this.value);" required/>
                     </div>
                     <div class="mb-3">
-                        <label for="pass" class="form-label">Password</label>
+                        <label for="pass" class="form-label">Password <span class="text-danger">*</span></label>
                         <input class="form-control" type="password" value="" id="pass" name="pass" required/>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="permissioncompany">Permiso a empresas</label>
+                        <label class="form-label" for="permissioncompany">Permiso a empresas <span class="text-danger">*</span></label>
                         <input id="permissioncompany" name="permissioncompany" class="form-control" required/>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="role">Rol de usuario</label>
+                        <label class="form-label" for="role">Rol de usuario <span class="text-danger">*</span></label>
                         <select id="role" name="role" class="select2 form-select" data-allow-clear="true" required>
 
                         </select>
@@ -205,7 +205,7 @@
                     @csrf @method('PATCH')
                     <input type="hidden" name="idedit" id="idedit">
                     <div class="mb-3">
-                        <label class="form-label" for="nameedit">Nombre Completo</label>
+                        <label class="form-label" for="nameedit">Nombre Completo <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="nameedit" placeholder="John Doe" name="nameedit"
                             aria-label="John Doe" required/>
                     </div>
@@ -215,11 +215,11 @@
                             aria-label="john.doe@example.com" name="emailedit" onchange="valemail(this.value);" readonly disabled/>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="permissioncompanyedit">Permiso a empresas</label>
+                        <label class="form-label" for="permissioncompanyedit">Permiso a empresas <span class="text-danger">*</span></label>
                         <input id="permissioncompanyedit" name="permissioncompanyedit" class="form-control" required/>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="roleedit">Rol de usuario</label>
+                        <label class="form-label" for="roleedit">Rol de usuario <span class="text-danger">*</span></label>
                         <select id="roleedit" name="roleedit" class="select2roleedit form-select" data-allow-clear="true" required>
                         </select>
                     </div>
