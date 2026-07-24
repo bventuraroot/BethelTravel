@@ -93,7 +93,12 @@ class CheckPermission
             $assignedTokens = array_filter(preg_split('/[.-]/', $perLower));
             $firstAssignedToken = rtrim(reset($assignedTokens), 's');
 
-            if ($firstAssignedToken === $firstRequestedToken || in_array($firstAssignedToken, $requestedTokens)) {
+            if (
+                $firstAssignedToken === $firstRequestedToken ||
+                in_array($firstAssignedToken, $requestedTokens) ||
+                str_contains($firstRequestedToken, $firstAssignedToken) ||
+                str_contains($firstAssignedToken, $firstRequestedToken)
+            ) {
                 return $next($request);
             }
         }

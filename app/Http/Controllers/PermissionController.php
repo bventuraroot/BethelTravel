@@ -184,10 +184,21 @@ class PermissionController extends Controller
                 "badge" => ["danger", (string)$pendingPrecheckinsCount]
             ],
             [
-                "url" => "/purchase/index",
                 "name" => "Compras",
                 "icon" => "menu-icon fa-solid fa-truck",
-                "slug" => "purchase.index"
+                "slug" => "purchase.index",
+                "submenu" => [
+                    [
+                        "url" => "/purchase/index",
+                        "name" => "Listado de Compras",
+                        "slug" => "purchase.index"
+                    ],
+                    [
+                        "url" => "/email-purchases",
+                        "name" => "Buzón DTE (Email) ✉️",
+                        "slug" => "purchase.index"
+                    ]
+                ]
             ],
             [
                 "url" => "/credit/index",
